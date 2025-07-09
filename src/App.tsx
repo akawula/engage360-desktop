@@ -3,6 +3,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAppStore } from './store';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import { StoreErrorHandler } from './components/StoreErrorHandler';
 import Layout from './components/Layout';
 import People from './pages/People';
 import PersonDetail from './pages/PersonDetail';
@@ -36,7 +40,7 @@ function App() {
   } = useAppStore();
 
   useEffect(() => {
-    // Load initial data
+    // Load initial data only when authenticated
     fetchPeople();
     fetchGroups();
     fetchNotes();
@@ -48,25 +52,32 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-            <Layout>
-              <Routes>
-                <Route path="/" element={<People />} />
-                <Route path="/people" element={<People />} />
-                <Route path="/people/:personId" element={<PersonDetail />} />
-                <Route path="/groups" element={<Groups />} />
-                <Route path="/groups/:groupId" element={<GroupDetail />} />
-                <Route path="/notes" element={<Notes />} />
-                <Route path="/notes/:noteId" element={<NoteDetail />} />
-                <Route path="/action-items" element={<ActionItems />} />
-                <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/devices" element={<Devices />} />
-              </Routes>
-            </Layout>
-          </div>
-        </Router>
+        <NotificationProvider>
+          <StoreErrorHandler />
+          <AuthProvider>
+            <Router>
+              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<People />} />
+                      <Route path="/people" element={<People />} />
+                      <Route path="/people/:personId" element={<PersonDetail />} />
+                      <Route path="/groups" element={<Groups />} />
+                      <Route path="/groups/:groupId" element={<GroupDetail />} />
+                      <Route path="/notes" element={<Notes />} />
+                      <Route path="/notes/:noteId" element={<NoteDetail />} />
+                      <Route path="/action-items" element={<ActionItems />} />
+                      <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/devices" element={<Devices />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              </div>
+            </Router>
+          </AuthProvider>
+        </NotificationProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
