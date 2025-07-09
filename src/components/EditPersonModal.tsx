@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import Modal from './Modal';
 import { Person } from '../types';
 import { useUpdatePerson } from '../hooks/usePeople';
@@ -17,10 +18,65 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
         phone: person.phone || '',
         position: person.position || '',
         githubUsername: person.githubUsername || '',
-        tags: person.tags?.join(', ') || '',
+        tags: person.tags || [],
     });
 
+    const [tagInput, setTagInput] = useState('');
+
     const mutation = useUpdatePerson();
+
+    // Update form data when person prop changes (after successful update)
+    useEffect(() => {
+        setFormData({
+            firstName: person.firstName,
+            lastName: person.lastName,
+            email: person.email,
+            phone: person.phone || '',
+            position: person.position || '',
+            githubUsername: person.githubUsername || '',
+            tags: person.tags || [],
+        });
+    }, [person]);
+
+    const addTag = (tag: string) => {
+        const trimmedTag = tag.trim();
+        if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...prev.tags, trimmedTag]
+            }));
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(tag => tag !== tagToRemove)
+        }));
+    };
+
+    const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTagInput(e.target.value);
+    };
+
+    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        } else if (e.key === ',') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        }
+    };
+
+    const handleTagBlur = () => {
+        if (tagInput.trim()) {
+            addTag(tagInput);
+            setTagInput('');
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -33,15 +89,19 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
                 phone: formData.phone || undefined,
                 position: formData.position || undefined,
                 githubUsername: formData.githubUsername || undefined,
-                tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+                tags: formData.tags.length > 0 ? formData.tags : undefined,
             }
         }, {
             onSuccess: (response) => {
                 if (response.success) {
+                    console.log('Person updated successfully:', response.data);
                     onClose();
                 } else {
                     console.error('Failed to update person:', response.error);
                 }
+            },
+            onError: (error) => {
+                console.error('Error updating person:', error);
             },
         });
     };
@@ -139,14 +199,39 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Tags (comma-separated)
+                        Tags
                     </label>
+
+                    {/* Display existing tags as chips */}
+                    {formData.tags && formData.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {formData.tags.map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200"
+                                >
+                                    {tag}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeTag(tag)}
+                                        className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Input for adding new tags */}
                     <input
                         type="text"
-                        name="tags"
-                        value={formData.tags}
-                        onChange={handleChange}
-                        placeholder="e.g., client, vip, colleague"
+                        name="tagInput"
+                        value={tagInput}
+                        onChange={handleTagsChange}
+                        onKeyPress={handleTagKeyPress}
+                        onBlur={handleTagBlur}
+                        placeholder="Type and press Enter or comma to add tags"
                         className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                 </div>

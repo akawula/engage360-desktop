@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import Modal from './Modal';
 import { useCreatePerson } from '../hooks/usePeople';
 import type { CreatePersonRequest } from '../types';
@@ -52,6 +53,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                             githubUsername: '',
                             tags: [],
                         });
+                        setTagInput('');
                     } else {
                         alert('Failed to create person. Please try again.');
                     }
@@ -77,12 +79,46 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
         }));
     };
 
+    const [tagInput, setTagInput] = useState('');
+
     const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
+        setTagInput(e.target.value);
+    };
+
+    const addTag = (tag: string) => {
+        const trimmedTag = tag.trim();
+        if (trimmedTag && !(formData.tags || []).includes(trimmedTag)) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...(prev.tags || []), trimmedTag]
+            }));
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
         setFormData(prev => ({
             ...prev,
-            tags
+            tags: (prev.tags || []).filter(tag => tag !== tagToRemove)
         }));
+    };
+
+    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        } else if (e.key === ',') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        }
+    };
+
+    const handleTagBlur = () => {
+        if (tagInput.trim()) {
+            addTag(tagInput);
+            setTagInput('');
+        }
     };
 
     return (
@@ -179,15 +215,40 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
 
                 <div>
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Tags (comma-separated)
+                        Tags
                     </label>
+
+                    {/* Display existing tags as chips */}
+                    {formData.tags && formData.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {formData.tags.map((tag, index) => (
+                                <span
+                                    key={index}
+                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200"
+                                >
+                                    {tag}
+                                    <button
+                                        type="button"
+                                        onClick={() => removeTag(tag)}
+                                        className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Input for adding new tags */}
                     <input
                         type="text"
                         id="tags"
                         name="tags"
-                        value={formData.tags?.join(', ') || ''}
+                        value={tagInput}
                         onChange={handleTagsChange}
-                        placeholder="e.g., developer, manager, client"
+                        onKeyPress={handleTagKeyPress}
+                        onBlur={handleTagBlur}
+                        placeholder="Type and press Enter or comma to add tags"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                 </div>

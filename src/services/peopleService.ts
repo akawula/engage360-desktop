@@ -14,10 +14,6 @@ export interface GetPeopleParams {
 
 // Helper function to transform API response to frontend format
 function transformPersonFromAPI(apiPerson: any): Person {
-    // Debug logging for tags
-    console.log('API Person data:', apiPerson);
-    console.log('Tags from API:', apiPerson.tags, 'Type:', typeof apiPerson.tags);
-
     // Handle tags - they might be a JSON string or already an array
     let tags: string[] = [];
     if (apiPerson.tags) {

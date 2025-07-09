@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { peopleService } from '../services/peopleService';
-import type { Person, CreatePersonRequest } from '../types';
+import type { CreatePersonRequest } from '../types';
 
 // Query keys
 export const peopleKeys = {
@@ -55,6 +55,21 @@ export const useUpdatePerson = () => {
             peopleService.updatePerson(id, updates),
         onSuccess: (response, variables) => {
             if (response.success) {
+                // Update the cached person data directly
+                queryClient.setQueryData(
+                    peopleKeys.detail(variables.id),
+                    (oldData: any) => {
+                        if (oldData?.success) {
+                            return {
+                                ...oldData,
+                                data: response.data
+                            };
+                        }
+                        return oldData;
+                    }
+                );
+
+                // Also invalidate to ensure consistency
                 queryClient.invalidateQueries({ queryKey: peopleKeys.lists() });
                 queryClient.invalidateQueries({ queryKey: peopleKeys.detail(variables.id) });
             }
