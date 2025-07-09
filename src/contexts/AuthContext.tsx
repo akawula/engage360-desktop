@@ -14,6 +14,7 @@ interface AuthContextType {
     login: (credentials: LoginRequest) => Promise<boolean>;
     register: (userData: RegisterRequest) => Promise<boolean>;
     logout: () => Promise<void>;
+    handleSessionExpiration: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -109,6 +110,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [showError, showSuccess]);
 
+    const handleSessionExpiration = useCallback(() => {
+        setUser(null);
+        authServiceToUse.setToken(null);
+        authServiceToUse.setRefreshToken(null);
+        setToken(null);
+        showError('Session Expired', 'Your session has expired. Please log in again.');
+    }, [showError]);
+
     return (
         <AuthContext.Provider
             value={{
@@ -118,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 login,
                 register,
                 logout,
+                handleSessionExpiration,
             }}
         >
             {children}

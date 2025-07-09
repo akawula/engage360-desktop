@@ -7,6 +7,7 @@ class AuthService {
 
         if (response.success && response.data) {
             apiService.setToken(response.data.accessToken);
+            apiService.setRefreshToken(response.data.refreshToken);
         }
 
         return response;
@@ -17,6 +18,7 @@ class AuthService {
 
         if (response.success && response.data) {
             apiService.setToken(response.data.accessToken);
+            apiService.setRefreshToken(response.data.refreshToken);
         }
 
         return response;
@@ -30,6 +32,7 @@ class AuthService {
             console.warn('Logout request failed:', error);
         } finally {
             apiService.setToken(null);
+            apiService.setRefreshToken(null);
         }
     }
 
@@ -38,6 +41,7 @@ class AuthService {
 
         if (response.success && response.data) {
             apiService.setToken(response.data.accessToken);
+            apiService.setRefreshToken(response.data.refreshToken);
         }
 
         return response;
@@ -65,6 +69,14 @@ class AuthService {
 
     setToken(token: string | null): void {
         apiService.setToken(token);
+    }
+
+    getRefreshToken(): string | null {
+        return apiService.getRefreshToken();
+    }
+
+    setRefreshToken(refreshToken: string | null): void {
+        apiService.setRefreshToken(refreshToken);
     }
 }
 
