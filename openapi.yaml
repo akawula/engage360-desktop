@@ -5,7 +5,7 @@ info:
   description: API for Engage360 - a comprehensive engagement and relationship management platform
 
 servers:
-  - url: http://45.86.33.25:5173/v1
+  - url: http://45.86.33.25:2137/api
     description: Development server
 
 paths:

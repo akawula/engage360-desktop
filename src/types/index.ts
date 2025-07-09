@@ -5,8 +5,8 @@ export interface Person {
     email: string;
     phone?: string;
     avatar?: string;
-    company?: string;
     position?: string;
+    githubUsername?: string;
     tags: string[];
     lastInteraction?: string;
     engagementScore: number;
@@ -92,8 +92,8 @@ export interface CreatePersonRequest {
     lastName: string;
     email: string;
     phone?: string;
-    company?: string;
     position?: string;
+    githubUsername?: string;
     tags?: string[];
 }
 

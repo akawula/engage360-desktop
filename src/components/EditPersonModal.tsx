@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from './Modal';
 import { Person } from '../types';
-import { mockApi } from '../data/mockData';
+import { useUpdatePerson } from '../hooks/usePeople';
 
 interface EditPersonModalProps {
     isOpen: boolean;
@@ -16,34 +15,35 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
         lastName: person.lastName,
         email: person.email,
         phone: person.phone || '',
-        company: person.company || '',
         position: person.position || '',
+        githubUsername: person.githubUsername || '',
         tags: person.tags?.join(', ') || '',
     });
 
-    const queryClient = useQueryClient();
-
-    const mutation = useMutation({
-        mutationFn: (data: typeof formData) =>
-            mockApi.updatePerson(person.id, {
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone || undefined,
-                company: data.company || undefined,
-                position: data.position || undefined,
-                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
-            }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['people'] });
-            queryClient.invalidateQueries({ queryKey: ['person', person.id] });
-            onClose();
-        },
-    });
+    const mutation = useUpdatePerson();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        mutation.mutate(formData);
+        mutation.mutate({
+            id: person.id,
+            updates: {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                phone: formData.phone || undefined,
+                position: formData.position || undefined,
+                githubUsername: formData.githubUsername || undefined,
+                tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+            }
+        }, {
+            onSuccess: (response) => {
+                if (response.success) {
+                    onClose();
+                } else {
+                    console.error('Failed to update person:', response.error);
+                }
+            },
+        });
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,13 +112,14 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Company
+                        GitHub Username
                     </label>
                     <input
                         type="text"
-                        name="company"
-                        value={formData.company}
+                        name="githubUsername"
+                        value={formData.githubUsername}
                         onChange={handleChange}
+                        placeholder="e.g., octocat"
                         className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     />
                 </div>

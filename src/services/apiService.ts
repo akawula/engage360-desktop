@@ -1,15 +1,26 @@
 import type { ApiResponse, ApiError } from '../types';
 
-// Using your actual server URL with port 5173 for CORS configuration
-const API_BASE_URL = 'http://45.86.33.25:2137';
+// Base server URL without any prefix
+const SERVER_BASE_URL = 'http://45.86.33.25:2137';
+// API prefix for protected endpoints
+const API_PREFIX = '/api';
 
 class ApiService {
-    private baseURL: string;
+    private serverBaseURL: string;
     private token: string | null = null;
 
-    constructor(baseURL: string = API_BASE_URL) {
-        this.baseURL = baseURL;
+    constructor(serverBaseURL: string = SERVER_BASE_URL) {
+        this.serverBaseURL = serverBaseURL;
         this.token = localStorage.getItem('authToken');
+    }
+
+    private getBaseURL(endpoint: string): string {
+        // Auth endpoints don't use the /api prefix
+        if (endpoint.startsWith('/auth/')) {
+            return this.serverBaseURL;
+        }
+        // All other endpoints use the /api prefix
+        return `${this.serverBaseURL}${API_PREFIX}`;
     }
 
     setToken(token: string | null) {
@@ -29,7 +40,8 @@ class ApiService {
         endpoint: string,
         options: RequestInit = {}
     ): Promise<ApiResponse<T>> {
-        const url = `${this.baseURL}${endpoint}`;
+        const baseURL = this.getBaseURL(endpoint);
+        const url = `${baseURL}${endpoint}`;
 
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',

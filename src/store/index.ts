@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import type { Person, Group, Note, ActionItem, Device, UserProfile } from '../types';
+import type { Person, Group, Note, ActionItem, Device, UserProfile, CreatePersonRequest } from '../types';
 import { mockApi } from '../data/mockData';
+import { peopleService } from '../services/peopleService';
 // import { apiService } from '../services/apiService'; // Will be used when connecting to real API
 
 interface AppState {
@@ -28,6 +29,7 @@ interface AppState {
 
     // Actions
     fetchPeople: () => Promise<void>;
+    getPersonById: (id: string) => Promise<Person | null>;
     fetchGroups: () => Promise<void>;
     fetchNotes: () => Promise<void>;
     fetchActionItems: () => Promise<void>;
@@ -35,9 +37,9 @@ interface AppState {
     fetchUserProfile: () => Promise<void>;
 
     // CRUD operations
-    addPerson: (person: Person) => void;
-    updatePerson: (id: string, updates: Partial<Person>) => void;
-    deletePerson: (id: string) => void;
+    addPerson: (personData: CreatePersonRequest) => Promise<Person | null>;
+    updatePerson: (id: string, updates: Partial<CreatePersonRequest>) => Promise<Person | null>;
+    deletePerson: (id: string) => Promise<boolean>;
 
     addGroup: (group: Group) => void;
     updateGroup: (id: string, updates: Partial<Group>) => void;
@@ -82,20 +84,33 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchPeople: async () => {
         set(state => ({ loading: { ...state.loading, people: true } }));
         try {
-            // For now, using mock API, but in production you'd use:
-            // const response = await apiService.get<{ people: Person[], total: number }>('/people');
-            // if (response.success) {
-            //     set({ people: response.data.people });
-            // } else {
-            //     get().showError?.('Failed to load people', response.error?.message);
-            // }
-            const response = await mockApi.getPeople();
-            set({ people: response.people });
+            const response = await peopleService.getPeople();
+            if (response.success && response.data) {
+                set({ people: response.data.people });
+            } else {
+                get().showError?.('Failed to load people', response.error?.message || 'Unknown error');
+            }
         } catch (error) {
             console.error('Failed to fetch people:', error);
             get().showError?.('Failed to load people', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, people: false } }));
+        }
+    },
+
+    getPersonById: async (id: string) => {
+        try {
+            const response = await peopleService.getPersonById(id);
+            if (response.success && response.data) {
+                return response.data;
+            } else {
+                get().showError?.('Failed to load person', response.error?.message || 'Unknown error');
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to fetch person:', error);
+            get().showError?.('Failed to load person', 'Please try again later.');
+            return null;
         }
     },
 
@@ -165,22 +180,61 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     // CRUD operations
-    addPerson: (person) => {
-        set(state => ({ people: [...state.people, person] }));
+    addPerson: async (personData: CreatePersonRequest) => {
+        try {
+            const response = await peopleService.createPerson(personData);
+            if (response.success && response.data) {
+                set(state => ({ people: [...state.people, response.data!] }));
+                return response.data;
+            } else {
+                get().showError?.('Failed to create person', response.error?.message || 'Unknown error');
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to create person:', error);
+            get().showError?.('Failed to create person', 'Please try again later.');
+            return null;
+        }
     },
 
-    updatePerson: (id, updates) => {
-        set(state => ({
-            people: state.people.map(person =>
-                person.id === id ? { ...person, ...updates } : person
-            )
-        }));
+    updatePerson: async (id: string, updates: Partial<CreatePersonRequest>) => {
+        try {
+            const response = await peopleService.updatePerson(id, updates);
+            if (response.success && response.data) {
+                set(state => ({
+                    people: state.people.map(person =>
+                        person.id === id ? response.data! : person
+                    )
+                }));
+                return response.data;
+            } else {
+                get().showError?.('Failed to update person', response.error?.message || 'Unknown error');
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to update person:', error);
+            get().showError?.('Failed to update person', 'Please try again later.');
+            return null;
+        }
     },
 
-    deletePerson: (id) => {
-        set(state => ({
-            people: state.people.filter(person => person.id !== id)
-        }));
+    deletePerson: async (id: string) => {
+        try {
+            const response = await peopleService.deletePerson(id);
+            if (response.success) {
+                set(state => ({
+                    people: state.people.filter(person => person.id !== id)
+                }));
+                return true;
+            } else {
+                get().showError?.('Failed to delete person', response.error?.message || 'Unknown error');
+                return false;
+            }
+        } catch (error) {
+            console.error('Failed to delete person:', error);
+            get().showError?.('Failed to delete person', 'Please try again later.');
+            return false;
+        }
     },
 
     addGroup: (group) => {

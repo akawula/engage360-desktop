@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, Building, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2 } from 'lucide-react';
 import { mockApi } from '../data/mockData';
+import { usePerson, useDeletePerson } from '../hooks/usePeople';
 import EditPersonModal from '../components/EditPersonModal';
 
 export default function PersonDetail() {
@@ -10,13 +11,8 @@ export default function PersonDetail() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
 
-    const { data: person, isLoading } = useQuery({
-        queryKey: ['person', personId],
-        queryFn: () => personId ? mockApi.getPersonById(personId) : null,
-        enabled: !!personId,
-    });
+    const { data: person, isLoading } = usePerson(personId || '');
 
     const { data: notes = [] } = useQuery({
         queryKey: ['notes', personId],
@@ -30,17 +26,19 @@ export default function PersonDetail() {
         enabled: !!personId,
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: (id: string) => mockApi.deletePerson(id),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['people'] });
-            navigate('/people');
-        },
-    });
+    const deleteMutation = useDeletePerson();
 
     const handleDelete = () => {
         if (personId) {
-            deleteMutation.mutate(personId);
+            deleteMutation.mutate(personId, {
+                onSuccess: (response) => {
+                    if (response.success) {
+                        navigate('/people');
+                    } else {
+                        console.error('Failed to delete person:', response.error);
+                    }
+                },
+            });
         }
     };
 
@@ -80,10 +78,12 @@ export default function PersonDetail() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <Link to="/people" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to People
-                </Link>
+                <div>
+                    <Link to="/people" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mb-2">
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to People
+                    </Link>
+                </div>
                 <div className="flex gap-2">
                     <button
                         onClick={() => setShowDeleteConfirm(true)}
@@ -144,12 +144,6 @@ export default function PersonDetail() {
                                     <a href={`tel:${person.phone}`} className="hover:text-primary-600 dark:hover:text-primary-400">
                                         {person.phone}
                                     </a>
-                                </div>
-                            )}
-                            {person.company && (
-                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                                    <Building className="h-4 w-4" />
-                                    <span>{person.company}</span>
                                 </div>
                             )}
                             {person.position && (
