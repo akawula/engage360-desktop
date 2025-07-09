@@ -122,3 +122,47 @@ export interface CreateActionItemRequest {
     groupId?: string;
     noteId?: string;
 }
+
+// Authentication types
+export interface AuthUser {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+    isEmailVerified: boolean;
+    createdAt: string;
+}
+
+export interface LoginRequest {
+    email: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    deviceName: string;
+    deviceType: string;
+}
+
+export interface AuthResponse {
+    user: AuthUser;
+    accessToken: string;
+    refreshToken: string;
+}
+
+// Error handling types
+export interface ApiError {
+    message: string;
+    code: number;
+    details?: string;
+}
+
+export interface ApiResponse<T> {
+    data?: T;
+    error?: ApiError;
+    success: boolean;
+}
