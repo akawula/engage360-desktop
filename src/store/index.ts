@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Person, Group, Note, ActionItem, Device, UserProfile } from '../types';
 import { mockApi } from '../data/mockData';
+// import { apiService } from '../services/apiService'; // Will be used when connecting to real API
 
 interface AppState {
     // Data
@@ -20,6 +21,10 @@ interface AppState {
         devices: boolean;
         profile: boolean;
     };
+
+    // Error handling
+    showError?: (title: string, message?: string) => void;
+    setErrorHandler: (handler: (title: string, message?: string) => void) => void;
 
     // Actions
     fetchPeople: () => Promise<void>;
@@ -49,7 +54,7 @@ interface AppState {
     updateUserProfile: (updates: Partial<UserProfile>) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
     // Initial state
     people: [],
     groups: [],
@@ -67,14 +72,28 @@ export const useAppStore = create<AppState>((set) => ({
         profile: false,
     },
 
+    // Error handling
+    showError: undefined,
+    setErrorHandler: (handler: (title: string, message?: string) => void) => {
+        set({ showError: handler });
+    },
+
     // Fetch actions
     fetchPeople: async () => {
         set(state => ({ loading: { ...state.loading, people: true } }));
         try {
+            // For now, using mock API, but in production you'd use:
+            // const response = await apiService.get<{ people: Person[], total: number }>('/people');
+            // if (response.success) {
+            //     set({ people: response.data.people });
+            // } else {
+            //     get().showError?.('Failed to load people', response.error?.message);
+            // }
             const response = await mockApi.getPeople();
             set({ people: response.people });
         } catch (error) {
             console.error('Failed to fetch people:', error);
+            get().showError?.('Failed to load people', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, people: false } }));
         }
@@ -87,6 +106,7 @@ export const useAppStore = create<AppState>((set) => ({
             set({ groups });
         } catch (error) {
             console.error('Failed to fetch groups:', error);
+            get().showError?.('Failed to load groups', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, groups: false } }));
         }
@@ -99,6 +119,7 @@ export const useAppStore = create<AppState>((set) => ({
             set({ notes });
         } catch (error) {
             console.error('Failed to fetch notes:', error);
+            get().showError?.('Failed to load notes', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, notes: false } }));
         }
@@ -111,6 +132,7 @@ export const useAppStore = create<AppState>((set) => ({
             set({ actionItems });
         } catch (error) {
             console.error('Failed to fetch action items:', error);
+            get().showError?.('Failed to load action items', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, actionItems: false } }));
         }
@@ -123,6 +145,7 @@ export const useAppStore = create<AppState>((set) => ({
             set({ devices });
         } catch (error) {
             console.error('Failed to fetch devices:', error);
+            get().showError?.('Failed to load devices', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, devices: false } }));
         }
@@ -135,6 +158,7 @@ export const useAppStore = create<AppState>((set) => ({
             set({ userProfile });
         } catch (error) {
             console.error('Failed to fetch user profile:', error);
+            get().showError?.('Failed to load profile', 'Please try again later.');
         } finally {
             set(state => ({ loading: { ...state.loading, profile: false } }));
         }
