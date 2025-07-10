@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2 } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2, Users } from 'lucide-react';
 import { mockApi } from '../data/mockData';
 import { usePerson, useDeletePerson } from '../hooks/usePeople';
 import EditPersonModal from '../components/EditPersonModal';
@@ -170,6 +170,50 @@ export default function PersonDetail() {
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
+
+            {/* Groups Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Groups ({person.groups?.length || 0})
+                    </h2>
+                </div>
+
+                <div className="p-6">
+                    {person.groups && person.groups.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {person.groups.map((group) => (
+                                <Link
+                                    key={group.id}
+                                    to={`/groups/${group.id}`}
+                                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
+                                >
+                                    <div className="flex items-start justify-between mb-2">
+                                        <h3 className="font-medium text-gray-900 dark:text-white">{group.name}</h3>
+                                        {group.type && (
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${group.type === 'team' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                                                group.type === 'project' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                                    group.type === 'customer' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
+                                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                                                }`}>
+                                                {group.type}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {group.description && (
+                                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-2">
+                                            {group.description}
+                                        </p>
+                                    )}
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">Not a member of any groups</p>
+                    )}
                 </div>
             </div>
 

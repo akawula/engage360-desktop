@@ -37,7 +37,20 @@ class AuthService {
     }
 
     async refreshToken(): Promise<ApiResponse<AuthResponse>> {
-        const response = await apiService.post<AuthResponse>('/auth/refresh');
+        const refreshToken = this.getRefreshToken();
+        if (!refreshToken) {
+            return {
+                success: false,
+                error: {
+                    message: 'No refresh token available',
+                    code: 401
+                }
+            };
+        }
+
+        const response = await apiService.post<AuthResponse>('/auth/refresh', {
+            refreshToken
+        });
 
         if (response.success && response.data) {
             apiService.setToken(response.data.accessToken);

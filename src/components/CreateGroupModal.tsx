@@ -1,48 +1,47 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from './Modal';
-import { Group } from '../types';
+import { CreateGroupRequest } from '../types';
 import { groupsService } from '../services/groupsService';
 
-interface EditGroupModalProps {
+interface CreateGroupModalProps {
     isOpen: boolean;
     onClose: () => void;
-    group: Group;
 }
 
-export default function EditGroupModal({ isOpen, onClose, group }: EditGroupModalProps) {
+export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalProps) {
     const [formData, setFormData] = useState({
-        name: group.name,
-        description: group.description || '',
-        type: group.type,
+        name: '',
+        description: '',
+        type: 'team' as 'team' | 'project' | 'customer' | 'interest',
     });
 
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
-        mutationFn: async (data: typeof formData) => {
-            const response = await groupsService.updateGroup(group.id, {
-                name: data.name,
-                description: data.description || undefined,
-                type: data.type as 'team' | 'project' | 'customer' | 'interest',
-            });
+        mutationFn: async (data: CreateGroupRequest) => {
+            const response = await groupsService.createGroup(data);
 
             if (!response.success) {
-                throw new Error(response.error?.message || 'Failed to update group');
+                throw new Error(response.error?.message || 'Failed to create group');
             }
 
             return response.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['groups'] });
-            queryClient.invalidateQueries({ queryKey: ['group', group.id] });
             onClose();
+            setFormData({ name: '', description: '', type: 'team' });
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        mutation.mutate(formData);
+        mutation.mutate({
+            name: formData.name,
+            description: formData.description || undefined,
+            type: formData.type,
+        });
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -54,7 +53,7 @@ export default function EditGroupModal({ isOpen, onClose, group }: EditGroupModa
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Edit Group">
+        <Modal isOpen={isOpen} onClose={onClose} title="Create New Group">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -117,7 +116,7 @@ export default function EditGroupModal({ isOpen, onClose, group }: EditGroupModa
                         disabled={mutation.isPending}
                         className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
                     >
-                        {mutation.isPending ? 'Saving...' : 'Save Changes'}
+                        {mutation.isPending ? 'Creating...' : 'Create Group'}
                     </button>
                 </div>
             </form>

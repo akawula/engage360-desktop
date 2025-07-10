@@ -101,8 +101,10 @@ class ApiService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.refreshToken}`,
                 },
+                body: JSON.stringify({
+                    refreshToken: this.refreshToken
+                }),
             });
 
             if (response.ok) {
@@ -140,9 +142,7 @@ class ApiService {
         }
 
         return true;
-    }
-
-    private async request<T>(
+    } private async request<T>(
         endpoint: string,
         options: RequestInit = {}
     ): Promise<ApiResponse<T>> {
@@ -161,6 +161,19 @@ class ApiService {
                     error,
                 };
             }
+        }
+
+        // Check if user is not authenticated for protected endpoints
+        if (!endpoint.startsWith('/auth/') && !this.token) {
+            const error: ApiError = {
+                message: 'Session expired. Please log in again.',
+                code: 401,
+                details: 'No authentication token available',
+            };
+            return {
+                success: false,
+                error,
+            };
         }
 
         const baseURL = this.getBaseURL(endpoint);

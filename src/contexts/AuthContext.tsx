@@ -42,9 +42,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing authentication on mount
     useEffect(() => {
-        const existingToken = authServiceToUse.getToken();
-        setToken(existingToken);
-        setIsLoading(false);
+        const initializeAuth = async () => {
+            const existingToken = authServiceToUse.getToken();
+            if (existingToken) {
+                setToken(existingToken);
+                // Try to load user data if token exists
+                try {
+                    const userResponse = await authServiceToUse.getUserProfile();
+                    if (userResponse.success && userResponse.data) {
+                        setUser(userResponse.data);
+                        console.log('User profile loaded:', userResponse.data);
+                    } else {
+                        // Only clear token if it's an authentication error
+                        if (userResponse.error?.code === 401) {
+                            console.log('Authentication failed, clearing token');
+                            authServiceToUse.setToken(null);
+                            setToken(null);
+                        } else {
+                            console.log('Failed to load user profile, but keeping token:', userResponse.error);
+                            // Keep the token but don't set user data
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load user profile:', error);
+                    // Don't clear token on network errors or other non-auth issues
+                    // authServiceToUse.setToken(null);
+                    // setToken(null);
+                }
+            }
+            setIsLoading(false);
+        };
+
+        initializeAuth();
     }, []);
 
     const login = useCallback(async (credentials: LoginRequest): Promise<boolean> => {

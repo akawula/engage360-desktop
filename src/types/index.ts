@@ -11,6 +11,7 @@ export interface Person {
     lastInteraction?: string;
     engagementScore: number;
     notes: Note[];
+    groups?: PersonGroup[];
     createdAt: string;
     updatedAt: string;
 }
@@ -24,6 +25,17 @@ export interface Group {
     memberCount: number;
     createdAt: string;
     updatedAt: string;
+}
+
+// Simplified group type for groups embedded in person responses
+export interface PersonGroup {
+    id: string;
+    name: string;
+    description?: string;
+    type?: 'team' | 'project' | 'customer' | 'interest';
+    color?: string;
+    tags?: string[];
+    memberCount?: number;
 }
 
 export interface Note {

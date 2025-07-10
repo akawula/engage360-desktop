@@ -1,13 +1,31 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Users, Calendar } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { groupsService } from '../services/groupsService';
+import { useAuth } from '../contexts/AuthContext';
+import CreateGroupModal from '../components/CreateGroupModal';
 
 export default function Groups() {
-    const { data: groups = [], isLoading } = useQuery({
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const { handleSessionExpiration } = useAuth();
+
+    const { data: groupsResponse, isLoading, error } = useQuery({
         queryKey: ['groups'],
-        queryFn: mockApi.getGroups,
+        queryFn: groupsService.getGroups,
+        retry: (failureCount, error) => {
+            // Don't retry on authentication errors
+            if (error && typeof error === 'object' && 'message' in error &&
+                typeof error.message === 'string' &&
+                error.message.includes('Session expired')) {
+                handleSessionExpiration();
+                return false;
+            }
+            return failureCount < 3;
+        },
     });
+
+    const groups = groupsResponse?.success ? groupsResponse.data || [] : [];
 
     if (isLoading) {
         return (
@@ -19,6 +37,28 @@ export default function Groups() {
                             <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
                         ))}
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || (groupsResponse && !groupsResponse.success)) {
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Groups</h1>
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        New Group
+                    </button>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-800 dark:text-red-200">
+                        Failed to load groups: {error?.message || groupsResponse?.error?.message || 'Unknown error'}
+                    </p>
                 </div>
             </div>
         );
@@ -38,7 +78,10 @@ export default function Groups() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Groups</h1>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
                     <Plus className="h-4 w-4" />
                     New Group
                 </button>
@@ -88,11 +131,19 @@ export default function Groups() {
                     <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No groups yet</h3>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">Create your first group to get started</p>
-                    <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                    >
                         Create Group
                     </button>
                 </div>
             )}
+
+            <CreateGroupModal
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
+            />
         </div>
     );
 }

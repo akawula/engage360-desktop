@@ -42,6 +42,7 @@ function transformPersonFromAPI(apiPerson: any): Person {
         lastInteraction: apiPerson.last_interaction,
         engagementScore: apiPerson.engagement_score || 0,
         notes: [], // Notes would come from a separate endpoint
+        groups: apiPerson.groups || [], // Include groups from API
         createdAt: apiPerson.created_at,
         updatedAt: apiPerson.updated_at,
     };
