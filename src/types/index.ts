@@ -48,6 +48,27 @@ export interface Note {
     tags: string[];
     createdAt: string;
     updatedAt: string;
+    // Encryption fields (optional for backward compatibility)
+    encrypted?: boolean;
+    encryptedContent?: string;  // Base64 encoded encrypted content
+    contentIV?: string;         // Base64 encoded initialization vector
+    deviceKeys?: Array<{        // AES key encrypted for each trusted device
+        deviceId: string;
+        encryptedKey: string;
+    }>;
+}
+
+// Extended note type for handling encryption operations
+export interface EncryptedNote extends Omit<Note, 'content'> {
+    encrypted: true;
+    encryptedContent: string;
+    contentIV: string;
+    deviceKeys: Array<{
+        deviceId: string;
+        encryptedKey: string;
+    }>;
+    // Content is only available after decryption
+    content?: string;
 }
 
 export interface ActionItem {
@@ -165,6 +186,7 @@ export interface RegisterRequest {
     lastName: string;
     deviceName: string;
     deviceType: string;
+    devicePublicKey?: string; // Added for E2E encryption support
 }
 
 export interface AuthResponse {

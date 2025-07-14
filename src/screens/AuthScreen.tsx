@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { devicesService } from '../services/devicesService';
 import type { LoginRequest, RegisterRequest } from '../types';
 
 type AuthMode = 'login' | 'register';
@@ -19,6 +20,18 @@ const AuthScreen: React.FC = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const { login, register, isLoading } = useAuth();
+
+    // Initialize device info when component mounts
+    useEffect(() => {
+        if (mode === 'register') {
+            const deviceInfo = devicesService.getDeviceInfo();
+            setFormData(prev => ({
+                ...prev,
+                deviceName: deviceInfo.deviceName,
+                deviceType: deviceInfo.deviceType,
+            }));
+        }
+    }, [mode]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -102,16 +115,31 @@ const AuthScreen: React.FC = () => {
     };
 
     const toggleMode = () => {
-        setMode(mode === 'login' ? 'register' : 'login');
+        const newMode = mode === 'login' ? 'register' : 'login';
+        setMode(newMode);
         setErrors({});
-        setFormData({
-            email: '',
-            password: '',
-            firstName: '',
-            lastName: '',
-            deviceName: '',
-            deviceType: 'desktop',
-        });
+
+        // Auto-populate device info when switching to register mode
+        if (newMode === 'register') {
+            const deviceInfo = devicesService.getDeviceInfo();
+            setFormData({
+                email: '',
+                password: '',
+                firstName: '',
+                lastName: '',
+                deviceName: deviceInfo.deviceName,
+                deviceType: deviceInfo.deviceType,
+            });
+        } else {
+            setFormData({
+                email: '',
+                password: '',
+                firstName: '',
+                lastName: '',
+                deviceName: '',
+                deviceType: 'desktop',
+            });
+        }
     };
 
     return (

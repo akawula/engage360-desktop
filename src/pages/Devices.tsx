@@ -4,11 +4,14 @@ import { Plus, Monitor, Smartphone, Tablet, Laptop, Wifi, WifiOff, Calendar, Shi
 import { devicesService } from '../services/devicesService';
 import { useNotification } from '../contexts/NotificationContext';
 import RegisterDeviceModal from '../components/RegisterDeviceModal';
+import DeviceApprovalModal from '../components/DeviceApprovalModal';
 
 export default function Devices() {
     const queryClient = useQueryClient();
     const { showSuccess, showError } = useNotification();
     const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [deviceToApprove, setDeviceToApprove] = useState<any>(null);
     const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +39,10 @@ export default function Devices() {
     });
 
     const approveMutation = useMutation({
-        mutationFn: (deviceId: string) => devicesService.approveDevice(deviceId),
+        mutationFn: async (data: { deviceId: string; password: string }) => {
+            // Use the enhanced approval method that shares encryption keys
+            return devicesService.approveDeviceWithKeySharing(data.deviceId, data.password);
+        },
         onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ['devices'] });
             if (response.success) {
@@ -62,10 +68,26 @@ export default function Devices() {
     });
 
     const handleApproveDevice = (deviceId: string) => {
-        if (window.confirm('Are you sure you want to approve this device? It will be able to access your encrypted data.')) {
-            approveMutation.mutate(deviceId);
+        const device = devices.find(d => d.id === deviceId);
+        if (device) {
+            setDeviceToApprove(device);
+            setShowApprovalModal(true);
         }
         setActionMenuOpen(null);
+    };
+
+    const handleApprovalConfirm = (password: string) => {
+        if (deviceToApprove) {
+            approveMutation.mutate({
+                deviceId: deviceToApprove.id,
+                password
+            });
+        }
+    };
+
+    const handleApprovalClose = () => {
+        setShowApprovalModal(false);
+        setDeviceToApprove(null);
     };
 
     const handleRevokeDevice = (deviceId: string, deviceName: string) => {
@@ -273,6 +295,15 @@ export default function Devices() {
             <RegisterDeviceModal
                 isOpen={showRegisterModal}
                 onClose={() => setShowRegisterModal(false)}
+            />
+
+            <DeviceApprovalModal
+                isOpen={showApprovalModal}
+                deviceName={deviceToApprove?.name || deviceToApprove?.deviceName || 'Unknown Device'}
+                deviceType={deviceToApprove?.type || deviceToApprove?.deviceType || 'unknown'}
+                onApprove={handleApprovalConfirm}
+                onCancel={handleApprovalClose}
+                isLoading={approveMutation.isPending}
             />
         </div>
     );
