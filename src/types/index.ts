@@ -68,13 +68,20 @@ export interface ActionItem {
 
 export interface Device {
     id: string;
-    name: string;
-    type: 'desktop' | 'mobile' | 'tablet';
-    platform: string;
+    userId: string;
+    deviceName: string;
+    deviceType: string; // 'laptop', 'mobile', 'tablet', 'desktop', etc.
+    platform?: string; // Operating system or browser info
     version?: string;
-    lastSeen: string;
-    isActive: boolean;
-    registeredAt: string;
+    trusted: boolean;
+    lastUsed?: string;
+    createdAt: string;
+    // Computed properties for UI compatibility
+    name?: string; // Alias for deviceName
+    type?: 'desktop' | 'mobile' | 'tablet' | 'laptop';
+    lastSeen?: string; // Alias for lastUsed
+    isActive?: boolean; // Computed based on lastUsed
+    registeredAt?: string; // Alias for createdAt
 }
 
 export interface UserProfile {
