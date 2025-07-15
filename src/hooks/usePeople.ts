@@ -17,7 +17,8 @@ export const usePeople = (params?: { limit?: number; offset?: number; search?: s
     return useQuery({
         queryKey: peopleKeys.list(params),
         queryFn: () => peopleService.getPeople(params),
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache
         select: (data) => data.success ? data.data : null,
     });
 };
@@ -27,7 +28,8 @@ export const usePerson = (id: string) => {
         queryKey: peopleKeys.detail(id),
         queryFn: () => peopleService.getPersonById(id),
         enabled: !!id,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache
         select: (data) => data.success ? data.data : null,
     });
 };

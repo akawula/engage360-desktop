@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import type { Person, Group, Note, ActionItem, Device, UserProfile, CreatePersonRequest } from '../types';
-import { mockApi } from '../data/mockData';
 import { peopleService } from '../services/peopleService';
-// import { apiService } from '../services/apiService'; // Will be used when connecting to real API
+import { groupsService } from '../services/groupsService';
+import { notesService } from '../services/notesService';
+import { actionItemsService } from '../services/actionItemsService';
+import { devicesService } from '../services/devicesService';
+import { userProfileService } from '../services/userProfileService';
 
 interface AppState {
     // Data
@@ -117,8 +120,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchGroups: async () => {
         set(state => ({ loading: { ...state.loading, groups: true } }));
         try {
-            const groups = await mockApi.getGroups();
-            set({ groups });
+            const response = await groupsService.getGroups();
+            if (response.success && response.data) {
+                set({ groups: response.data });
+            } else {
+                get().showError?.('Failed to load groups', response.error?.message || 'Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to fetch groups:', error);
             get().showError?.('Failed to load groups', 'Please try again later.');
@@ -130,8 +137,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchNotes: async () => {
         set(state => ({ loading: { ...state.loading, notes: true } }));
         try {
-            const notes = await mockApi.getNotes();
-            set({ notes });
+            const response = await notesService.getNotes();
+            if (response.success && response.data) {
+                set({ notes: response.data });
+            } else {
+                get().showError?.('Failed to load notes', response.error?.message || 'Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to fetch notes:', error);
             get().showError?.('Failed to load notes', 'Please try again later.');
@@ -143,8 +154,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchActionItems: async () => {
         set(state => ({ loading: { ...state.loading, actionItems: true } }));
         try {
-            const actionItems = await mockApi.getActionItems();
-            set({ actionItems });
+            const response = await actionItemsService.getActionItems();
+            if (response.success && response.data) {
+                set({ actionItems: response.data });
+            } else {
+                get().showError?.('Failed to load action items', response.error?.message || 'Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to fetch action items:', error);
             get().showError?.('Failed to load action items', 'Please try again later.');
@@ -156,8 +171,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchDevices: async () => {
         set(state => ({ loading: { ...state.loading, devices: true } }));
         try {
-            const devices = await mockApi.getDevices();
-            set({ devices });
+            const response = await devicesService.getDevices();
+            if (response.success && response.data) {
+                set({ devices: response.data });
+            } else {
+                get().showError?.('Failed to load devices', response.error?.message || 'Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to fetch devices:', error);
             get().showError?.('Failed to load devices', 'Please try again later.');
@@ -169,8 +188,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     fetchUserProfile: async () => {
         set(state => ({ loading: { ...state.loading, profile: true } }));
         try {
-            const userProfile = await mockApi.getUserProfile();
-            set({ userProfile });
+            const response = await userProfileService.getUserProfile();
+            if (response.success && response.data) {
+                set({ userProfile: response.data });
+            } else {
+                get().showError?.('Failed to load profile', response.error?.message || 'Please try again later.');
+            }
         } catch (error) {
             console.error('Failed to fetch user profile:', error);
             get().showError?.('Failed to load profile', 'Please try again later.');
