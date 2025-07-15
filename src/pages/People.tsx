@@ -19,7 +19,7 @@ export default function People() {
     const filteredPeople = people.filter(person => {
         const matchesSearch = !searchTerm ||
             `${person.firstName} ${person.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            person.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            person.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             person.position?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             person.githubUsername?.toLowerCase().includes(searchTerm.toLowerCase());
 

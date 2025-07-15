@@ -1,13 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { User, Mail, MapPin, Calendar, Settings, Bell, Shield } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { userProfileService } from '../services/userProfileService';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function Profile() {
     const { theme, setTheme } = useTheme();
     const { data: profile, isLoading } = useQuery({
         queryKey: ['profile'],
-        queryFn: mockApi.getUserProfile,
+        queryFn: async () => {
+            const response = await userProfileService.getUserProfile();
+            if (response.success) {
+                return response.data;
+            } else {
+                throw new Error(response.error?.message || 'Failed to fetch profile');
+            }
+        },
+        staleTime: 15 * 60 * 1000, // 15 minutes - profile changes less frequently
+        gcTime: 20 * 60 * 1000, // 20 minutes cache
     });
 
     if (isLoading) {

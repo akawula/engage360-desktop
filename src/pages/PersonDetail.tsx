@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2, Users } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { notesService } from '../services/notesService';
+import { actionItemsService } from '../services/actionItemsService';
 import { usePerson, useDeletePerson } from '../hooks/usePeople';
 import EditPersonModal from '../components/EditPersonModal';
 
@@ -16,13 +17,19 @@ export default function PersonDetail() {
 
     const { data: notes = [] } = useQuery({
         queryKey: ['notes', personId],
-        queryFn: () => mockApi.getNotes(),
+        queryFn: async () => {
+            const response = await notesService.getNotes();
+            return response.success && response.data ? response.data.filter(note => note.personId === personId) : [];
+        },
         enabled: !!personId,
     });
 
     const { data: actionItems = [] } = useQuery({
         queryKey: ['actionItems', personId],
-        queryFn: () => mockApi.getActionItems(),
+        queryFn: async () => {
+            const response = await actionItemsService.getActionItems();
+            return response.success && response.data ? response.data.filter(item => item.personId === personId) : [];
+        },
         enabled: !!personId,
     });
 
@@ -106,9 +113,9 @@ export default function PersonDetail() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
                 <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
-                        {person.avatar ? (
+                        {person.avatarUrl ? (
                             <img
-                                src={person.avatar}
+                                src={person.avatarUrl}
                                 alt={`${person.firstName} ${person.lastName}`}
                                 className="w-24 h-24 rounded-full object-cover"
                             />
@@ -126,9 +133,11 @@ export default function PersonDetail() {
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {person.firstName} {person.lastName}
                             </h1>
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${engagementColor(person.engagementScore)}`}>
-                                {person.engagementScore}% engagement
-                            </div>
+                            {person.engagementScore && (
+                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${engagementColor(person.engagementScore)}`}>
+                                    {person.engagementScore}% engagement
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -146,10 +155,10 @@ export default function PersonDetail() {
                                     </a>
                                 </div>
                             )}
-                            {person.position && (
+                            {person.jobDescription && (
                                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                     <MapPin className="h-4 w-4" />
-                                    <span>{person.position}</span>
+                                    <span>{person.jobDescription}</span>
                                 </div>
                             )}
                             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
@@ -193,13 +202,13 @@ export default function PersonDetail() {
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <h3 className="font-medium text-gray-900 dark:text-white">{group.name}</h3>
-                                        {group.type && (
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${group.type === 'team' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                                                group.type === 'project' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                                                    group.type === 'customer' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
-                                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                                                }`}>
-                                                {group.type}
+                                        {group.tags && group.tags.length > 0 && (
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${group.color
+                                                ? 'text-white'
+                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                                }`}
+                                                style={group.color ? { backgroundColor: group.color } : undefined}>
+                                                {group.tags[0]}
                                             </span>
                                         )}
                                     </div>

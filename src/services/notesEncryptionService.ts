@@ -10,7 +10,7 @@ class NotesEncryptionService {
     /**
      * Encrypt a note for all trusted devices
      */
-    async encryptNote(note: Note, password: string): Promise<EncryptedNote> {
+    async encryptNote(note: Note, _password: string): Promise<EncryptedNote> {
         if (!cryptoService.isAvailable()) {
             throw new Error('Encryption not available in this browser');
         }
@@ -110,7 +110,7 @@ class NotesEncryptionService {
      * Re-encrypt a note for newly trusted devices
      * This should be called when a new device is approved
      */
-    async reEncryptForNewDevice(noteId: string, password: string): Promise<void> {
+    async reEncryptForNewDevice(noteId: string, _password: string): Promise<void> {
         // This would typically:
         // 1. Fetch the note
         // 2. Decrypt it with current device

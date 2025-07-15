@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X, Calendar, User, Building } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { notesService } from '../services/notesService';
 import RichTextEditor from '../components/RichTextEditor';
 
 export default function NoteDetail() {
@@ -23,7 +23,11 @@ export default function NoteDetail() {
 
     const { data: note, isLoading } = useQuery({
         queryKey: ['note', noteId],
-        queryFn: () => noteId ? mockApi.getNoteById(noteId) : null,
+        queryFn: async () => {
+            if (!noteId) return null;
+            const response = await notesService.getNoteById(noteId);
+            return response.success ? response.data : null;
+        },
         enabled: !!noteId,
     });
 
@@ -40,13 +44,28 @@ export default function NoteDetail() {
     }, [note]);
 
     const updateMutation = useMutation({
-        mutationFn: (data: typeof formData) =>
-            mockApi.updateNote(note!.id, {
+        mutationFn: async (data: typeof formData) => {
+            if (!note) throw new Error('Note not found');
+
+            // For now, we'll pass the unencrypted data - in a real implementation,
+            // this would be encrypted before sending to the API
+            const response = await notesService.updateNote(note.id, {
                 title: data.title,
                 content: data.content,
                 type: data.type,
                 tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
-            }),
+                // TODO: Add encryption here
+                encryptedContent: data.content, // This should be encrypted
+                encryptedKeys: {}, // This should contain device keys
+                iv: '' // This should be the initialization vector
+            });
+
+            if (!response.success) {
+                throw new Error(response.error?.message || 'Failed to update note');
+            }
+
+            return response.data;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['notes'] });
             queryClient.invalidateQueries({ queryKey: ['note', noteId] });

@@ -13,6 +13,8 @@ export default function Groups() {
     const { data: groupsResponse, isLoading, error } = useQuery({
         queryKey: ['groups'],
         queryFn: groupsService.getGroups,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache
         retry: (failureCount, error) => {
             // Don't retry on authentication errors
             if (error && typeof error === 'object' && 'message' in error &&
@@ -21,7 +23,7 @@ export default function Groups() {
                 handleSessionExpiration();
                 return false;
             }
-            return failureCount < 3;
+            return failureCount < 2;
         },
     });
 
@@ -101,9 +103,11 @@ export default function Groups() {
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-gray-900 dark:text-white">{group.name}</h3>
-                                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getGroupTypeColor(group.type)}`}>
-                                        {group.type}
-                                    </span>
+                                    {group.type && (
+                                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${getGroupTypeColor(group.type)}`}>
+                                            {group.type}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>

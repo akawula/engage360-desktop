@@ -100,9 +100,11 @@ export default function GroupDetail() {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{group.name}</h1>
                         <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(group.type)}`}>
-                                {group.type}
-                            </span>
+                            {group.type && (
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(group.type)}`}>
+                                    {group.type}
+                                </span>
+                            )}
                             <span className="text-gray-500 dark:text-gray-400 text-sm">
                                 {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
                             </span>

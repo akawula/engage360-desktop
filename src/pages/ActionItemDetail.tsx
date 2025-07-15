@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, CheckSquare, Calendar, User, Building, FileText } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { actionItemsService } from '../services/actionItemsService';
 import EditActionItemModal from '../components/EditActionItemModal';
 
 export default function ActionItemDetail() {
@@ -11,7 +11,11 @@ export default function ActionItemDetail() {
 
     const { data: actionItem, isLoading } = useQuery({
         queryKey: ['actionItem', actionItemId],
-        queryFn: () => actionItemId ? mockApi.getActionItemById(actionItemId) : null,
+        queryFn: async () => {
+            if (!actionItemId) return null;
+            const response = await actionItemsService.getActionItems();
+            return response.success && response.data ? response.data.find(item => item.id === actionItemId) || null : null;
+        },
         enabled: !!actionItemId,
     });
 

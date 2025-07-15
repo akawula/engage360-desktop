@@ -512,7 +512,7 @@ class DevicesService {
      * Share encryption keys with a newly approved device
      * This is called from a trusted device when approving a new device
      */
-    async shareKeysWithDevice(targetDeviceId: string, password: string): Promise<ApiResponse<void>> {
+    async shareKeysWithDevice(targetDeviceId: string, _password: string): Promise<ApiResponse<void>> {
         try {
             // Get current device's encrypted private key
             const encryptedPrivateKey = this.getEncryptedPrivateKey();

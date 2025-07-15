@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { actionItemsService } from '../services/actionItemsService';
 
 export default function ActionItems() {
     const { data: actionItems = [], isLoading } = useQuery({
         queryKey: ['actionItems'],
-        queryFn: mockApi.getActionItems,
+        queryFn: async () => {
+            const response = await actionItemsService.getActionItems();
+            return response.success ? response.data : [];
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache
     });
 
     if (isLoading) {

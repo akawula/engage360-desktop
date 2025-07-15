@@ -1,12 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, FileText, User, Calendar, Tag } from 'lucide-react';
-import { mockApi } from '../data/mockData';
+import { notesService } from '../services/notesService';
 
 export default function Notes() {
     const { data: notes = [], isLoading } = useQuery({
         queryKey: ['notes'],
-        queryFn: mockApi.getNotes,
+        queryFn: async () => {
+            const response = await notesService.getNotes();
+            return response.success && response.data ? response.data : [];
+        },
+        staleTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 15 * 60 * 1000, // 15 minutes cache
     });
 
     if (isLoading) {
