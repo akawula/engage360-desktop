@@ -203,6 +203,18 @@ class ApiService {
             }
 
             if (!response.ok) {
+                // Handle 304 Not Modified - this is actually a success case for GET requests
+                if (response.status === 304) {
+                    console.log('Received 304 Not Modified, forcing fresh request');
+
+                    // Force a fresh request by adding a cache-busting parameter
+                    const separator = endpoint.includes('?') ? '&' : '?';
+                    const freshEndpoint = `${endpoint}${separator}_t=${Date.now()}`;
+
+                    // Retry without cache-busting headers to avoid CORS issues
+                    return this.request(freshEndpoint, options);
+                }
+
                 // Handle 401 errors by attempting token refresh
                 if (response.status === 401 && !endpoint.startsWith('/auth/')) {
                     const refreshSuccess = await this.attemptTokenRefresh();
@@ -274,7 +286,14 @@ class ApiService {
     }
 
     async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'GET' });
+        // Add cache-busting for profile requests to avoid 304 responses
+        let requestEndpoint = endpoint;
+        if (endpoint.includes('/users/profile')) {
+            const separator = endpoint.includes('?') ? '&' : '?';
+            requestEndpoint = `${endpoint}${separator}_cb=${Date.now()}`;
+        }
+
+        return this.request<T>(requestEndpoint, { method: 'GET' });
     }
 
     async post<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {

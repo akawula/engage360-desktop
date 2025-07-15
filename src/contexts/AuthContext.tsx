@@ -33,41 +33,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [token, setToken] = useState<string | null>(null);
     const { showError, showSuccess } = useNotification();
 
-    // Calculate isAuthenticated based on token
+    // Calculate isAuthenticated based on token only
     const isAuthenticated = useMemo(() => {
         const hasToken = !!token;
-        console.log('isAuthenticated calculation:', { hasToken, user, token });
+        console.log('isAuthenticated calculation:', { hasToken, token: token ? 'present' : 'null' });
         return hasToken;
-    }, [user, token]); // Depend on both user and token
+    }, [token]); // Only depend on token, not user
 
     // Check for existing authentication on mount
     useEffect(() => {
         const initializeAuth = async () => {
             const existingToken = authServiceToUse.getToken();
+            console.log('Initializing auth with existing token:', existingToken ? 'present' : 'null');
+
             if (existingToken) {
                 setToken(existingToken);
                 // Try to load user data if token exists
                 try {
                     const userResponse = await authServiceToUse.getUserProfile();
                     if (userResponse.success && userResponse.data) {
-                        setUser(userResponse.data);
-                        console.log('User profile loaded:', userResponse.data);
+                        // Handle the API response structure - userResponse.data contains the raw API response
+                        let userData: AuthUser | null = null;
+
+                        // Check if the response has the expected structure: response.data.user
+                        if (userResponse.data && typeof userResponse.data === 'object' && 'user' in userResponse.data) {
+                            userData = (userResponse.data as any).user;
+                        }
+                        // Fallback to direct user data
+                        else if (userResponse.data && 'id' in userResponse.data) {
+                            userData = userResponse.data as AuthUser;
+                        }
+
+                        if (userData) {
+                            setUser(userData);
+                            console.log('User profile loaded:', userData);
+                        } else {
+                            console.log('Could not extract user data from response:', userResponse.data);
+                        }
                     } else {
-                        // Only clear token if it's an authentication error
-                        if (userResponse.error?.code === 401) {
+                        console.log('Failed to load user profile:', userResponse.error);
+                        // Only clear token if it's an authentication error (401)
+                        if (userResponse.error?.code === 401 || userResponse.error?.message?.includes('Unauthorized')) {
                             console.log('Authentication failed, clearing token');
                             authServiceToUse.setToken(null);
                             setToken(null);
                         } else {
-                            console.log('Failed to load user profile, but keeping token:', userResponse.error);
-                            // Keep the token but don't set user data
+                            console.log('Network or other error, keeping token but no user data');
+                            // Keep the token but don't set user data - this allows the app to work
+                            // User profile will be loaded when they navigate to profile page
                         }
                     }
                 } catch (error) {
-                    console.error('Failed to load user profile:', error);
-                    // Don't clear token on network errors or other non-auth issues
-                    // authServiceToUse.setToken(null);
-                    // setToken(null);
+                    console.error('Error loading user profile:', error);
+                    // Don't clear token on network errors - keep user authenticated
+                    console.log('Keeping token despite profile load error');
                 }
             }
             setIsLoading(false);

@@ -15,8 +15,12 @@ class UserProfileService {
             if (response.success) {
                 let user: Partial<AuthUser>;
 
-                // Handle nested structure
-                if (response.data?.data) {
+                // Handle the actual API response structure: response.data.user
+                if (response.data?.user) {
+                    user = response.data.user;
+                }
+                // Handle nested structure (legacy)
+                else if (response.data?.data) {
                     user = response.data.data;
                 }
                 // Handle flat structure where user data is directly in response.data
