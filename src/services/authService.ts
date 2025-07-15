@@ -1,55 +1,169 @@
 import { apiService } from './apiService';
 import { devicesService } from './devicesService';
-import type { LoginRequest, RegisterRequest, AuthResponse, ApiResponse, AuthUser } from '../types';
-
-// Extended registration request with device key
-interface ExtendedRegisterRequest extends RegisterRequest {
-    devicePublicKey: string;
-}
+import type { LoginRequest, RegisterRequest, RegisterFormRequest, AuthResponse, ApiResponse, AuthUser } from '../types';
 
 class AuthService {
-    async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
-        const response = await apiService.post<AuthResponse>('/auth/login', credentials);
+    async login(credentials: Omit<LoginRequest, 'deviceId'>): Promise<ApiResponse<AuthResponse>> {
+        // Get stored device ID, or generate new one if first time
+        let deviceId = this.getDeviceId();
+        if (!deviceId) {
+            deviceId = this.generateDeviceId();
+            this.setDeviceId(deviceId);
+        }
+
+        const loginRequest: LoginRequest = {
+            ...credentials,
+            deviceId
+        };
+
+        const response = await apiService.post<AuthResponse>('/auth/login', loginRequest);
 
         if (response.success && response.data) {
-            apiService.setToken(response.data.accessToken);
-            apiService.setRefreshToken(response.data.refreshToken);
+            const authData = response.data as any;
+
+            // Login API returns flat structure: { message, user, devices, accessToken, refreshToken, expiresIn }
+            const accessToken = authData.accessToken;
+            const refreshToken = authData.refreshToken;
+
+            if (accessToken && authData.user) {
+                apiService.setToken(accessToken);
+                if (refreshToken) {
+                    apiService.setRefreshToken(refreshToken);
+                }
+
+                // Handle devices array - use the first device
+                if (authData.devices && authData.devices.length > 0) {
+                    const device = authData.devices[0];
+                    this.setDeviceId(device.id);
+                }
+
+                // Get stored user profile data to complement the minimal user object from login
+                const storedUserData = this.getStoredUserProfile();
+
+                // Create enhanced user object
+                const user: AuthUser = {
+                    id: authData.user.id,
+                    email: authData.user.email,
+                    firstName: storedUserData?.firstName || 'User', // Fallback if no stored data
+                    lastName: storedUserData?.lastName || '',
+                    avatarUrl: authData.user.avatarUrl || storedUserData?.avatarUrl,
+                    createdAt: authData.user.createdAt || new Date().toISOString(),
+                    updatedAt: authData.user.updatedAt || new Date().toISOString()
+                };
+
+                // Store the user profile for future logins
+                this.storeUserProfile(user);
+
+                // Return standardized response format
+                return {
+                    success: true,
+                    data: {
+                        success: true,
+                        message: authData.message || 'Login successful',
+                        data: {
+                            accessToken,
+                            refreshToken,
+                            user,
+                            device: authData.devices?.[0] ? {
+                                id: authData.devices[0].id,
+                                name: authData.devices[0].name,
+                                type: 'desktop' as const,
+                                trusted: true
+                            } : undefined
+                        }
+                    }
+                };
+            }
         }
 
         return response;
     }
 
-    async register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse & { recoveryKeys?: string[] }>> {
+    async register(userData: RegisterFormRequest): Promise<ApiResponse<AuthResponse & { recoveryKeys?: string[] }>> {
         try {
             // Generate device key pair for encryption
             const keyPair = await devicesService.generateAndStoreKeyPair(userData.password);
 
-            // Store encrypted private key locally
+            // Generate master key pair (separate from device keys)
+            const masterKeyPair = await devicesService.generateKeyPair();
+
+            // Store encrypted private keys locally
             this.storeEncryptedPrivateKey(keyPair.privateKey);
+            this.storeEncryptedMasterKey(masterKeyPair.privateKey, userData.password);
 
             // Generate recovery keys for account recovery
             const recoveryKeys = await this.generateRecoveryKeys();
 
-            // Include public key in registration request
-            const extendedUserData: ExtendedRegisterRequest = {
-                ...userData,
-                devicePublicKey: keyPair.publicKey
-            };
+            // Create registration request with all required keys
+            const registrationRequest: RegisterRequest = {
+                email: userData.email,
+                password: userData.password,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                deviceName: userData.deviceName,
+                deviceType: userData.deviceType,
+                devicePublicKey: keyPair.publicKey,
+                masterPublicKey: masterKeyPair.publicKey
+            }; const response = await apiService.post<AuthResponse>('/auth/register', registrationRequest);
 
-            const response = await apiService.post<AuthResponse>('/auth/register', extendedUserData);
+            // Handle different response formats
+            let accessToken: string | undefined;
+            let refreshToken: string | undefined;
+            let user: AuthUser | undefined;
+            let deviceInfo: any;
 
             if (response.success && response.data) {
-                apiService.setToken(response.data.accessToken);
-                apiService.setRefreshToken(response.data.refreshToken);
+                const authData = response.data as any; // Cast to any to handle flexible response format
 
-                // Return response with recovery keys for user to save
-                return {
-                    ...response,
-                    data: {
-                        ...response.data,
-                        recoveryKeys
+                // Your backend returns a flat structure with: message, user, device, accessToken, refreshToken
+                accessToken = authData.accessToken;
+                refreshToken = authData.refreshToken;
+
+                // Backend user object only has id and email, we need to enhance it with firstName/lastName
+                if (authData.user) {
+                    user = {
+                        id: authData.user.id,
+                        email: authData.user.email,
+                        firstName: userData.firstName,  // Use the data we sent in registration
+                        lastName: userData.lastName,    // Use the data we sent in registration
+                        avatarUrl: authData.user.avatarUrl,
+                        createdAt: authData.user.createdAt || new Date().toISOString(),
+                        updatedAt: authData.user.updatedAt || new Date().toISOString()
+                    };
+                }
+
+                deviceInfo = authData.device;
+
+                if (accessToken && user) {
+                    apiService.setToken(accessToken);
+                    if (refreshToken) {
+                        apiService.setRefreshToken(refreshToken);
                     }
-                };
+
+                    // Store device ID from registration response
+                    if (deviceInfo?.id) {
+                        this.setDeviceId(deviceInfo.id);
+                    }
+
+                    // Store user profile for future logins
+                    this.storeUserProfile(user);
+
+                    // Return response with recovery keys for user to save
+                    return {
+                        success: true,
+                        data: {
+                            success: true,
+                            message: 'Registration successful',
+                            data: {
+                                accessToken,
+                                refreshToken: refreshToken || '',
+                                user,
+                                device: deviceInfo || { id: '', name: '', type: 'desktop' as const, trusted: false }
+                            },
+                            recoveryKeys
+                        }
+                    };
+                }
             }
 
             return response;
@@ -75,12 +189,15 @@ class AuthService {
         } finally {
             apiService.setToken(null);
             apiService.setRefreshToken(null);
-            // Clear device private key on logout
+            // Clear all device and encryption data on logout
             this.clearEncryptedPrivateKey();
+            this.clearEncryptedMasterKey();
+            this.clearDeviceId();
+            this.clearStoredUserProfile();
         }
     }
 
-    async refreshToken(): Promise<ApiResponse<AuthResponse>> {
+    async refreshToken(): Promise<ApiResponse<{ success: boolean; data: { accessToken: string } }>> {
         const refreshToken = this.getRefreshToken();
         if (!refreshToken) {
             return {
@@ -92,13 +209,12 @@ class AuthService {
             };
         }
 
-        const response = await apiService.post<AuthResponse>('/auth/refresh', {
+        const response = await apiService.post<{ success: boolean; data: { accessToken: string } }>('/auth/refresh', {
             refreshToken
         });
 
-        if (response.success && response.data) {
-            apiService.setToken(response.data.accessToken);
-            apiService.setRefreshToken(response.data.refreshToken);
+        if (response.success && response.data?.data) {
+            apiService.setToken(response.data.data.accessToken);
         }
 
         return response;
@@ -113,7 +229,7 @@ class AuthService {
     }
 
     async getUserProfile(): Promise<ApiResponse<AuthUser>> {
-        return apiService.get<AuthUser>('/profile');
+        return apiService.get<AuthUser>('/users/profile');
     }
 
     isAuthenticated(): boolean {
@@ -266,6 +382,115 @@ class AuthService {
         }
 
         return selectedWords.join('-');
+    }
+
+    /**
+     * Device ID management
+     */
+    generateDeviceId(): string {
+        return crypto.randomUUID();
+    }
+
+    getDeviceId(): string | null {
+        try {
+            return localStorage.getItem('device_id');
+        } catch (error) {
+            console.error('Failed to retrieve device ID:', error);
+            return null;
+        }
+    }
+
+    setDeviceId(deviceId: string): void {
+        try {
+            localStorage.setItem('device_id', deviceId);
+        } catch (error) {
+            console.error('Failed to store device ID:', error);
+        }
+    }
+
+    private clearDeviceId(): void {
+        try {
+            localStorage.removeItem('device_id');
+        } catch (error) {
+            console.error('Failed to clear device ID:', error);
+        }
+    }
+
+    /**
+     * Store encrypted master key in local storage
+     */
+    private storeEncryptedMasterKey(encryptedMasterKey: string, _password: string): void {
+        try {
+            // In a real implementation, you'd want to encrypt this with the password
+            // For now, we'll store it directly
+            localStorage.setItem('master_private_key', encryptedMasterKey);
+        } catch (error) {
+            console.error('Failed to store encrypted master key:', error);
+            throw new Error('Could not store master encryption key');
+        }
+    }
+
+    /**
+     * Get encrypted master key from local storage
+     */
+    getEncryptedMasterKey(): string | null {
+        try {
+            return localStorage.getItem('master_private_key');
+        } catch (error) {
+            console.error('Failed to retrieve encrypted master key:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Clear encrypted master key from local storage
+     */
+    private clearEncryptedMasterKey(): void {
+        try {
+            localStorage.removeItem('master_private_key');
+        } catch (error) {
+            console.error('Failed to clear encrypted master key:', error);
+        }
+    }
+
+    /**
+     * Store user profile data locally
+     */
+    private storeUserProfile(user: AuthUser): void {
+        try {
+            localStorage.setItem('user_profile', JSON.stringify({
+                firstName: user.firstName,
+                lastName: user.lastName,
+                avatarUrl: user.avatarUrl,
+                email: user.email
+            }));
+        } catch (error) {
+            console.error('Failed to store user profile:', error);
+        }
+    }
+
+    /**
+     * Get stored user profile data
+     */
+    private getStoredUserProfile(): Partial<AuthUser> | null {
+        try {
+            const stored = localStorage.getItem('user_profile');
+            return stored ? JSON.parse(stored) : null;
+        } catch (error) {
+            console.error('Failed to retrieve user profile:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Clear stored user profile
+     */
+    private clearStoredUserProfile(): void {
+        try {
+            localStorage.removeItem('user_profile');
+        } catch (error) {
+            console.error('Failed to clear user profile:', error);
+        }
     }
 }
 

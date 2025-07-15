@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { devicesService } from '../services/devicesService';
-import type { LoginRequest, RegisterRequest } from '../types';
+import type { LoginRequest, RegisterFormRequest } from '../types';
 
 type AuthMode = 'login' | 'register';
 
@@ -96,19 +96,19 @@ const AuthScreen: React.FC = () => {
         }
 
         if (mode === 'login') {
-            const loginData: LoginRequest = {
+            const loginData: Omit<LoginRequest, 'deviceId'> = {
                 email: formData.email,
                 password: formData.password,
             };
             await login(loginData);
         } else {
-            const registerData: RegisterRequest = {
+            const registerData: RegisterFormRequest = {
                 email: formData.email,
                 password: formData.password,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 deviceName: formData.deviceName,
-                deviceType: formData.deviceType,
+                deviceType: formData.deviceType as 'desktop' | 'laptop' | 'mobile' | 'tablet',
             };
             await register(registerData);
         }

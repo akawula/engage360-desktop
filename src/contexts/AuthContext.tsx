@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { authService } from '../services/authService'; // Using real API service
 // import { mockAuthService } from '../services/mockAuthService'; // For demo only
 import { useNotification } from './NotificationContext';
-import type { AuthUser, LoginRequest, RegisterRequest } from '../types';
+import type { AuthUser, LoginRequest, RegisterFormRequest } from '../types';
 
 // Use real service for production
 const authServiceToUse = authService;
@@ -11,8 +11,8 @@ interface AuthContextType {
     user: AuthUser | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (credentials: LoginRequest) => Promise<boolean>;
-    register: (userData: RegisterRequest) => Promise<boolean>;
+    login: (credentials: Omit<LoginRequest, 'deviceId'>) => Promise<boolean>;
+    register: (userData: RegisterFormRequest) => Promise<boolean>;
     logout: () => Promise<void>;
     handleSessionExpiration: () => void;
 }
@@ -76,17 +76,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         initializeAuth();
     }, []);
 
-    const login = useCallback(async (credentials: LoginRequest): Promise<boolean> => {
+    const login = useCallback(async (credentials: Omit<LoginRequest, 'deviceId'>): Promise<boolean> => {
         setIsLoading(true);
         try {
             const response = await authServiceToUse.login(credentials);
 
-            if (response.success && response.data) {
-                console.log('Login successful, accessToken:', response.data.accessToken);
-                setUser(response.data.user);
-                authServiceToUse.setToken(response.data.accessToken);
-                setToken(response.data.accessToken); // Update token state
-                console.log('Token state updated to:', response.data.accessToken);
+            if (response.success && response.data?.data) {
+                console.log('Login successful, accessToken:', response.data.data.accessToken);
+                setUser(response.data.data.user);
+                authServiceToUse.setToken(response.data.data.accessToken);
+                setToken(response.data.data.accessToken); // Update token state
+                console.log('Token state updated to:', response.data.data.accessToken);
                 showSuccess('Welcome back!', 'You have been successfully logged in.');
                 return true;
             } else {
@@ -101,15 +101,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [showError, showSuccess]);
 
-    const register = useCallback(async (userData: RegisterRequest): Promise<boolean> => {
+    const register = useCallback(async (userData: RegisterFormRequest): Promise<boolean> => {
         setIsLoading(true);
         try {
             const response = await authServiceToUse.register(userData);
 
-            if (response.success && response.data) {
-                setUser(response.data.user);
-                authServiceToUse.setToken(response.data.accessToken);
-                setToken(response.data.accessToken); // Update token state
+            if (response.success && response.data?.data) {
+                setUser(response.data.data.user);
+                authServiceToUse.setToken(response.data.data.accessToken);
+                setToken(response.data.data.accessToken); // Update token state
                 showSuccess('Welcome!', 'Your account has been created successfully.');
                 return true;
             } else {
