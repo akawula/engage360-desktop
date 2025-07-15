@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, Download, Check, AlertTriangle } from 'lucide-react';
 
 interface RecoveryKeysModalProps {

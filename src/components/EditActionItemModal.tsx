@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from './Modal';
 import { ActionItem } from '../types';
-import { mockApi } from '../data/mockData';
+import { actionItemsService } from '../services/actionItemsService';
 
 interface EditActionItemModalProps {
     isOpen: boolean;
@@ -23,15 +23,42 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
-        mutationFn: (data: typeof formData) =>
-            mockApi.updateActionItem(actionItem.id, {
+        mutationFn: async (data: typeof formData) => {
+            // Update basic fields first
+            const updateResponse = await actionItemsService.updateActionItem(actionItem.id, {
                 title: data.title,
                 description: data.description || undefined,
-                status: data.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
                 priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
                 assigneeId: data.assigneeId,
                 dueDate: data.dueDate || undefined,
-            }),
+            });
+
+            if (!updateResponse.success) {
+                const errorMessage = typeof updateResponse.error === 'string'
+                    ? updateResponse.error
+                    : updateResponse.error?.message || 'Failed to update action item';
+                throw new Error(errorMessage);
+            }
+
+            // Update status separately if it changed
+            if (data.status !== actionItem.status) {
+                const statusResponse = await actionItemsService.updateActionStatus(
+                    actionItem.id,
+                    data.status as 'pending' | 'in_progress' | 'completed' | 'cancelled'
+                );
+
+                if (!statusResponse.success) {
+                    const errorMessage = typeof statusResponse.error === 'string'
+                        ? statusResponse.error
+                        : statusResponse.error?.message || 'Failed to update action status';
+                    throw new Error(errorMessage);
+                }
+
+                return statusResponse.data;
+            }
+
+            return updateResponse.data;
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['actionItems'] });
             queryClient.invalidateQueries({ queryKey: ['actionItem', actionItem.id] });

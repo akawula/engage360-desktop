@@ -8,9 +8,9 @@ import {
     User,
     Monitor,
     LogOut,
-    ChevronDown
+    ChevronDown,
+    Home
 } from 'lucide-react';
-import { useAppStore } from '../store';
 import { useAuth } from '../contexts/AuthContext';
 import { clsx } from 'clsx';
 
@@ -19,6 +19,7 @@ interface LayoutProps {
 }
 
 const navItems = [
+    { path: '/', label: 'Dashboard', icon: Home },
     { path: '/people', label: 'People', icon: Users },
     { path: '/groups', label: 'Groups', icon: UsersRound },
     { path: '/notes', label: 'Notes', icon: FileText },
@@ -29,8 +30,7 @@ const navItems = [
 
 export default function Layout({ children }: LayoutProps) {
     const location = useLocation();
-    const userProfile = useAppStore(state => state.userProfile);
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
 
     const handleLogout = async () => {
         await logout();
@@ -87,51 +87,53 @@ export default function Layout({ children }: LayoutProps) {
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            {/* User Profile */}
-                            <div className="relative group">
-                                <div className="flex items-center space-x-3 cursor-pointer">
-                                    {userProfile?.avatar ? (
-                                        <img
-                                            src={userProfile.avatar}
-                                            alt={`${userProfile.firstName} ${userProfile.lastName}`}
-                                            className="w-8 h-8 rounded-full"
-                                        />
-                                    ) : (
-                                        <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
-                                            <span className="text-white text-sm font-medium">
-                                                {userProfile?.firstName?.[0]}{userProfile?.lastName?.[0]}
-                                            </span>
+                            {/* User Profile - only show if user is authenticated */}
+                            {user && (
+                                <div className="relative group">
+                                    <div className="flex items-center space-x-3 cursor-pointer">
+                                        {user.avatarUrl ? (
+                                            <img
+                                                src={user.avatarUrl}
+                                                alt={`${user.firstName} ${user.lastName}`}
+                                                className="w-8 h-8 rounded-full"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+                                                <span className="text-white text-sm font-medium">
+                                                    {user.firstName?.[0]}{user.lastName?.[0]}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="hidden md:block">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {user.firstName} {user.lastName}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
                                         </div>
-                                    )}
-                                    <div className="hidden md:block">
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {userProfile?.firstName} {userProfile?.lastName}
-                                        </p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{userProfile?.position}</p>
+                                        <ChevronDown className="w-4 h-4 text-gray-400" />
                                     </div>
-                                    <ChevronDown className="w-4 h-4 text-gray-400" />
-                                </div>
 
-                                {/* Dropdown menu */}
-                                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                    <div className="py-1">
-                                        <NavLink
-                                            to="/profile"
-                                            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        >
-                                            <User className="w-4 h-4 mr-3" />
-                                            Profile Settings
-                                        </NavLink>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        >
-                                            <LogOut className="w-4 h-4 mr-3" />
-                                            Sign out
-                                        </button>
+                                    {/* Dropdown menu */}
+                                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                        <div className="py-1">
+                                            <NavLink
+                                                to="/profile"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
+                                                <User className="w-4 h-4 mr-3" />
+                                                Profile Settings
+                                            </NavLink>
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
+                                                <LogOut className="w-4 h-4 mr-3" />
+                                                Sign out
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </header>
