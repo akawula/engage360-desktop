@@ -4,6 +4,8 @@ import type { Group, CreateGroupRequest, ApiResponse, Person } from '../types';
 export interface UpdateGroupRequest {
     name?: string;
     description?: string;
+    tags?: string[];
+    color?: string;
     type?: 'team' | 'project' | 'customer' | 'interest';
 }
 
@@ -44,7 +46,7 @@ class GroupsService {
         }
 
         const personGroups = groupsResponse.data.filter(group =>
-            group.members.some(member => member.id === personId)
+            group.members?.some(member => member.id === personId)
         );
 
         return {
