@@ -2,29 +2,44 @@ export interface Person {
     id: string;
     firstName: string;
     lastName: string;
-    email: string;
+    jobDescription?: string;
+    avatarUrl?: string;
     phone?: string;
-    avatar?: string;
-    position?: string;
-    githubUsername?: string;
+    email?: string;
     tags: string[];
-    lastInteraction?: string;
-    engagementScore: number;
-    notes: Note[];
-    groups?: PersonGroup[];
+    group?: PersonGroup;
+    counts?: {
+        notes: number;
+        achievements: number;
+        actions: number;
+    };
     createdAt: string;
     updatedAt: string;
+    // Frontend-only fields for compatibility
+    notes?: Note[];
+    groups?: PersonGroup[];
+    lastInteraction?: string;
+    engagementScore?: number;
+    // UI compatibility fields
+    avatar?: string; // Alias for avatarUrl
+    position?: string; // Alias for jobDescription
+    githubUsername?: string; // Additional profile field
 }
 
 export interface Group {
     id: string;
     name: string;
     description?: string;
-    type: 'team' | 'project' | 'customer' | 'interest';
-    members: Person[];
+    tags: string[];
+    color?: string;
     memberCount: number;
+    userId: string;
     createdAt: string;
     updatedAt: string;
+    // Populated only when needed (e.g., for detailed views)
+    members?: Person[];
+    // UI compatibility field
+    type?: 'team' | 'project' | 'customer' | 'interest';
 }
 
 // Simplified group type for groups embedded in person responses
@@ -32,7 +47,6 @@ export interface PersonGroup {
     id: string;
     name: string;
     description?: string;
-    type?: 'team' | 'project' | 'customer' | 'interest';
     color?: string;
     tags?: string[];
     memberCount?: number;
@@ -140,7 +154,9 @@ export interface CreatePersonRequest {
 export interface CreateGroupRequest {
     name: string;
     description?: string;
-    type: 'team' | 'project' | 'customer' | 'interest';
+    tags?: string[];
+    color?: string;
+    type?: 'team' | 'project' | 'customer' | 'interest';
 }
 
 export interface CreateNoteRequest {
@@ -169,14 +185,15 @@ export interface AuthUser {
     email: string;
     firstName: string;
     lastName: string;
-    avatar?: string;
-    isEmailVerified: boolean;
+    avatarUrl?: string;
     createdAt: string;
+    updatedAt: string;
 }
 
 export interface LoginRequest {
     email: string;
     password: string;
+    deviceId: string;
 }
 
 export interface RegisterRequest {
@@ -185,14 +202,40 @@ export interface RegisterRequest {
     firstName: string;
     lastName: string;
     deviceName: string;
-    deviceType: string;
-    devicePublicKey?: string; // Added for E2E encryption support
+    deviceType: 'desktop' | 'laptop' | 'mobile' | 'tablet';
+    devicePublicKey: string;
+    masterPublicKey: string;
+}
+
+// Simplified registration request for UI forms (without encryption keys)
+export interface RegisterFormRequest {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    deviceName: string;
+    deviceType: 'desktop' | 'laptop' | 'mobile' | 'tablet';
 }
 
 export interface AuthResponse {
-    user: AuthUser;
-    accessToken: string;
-    refreshToken: string;
+    success: boolean;
+    message?: string;
+    data?: {
+        accessToken: string;
+        refreshToken: string;
+        user: AuthUser;
+        device?: {
+            id: string;
+            name: string;
+            type: 'desktop' | 'laptop' | 'mobile' | 'tablet';
+            trusted: boolean;
+        };
+    };
+    // Alternative flat structure (in case backend returns differently)
+    accessToken?: string;
+    refreshToken?: string;
+    user?: AuthUser;
+    token?: string; // Some APIs use 'token' instead of 'accessToken'
 }
 
 // Error handling types
