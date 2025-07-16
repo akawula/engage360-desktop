@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from './Modal';
 import { ActionItem } from '../types';
-import { actionItemsService } from '../services/actionItemsService';
+import { useUpdateActionItem, useUpdateActionStatus } from '../hooks/useActionItems';
 
 interface EditActionItemModalProps {
     isOpen: boolean;
@@ -16,59 +15,44 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
         description: actionItem.description || '',
         status: actionItem.status,
         priority: actionItem.priority,
-        assigneeId: actionItem.assigneeId,
         dueDate: actionItem.dueDate ? actionItem.dueDate.split('T')[0] : '',
     });
 
-    const queryClient = useQueryClient();
+    const updateActionItem = useUpdateActionItem();
+    const updateActionStatus = useUpdateActionStatus();
 
-    const mutation = useMutation({
-        mutationFn: async (data: typeof formData) => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            // Format the due date to ISO string if provided
+            const formattedDueDate = formData.dueDate
+                ? new Date(formData.dueDate + 'T00:00:00.000Z').toISOString()
+                : undefined;
+
             // Update basic fields first
-            const updateResponse = await actionItemsService.updateActionItem(actionItem.id, {
-                title: data.title,
-                description: data.description || undefined,
-                priority: data.priority as 'low' | 'medium' | 'high' | 'urgent',
-                assigneeId: data.assigneeId,
-                dueDate: data.dueDate || undefined,
+            await updateActionItem.mutateAsync({
+                id: actionItem.id,
+                data: {
+                    title: formData.title,
+                    description: formData.description || undefined,
+                    priority: formData.priority as 'low' | 'medium' | 'high' | 'urgent',
+                    dueDate: formattedDueDate,
+                }
             });
 
-            if (!updateResponse.success) {
-                const errorMessage = typeof updateResponse.error === 'string'
-                    ? updateResponse.error
-                    : updateResponse.error?.message || 'Failed to update action item';
-                throw new Error(errorMessage);
+            // Update status if it changed
+            if (formData.status !== actionItem.status) {
+                await updateActionStatus.mutateAsync({
+                    id: actionItem.id,
+                    status: formData.status as 'pending' | 'in_progress' | 'completed' | 'cancelled'
+                });
             }
 
-            // Update status separately if it changed
-            if (data.status !== actionItem.status) {
-                const statusResponse = await actionItemsService.updateActionStatus(
-                    actionItem.id,
-                    data.status as 'pending' | 'in_progress' | 'completed' | 'cancelled'
-                );
-
-                if (!statusResponse.success) {
-                    const errorMessage = typeof statusResponse.error === 'string'
-                        ? statusResponse.error
-                        : statusResponse.error?.message || 'Failed to update action status';
-                    throw new Error(errorMessage);
-                }
-
-                return statusResponse.data;
-            }
-
-            return updateResponse.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['actionItems'] });
-            queryClient.invalidateQueries({ queryKey: ['actionItem', actionItem.id] });
             onClose();
-        },
-    });
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        mutation.mutate(formData);
+        } catch (error) {
+            console.error('Failed to update action item:', error);
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -150,21 +134,6 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                 </div>
 
                 <div>
-                    <label htmlFor="assigneeId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Assignee ID *
-                    </label>
-                    <input
-                        type="text"
-                        id="assigneeId"
-                        name="assigneeId"
-                        value={formData.assigneeId}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                </div>
-
-                <div>
                     <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Due Date
                     </label>
@@ -188,10 +157,10 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                     </button>
                     <button
                         type="submit"
-                        disabled={mutation.isPending}
+                        disabled={updateActionItem.isPending || updateActionStatus.isPending}
                         className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
                     >
-                        {mutation.isPending ? 'Saving...' : 'Save Changes'}
+                        {(updateActionItem.isPending || updateActionStatus.isPending) ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>

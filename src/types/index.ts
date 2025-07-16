@@ -172,11 +172,11 @@ export interface CreateActionItemRequest {
     title: string;
     description?: string;
     priority: 'low' | 'medium' | 'high' | 'urgent';
-    assigneeId: string;
     dueDate?: string;
     personId?: string;
     groupId?: string;
     noteId?: string;
+    // Note: assigneeId is not part of the API - actions are automatically assigned to the current user
 }
 
 // Authentication types
