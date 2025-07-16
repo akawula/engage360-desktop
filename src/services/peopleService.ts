@@ -129,7 +129,7 @@ export class PeopleService {
         return response as ApiResponse<Person>;
     } async createPerson(personData: CreatePersonRequest): Promise<ApiResponse<Person>> {
         // Transform camelCase to snake_case for API
-        const apiData = {
+        const apiData: any = {
             first_name: personData.firstName,
             last_name: personData.lastName,
             email: personData.email,
@@ -138,6 +138,10 @@ export class PeopleService {
             github_username: personData.githubUsername,
             tags: personData.tags,
         };
+
+        if (personData.avatarUrl) {
+            apiData.avatar_url = personData.avatarUrl;
+        }
 
         const response = await apiService.post<any>('/people', apiData);
 

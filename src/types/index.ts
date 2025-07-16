@@ -149,6 +149,7 @@ export interface CreatePersonRequest {
     position?: string;
     githubUsername?: string;
     tags?: string[];
+    avatarUrl?: string;
 }
 
 export interface CreateGroupRequest {

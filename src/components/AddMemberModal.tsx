@@ -80,10 +80,10 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] min-h-[400px] flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                         Add Members to Group
                     </h2>
@@ -96,7 +96,7 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
                 </div>
 
                 {/* Search */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <input
@@ -110,7 +110,7 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
                 </div>
 
                 {/* People List */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 min-h-0 p-6 overflow-y-auto">
                     {isLoading ? (
                         <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
@@ -183,7 +183,7 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                         {selectedPeople.length} people selected
                     </div>
