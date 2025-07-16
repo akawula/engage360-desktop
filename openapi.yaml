@@ -1,281 +1,1548 @@
 openapi: 3.0.3
 info:
-  title: Engage360 API
+  title: Engage360 Backend API
+  description: |
+    Secure backend API service with end-to-end encryption and zero-knowledge architecture.
+
+    ## Core Features
+    - **People Management**: Comprehensive contact and relationship management with optional GitHub username integration
+    - **Groups Management**: Organize people into groups with custom categories and member management
+    - **Notes System**: End-to-end encrypted notes with multi-device support
+    - **Action Items**: Encrypted todo/task management with flexible associations to people, groups, or notes
+    - **User Management**: Account and device management with security features
+    - **Authentication**: JWT-based authentication with device registration
+
+    ## Security Features
+    - JWT-based authentication with refresh tokens (15min access, 30day refresh)
+    - Token blacklist system for secure logout and session revocation
+    - AES-256-GCM end-to-end encryption for notes and action items
+    - Multi-device support with device-specific encryption keys
+    - Complete user data isolation with database-level security
+    - Zero-knowledge server architecture (server cannot decrypt user data)
+    - Row-level security and user-scoped data access
+    - Device approval workflow for enhanced security
+
+    ## External Access
+    - **Base URL**: http://45.86.33.25:2137
+    - **Health Check**: GET /health
+
+    ## Authentication Flow
+    1. Register user with device information
+    2. Login to receive JWT access token (Bearer)
+    3. Use token in Authorization header for all API calls
+    4. Refresh token when expired using refresh endpoint
+    5. Logout to invalidate tokens (single device or all devices)
+    6. Manage active sessions and revoke specific sessions
+
+    ## Data Architecture
+    - **People**: Contact information with optional GitHub username, metadata (not encrypted)
+    - **Groups**: Organization structure, metadata (not encrypted)
+    - **Notes**: End-to-end encrypted content with multi-device keys
+    - **Action Items**: End-to-end encrypted todo/task items with priority, status, and associations
+    - **User Data**: Complete isolation between users
   version: 1.0.0
-  description: API for Engage360 - a comprehensive engagement and relationship management platform
+  contact:
+    name: Engage360 API Support
+    email: support@engage360.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://45.86.33.25:2137/api
-    description: Development server
+  - url: http://45.86.33.25:2137
+    description: Production server (Raspberry Pi k3s cluster)
+  - url: http://localhost:3000
+    description: Local development server
+
+security:
+  - BearerAuth: []
 
 paths:
-  # People endpoints
-  /people:
+  /health:
     get:
-      summary: Get all people
-      operationId: getPeople
+      summary: Health check endpoint
+      description: Returns the current status of the API service
       tags:
-        - People
-      parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            default: 50
-        - name: offset
-          in: query
-          schema:
-            type: integer
-            default: 0
-        - name: search
-          in: query
-          schema:
-            type: string
+        - Health
+      security: []
       responses:
         '200':
-          description: List of people
+          description: Service is healthy
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  people:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Person'
-                  total:
-                    type: integer
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "ok"
+                timestamp: "2025-07-07T19:22:00.922Z"
+                service: "engage360-backend"
+                version: "1.0.0"
+
+  # Authentication Endpoints
+  /auth/register:
     post:
-      summary: Create a new person
-      operationId: createPerson
+      summary: Register new user
+      description: |
+        Register a new user account with their first device.
+        Creates user account and device registration.
       tags:
-        - People
+        - Authentication
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreatePersonRequest'
+              $ref: '#/components/schemas/RegisterRequest'
       responses:
         '201':
-          description: Person created
+          description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /people/{personId}:
-    get:
-      summary: Get person by ID
-      operationId: getPersonById
-      tags:
-        - People
-      parameters:
-        - name: personId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Person details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Person'
-    put:
-      summary: Update person
-      operationId: updatePerson
-      tags:
-        - People
-      parameters:
-        - name: personId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdatePersonRequest'
-      responses:
-        '200':
-          description: Person updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Person'
-    delete:
-      summary: Delete person
-      operationId: deletePerson
-      tags:
-        - People
-      parameters:
-        - name: personId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Person deleted
-
-  # Groups endpoints
-  /groups:
-    get:
-      summary: Get all groups
-      operationId: getGroups
-      tags:
-        - Groups
-      responses:
-        '200':
-          description: List of groups
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Group'
+  /auth/login:
     post:
-      summary: Create a new group
-      operationId: createGroup
+      summary: User login
+      description: |
+        Authenticate user and receive JWT tokens.
+        Returns access token (15min) and refresh token (30 days).
       tags:
-        - Groups
+        - Authentication
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateGroupRequest'
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "user@example.com"
+              password: "SecurePassword123!"
       responses:
-        '201':
-          description: Group created
+        '200':
+          description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Group'
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /groups/{groupId}:
-    get:
-      summary: Get group by ID
-      operationId: getGroupById
-      tags:
-        - Groups
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Group details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'
-    put:
-      summary: Update group
-      operationId: updateGroup
-      tags:
-        - Groups
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateGroupRequest'
-      responses:
-        '200':
-          description: Group updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Group'
-
-  /groups/{groupId}/members:
-    get:
-      summary: Get group members
-      operationId: getGroupMembers
-      tags:
-        - Groups
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Group members
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Person'
+  /auth/refresh:
     post:
-      summary: Add member to group
-      operationId: addGroupMember
+      summary: Refresh JWT token
+      description: Exchange refresh token for new access token
       tags:
-        - Groups
-      parameters:
-        - name: groupId
-          in: path
-          required: true
-          schema:
-            type: string
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      description: |
+        Invalidate current access token and refresh token.
+        Token will be added to blacklist and become invalid for future requests.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout-all:
+    post:
+      summary: Logout from all devices
+      description: |
+        Invalidate all user's tokens across all devices. Requires password confirmation.
+        All access tokens will be blacklisted and refresh tokens will be deleted.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - password
               properties:
-                personId:
+                password:
                   type: string
+                  description: User's password for confirmation
       responses:
-        '201':
-          description: Member added
+        '200':
+          description: Successfully logged out from all devices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Invalid password or unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  # Notes endpoints
-  /notes:
+  /auth/sessions:
     get:
-      summary: Get all notes
-      operationId: getNotes
+      summary: List active sessions
+      description: |
+        Get list of all active sessions (refresh tokens) for the current user.
+        Shows device information and last activity.
       tags:
-        - Notes
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sessions retrieved successfully"
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SessionInfo'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/sessions/{sessionId}:
+    delete:
+      summary: Revoke specific session
+      description: |
+        Revoke a specific session (refresh token) by ID.
+        The associated access tokens will be blacklisted.
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
       parameters:
-        - name: personId
-          in: query
+        - name: sessionId
+          in: path
+          required: true
+          description: Session (refresh token) UUID
           schema:
             type: string
-        - name: groupId
+            format: uuid
+      responses:
+        '200':
+          description: Session revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/data:
+    get:
+      summary: List encrypted data
+      description: |
+        Retrieve paginated list of user's encrypted data items.
+        Returns encrypted content and per-device encrypted keys.
+      tags:
+        - Data Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
           in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: search
+          in: query
+          description: Search in titles (encrypted search not supported)
           schema:
             type: string
       responses:
         '200':
-          description: List of notes
+          description: Data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create encrypted data
+      description: |
+        Store new encrypted data item.
+        Client must provide encrypted content and keys for all user devices.
+      tags:
+        - Data Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDataRequest'
+            example:
+              title: "Personal Notes"
+              encryptedContent: "U2FsdGVkX1+vupppZksvRf5pq5g5XjFRIipRkwB0K1Y="
+              encryptedKeys:
+                "device-1-uuid": "encrypted-symmetric-key-for-device-1"
+                "device-2-uuid": "encrypted-symmetric-key-for-device-2"
+              contentType: "text/plain"
+              iv: "random-96-bit-iv"
+      responses:
+        '201':
+          description: Data created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/data/{id}:
+    get:
+      summary: Get encrypted data item
+      description: Retrieve specific encrypted data item by ID
+      tags:
+        - Data Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data item UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update encrypted data item
+      description: Update existing encrypted data item
+      tags:
+        - Data Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data item UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDataRequest'
+      responses:
+        '200':
+          description: Data updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete data item
+      description: Permanently delete encrypted data item
+      tags:
+        - Data Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Data item UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Data deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/devices:
+    get:
+      summary: List user devices
+      description: Get all registered devices for the current user
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Devices retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Register new device
+      description: |
+        Register a new device for the current user.
+        Requires device approval from existing trusted device.
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDeviceRequest'
+            example:
+              deviceName: "iPhone 15"
+              deviceType: "mobile"
+              publicKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..."
+      responses:
+        '201':
+          description: Device registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/devices/{id}:
+    put:
+      summary: Update device information
+      description: Update device name or other metadata
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Device UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeviceRequest'
+      responses:
+        '200':
+          description: Device updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Revoke device access
+      description: |
+        Remove device and revoke all access.
+        Warning: Data encrypted only for this device will become inaccessible.
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Device UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Device revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/devices/{id}/approve:
+    post:
+      summary: Approve device
+      description: |
+        Approve a previously registered device, granting it trusted status.
+        Only the device owner can approve their own devices.
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Device UUID to approve
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Device approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Device approved successfully"
+                  device:
+                    $ref: '#/components/schemas/DeviceResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/devices/{id}/keys:
+    get:
+      summary: Get device public key
+      description: |
+        Retrieve the public key for a specific device.
+        Used for multi-device encryption key sharing.
+      tags:
+        - Device Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Device UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Device keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Device keys retrieved successfully"
+                  publicKey:
+                    type: string
+                    description: Device's public key in PEM format
+                    example: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA..."
+                  device:
+                    $ref: '#/components/schemas/DeviceResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/profile:
+    get:
+      summary: Get user profile
+      description: Retrieve current user's profile information
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+              example:
+                success: true
+                data:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "user@example.com"
+                  firstName: "John"
+                  lastName: "Doe"
+                  avatarUrl: "https://example.com/avatar.jpg"
+                  createdAt: "2025-07-15T10:30:00.000Z"
+                  updatedAt: "2025-07-15T10:30:00.000Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update user profile
+      description: Update user profile information (email, etc.)
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            example:
+              email: "newemail@example.com"
+              firstName: "John"
+              lastName: "Doe"
+              avatarUrl: "https://example.com/avatar.jpg"
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/users/account:
+    delete:
+      summary: Delete user account
+      description: |
+        Permanently delete user account and all associated data.
+        This action is irreversible.
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================================================
+  # PEOPLE MANAGEMENT ENDPOINTS
+  # ============================================================================
+
+  /api/people:
+    get:
+      summary: List people
+      description: |
+        Get all people for the authenticated user with pagination, search, and filtering.
+        Includes relationship counts and group information.
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: search
+          in: query
+          description: Search term for name or job description
+          schema:
+            type: string
+        - name: groupId
+          in: query
+          description: Filter by group ID
+          schema:
+            type: string
+            format: uuid
+        - name: tags
+          in: query
+          description: Filter by tags (array)
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: People retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeopleListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create person
+      description: Create a new person in the system
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersonRequest'
+            example:
+              firstName: "John"
+              lastName: "Doe"
+              jobDescription: "Software Engineer"
+              email: "john.doe@company.com"
+              phone: "+1-555-0123"
+              groupId: "550e8400-e29b-41d4-a716-446655440000"
+              tags: ["colleague", "frontend", "react"]
+      responses:
+        '201':
+          description: Person created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Groups Management Endpoints
+  /api/groups:
+    get:
+      summary: List groups
+      description: Get all groups for the authenticated user with member counts
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Groups retrieved successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Note'
+                  $ref: '#/components/schemas/GroupResponse'
+              example:
+                - id: "550e8400-e29b-41d4-a716-446655440000"
+                  name: "Engineering Team"
+                  description: "Software development team members"
+                  tags: ["team", "engineering", "dev"]
+                  color: "#3B82F6"
+                  member_count: 12
+                  user_id: "550e8400-e29b-41d4-a716-446655440001"
+                  created_at: "2025-07-15T10:30:00.000Z"
+                  updated_at: "2025-07-15T10:30:00.000Z"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     post:
-      summary: Create a new note
-      operationId: createNote
+      summary: Create group
+      description: Create a new group for organizing people with tags and color support
       tags:
-        - Notes
+        - Groups Management
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+            example:
+              name: "Engineering Team"
+              description: "Software development team members"
+              tags: ["team", "engineering", "dev"]
+              color: "#3B82F6"
+      responses:
+        '201':
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/groups/{id}:
+    get:
+      summary: Get group by ID
+      description: Get detailed information about a specific group
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      responses:
+        '200':
+          description: Group retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Invalid group ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update group
+      description: Update group information including tags and color
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGroupRequest'
+            example:
+              name: "Senior Engineering Team"
+              description: "Senior software development team members"
+              tags: ["team", "engineering", "senior"]
+              color: "#10B981"
+      responses:
+        '200':
+          description: Group updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupResponse'
+        '400':
+          description: Invalid request data or group ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete group
+      description: Delete a group permanently
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      responses:
+        '204':
+          description: Group deleted successfully
+        '400':
+          description: Invalid group ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Group Member Management Endpoints
+  /api/groups/{id}/members:
+    get:
+      summary: Get group members
+      description: Get all members of a group with their details
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      responses:
+        '200':
+          description: Group members retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMemberResponse'
+              example:
+                - id: "550e8400-e29b-41d4-a716-446655440002"
+                  added_at: "2025-07-15T10:30:00.000Z"
+                  person:
+                    id: "550e8400-e29b-41d4-a716-446655440003"
+                    first_name: "John"
+                    last_name: "Doe"
+                    email: "john.doe@example.com"
+                    phone: "+1234567890"
+                    job_description: "Senior Software Engineer"
+                    avatar_url: "https://example.com/avatar.jpg"
+                    tags: ["engineer", "senior"]
+        '400':
+          description: Invalid group ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Add members to group
+      description: Add one or more people to a group
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMembersRequest'
+            example:
+              memberIds:
+                - "550e8400-e29b-41d4-a716-446655440003"
+                - "550e8400-e29b-41d4-a716-446655440004"
+      responses:
+        '201':
+          description: Members added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberOperationResponse'
+              example:
+                message: "Successfully added 2 new members to the group"
+                addedCount: 2
+                skippedCount: 0
+        '200':
+          description: No new members added (all already members)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberOperationResponse'
+              example:
+                message: "All specified people are already members of this group"
+                addedCount: 0
+                skippedCount: 2
+        '400':
+          description: Invalid request data, group ID format, or people not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Remove members from group
+      description: Remove one or more people from a group
+      tags:
+        - Groups Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Group's unique identifier
+      responses:
+        '200':
+          description: Members removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberRemovalResponse'
+              example:
+                message: "Successfully removed 2 members from the group"
+                removedCount: 2
+        '400':
+          description: Invalid request data or group ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Group not found or no matching memberships found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/people/{id}:
+    get:
+      summary: Get person details
+      description: |
+        Get detailed information about a specific person including recent notes,
+        achievements, and actions.
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Person UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Person details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDetailResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update person
+      description: Update an existing person's information
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Person UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonRequest'
+            example:
+              firstName: "John"
+              lastName: "Smith"
+              jobDescription: "Senior Software Engineer"
+              tags: ["colleague", "frontend", "react", "lead"]
+      responses:
+        '200':
+          description: Person updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete person
+      description: |
+        Delete a person and all associated notes, achievements, and actions.
+        This action is irreversible.
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Person UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Person deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/notes:
+    get:
+      summary: List encrypted notes
+      description: |
+        Retrieve paginated list of user's end-to-end encrypted notes. Notes can be filtered by associated person.
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: personId
+          in: query
+          description: Filter notes by associated person UUID
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Notes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create encrypted note
+      description: |
+        Store a new end-to-end encrypted note associated with a person. Client must provide encrypted content and keys for all user devices.
+      tags:
+        - People Management
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -284,42 +1551,75 @@ paths:
               $ref: '#/components/schemas/CreateNoteRequest'
       responses:
         '201':
-          description: Note created
+          description: Note created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Note'
+                $ref: '#/components/schemas/NoteResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /notes/{noteId}:
+  /api/notes/{id}:
     get:
-      summary: Get note by ID
-      operationId: getNoteById
+      summary: Get encrypted note
+      description: Retrieve a specific encrypted note by ID
       tags:
-        - Notes
+        - People Management
+      security:
+        - BearerAuth: []
       parameters:
-        - name: noteId
+        - name: id
           in: path
           required: true
+          description: Note UUID
           schema:
             type: string
+            format: uuid
       responses:
         '200':
-          description: Note details
+          description: Note retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Note'
+                $ref: '#/components/schemas/NoteResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     put:
-      summary: Update note
-      operationId: updateNote
+      summary: Update encrypted note
+      description: Update an existing end-to-end encrypted note
       tags:
-        - Notes
+        - People Management
+      security:
+        - BearerAuth: []
       parameters:
-        - name: noteId
+        - name: id
           in: path
           required: true
+          description: Note UUID
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -328,522 +1628,749 @@ paths:
               $ref: '#/components/schemas/UpdateNoteRequest'
       responses:
         '200':
-          description: Note updated
+          description: Note updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Note'
-
-  # Action Items endpoints
-  /action-items:
+                $ref: '#/components/schemas/NoteResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  # Action Items Management
+  /api/actions:
     get:
-      summary: Get all action items
-      operationId: getActionItems
+      summary: List action items
+      description: |
+        Retrieve a paginated list of action items with optional filtering.
+        Supports filtering by status, priority, person, group, and note associations.
       tags:
-        - ActionItems
+        - Actions Management
       parameters:
-        - name: assigneeId
+        - name: page
           in: query
+          description: Page number for pagination
+          required: false
           schema:
-            type: string
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
         - name: status
           in: query
+          description: Filter by action status
+          required: false
           schema:
             type: string
             enum: [pending, in_progress, completed, cancelled]
+        - name: priority
+          in: query
+          description: Filter by action priority
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - name: person_id
+          in: query
+          description: Filter by associated person ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: group_id
+          in: query
+          description: Filter by associated group ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: note_id
+          in: query
+          description: Filter by associated note ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: due_date_from
+          in: query
+          description: Filter actions due after this date
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: due_date_to
+          in: query
+          description: Filter actions due before this date
+          required: false
+          schema:
+            type: string
+            format: date-time
       responses:
         '200':
-          description: List of action items
+          description: Action items retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActionItem'
+                $ref: '#/components/schemas/ActionListResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     post:
-      summary: Create a new action item
-      operationId: createActionItem
+      summary: Create action item
+      description: |
+        Create a new action item with encrypted content.
+        Can be standalone or associated with people, groups, or notes.
       tags:
-        - ActionItems
+        - Actions Management
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateActionItemRequest'
+              $ref: '#/components/schemas/CreateActionRequest'
       responses:
         '201':
-          description: Action item created
+          description: Action item created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionItem'
+                $ref: '#/components/schemas/ActionResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /action-items/{actionItemId}:
+  /api/actions/{id}:
     get:
-      summary: Get action item by ID
-      operationId: getActionItemById
+      summary: Get action item
+      description: Retrieve a specific action item by ID
       tags:
-        - ActionItems
+        - Actions Management
       parameters:
-        - name: actionItemId
+        - name: id
           in: path
+          description: Action item ID
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '200':
-          description: Action item details
+          description: Action item retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionItem'
+                $ref: '#/components/schemas/ActionResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Action item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     put:
       summary: Update action item
-      operationId: updateActionItem
+      description: |
+        Update an existing action item.
+        Can update content, priority, due date, and associations.
       tags:
-        - ActionItems
+        - Actions Management
       parameters:
-        - name: actionItemId
+        - name: id
           in: path
+          description: Action item ID
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateActionItemRequest'
+              $ref: '#/components/schemas/UpdateActionRequest'
       responses:
         '200':
-          description: Action item updated
+          description: Action item updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionItem'
+                $ref: '#/components/schemas/ActionResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Action item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  # Devices endpoints
-  /devices:
-    get:
-      summary: Get all devices
-      operationId: getDevices
+    delete:
+      summary: Delete action item
+      description: |
+        Delete an action item.
+        This action is irreversible.
       tags:
-        - Devices
+        - Actions Management
+      parameters:
+        - name: id
+          in: path
+          description: Action item ID
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
-          description: List of devices
+          description: Action item deleted successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Device'
-    post:
-      summary: Register a new device
-      operationId: registerDevice
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Action item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/actions/{id}/status:
+    patch:
+      summary: Update action status
+      description: |
+        Update only the status of an action item.
+        Automatically sets completed_at when marking as completed.
       tags:
-        - Devices
+        - Actions Management
+      parameters:
+        - name: id
+          in: path
+          description: Action item ID
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterDeviceRequest'
-      responses:
-        '201':
-          description: Device registered
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Device'
-
-  # User Profile endpoints
-  /profile:
-    get:
-      summary: Get user profile
-      operationId: getUserProfile
-      tags:
-        - Profile
+              $ref: '#/components/schemas/UpdateActionStatusRequest'
       responses:
         '200':
-          description: User profile
+          description: Action status updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-    put:
-      summary: Update user profile
-      operationId: updateUserProfile
-      tags:
-        - Profile
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUserProfileRequest'
-      responses:
-        '200':
-          description: Profile updated
+                $ref: '#/components/schemas/ActionResponse'
+        '400':
+          description: Invalid status value
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserProfile'
-
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Action item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/login
+
   schemas:
-    Person:
+    # Health Schema
+    HealthResponse:
       type: object
       properties:
-        id:
+        status:
           type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        avatar:
-          type: string
-        company:
-          type: string
-        position:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-        lastInteraction:
+          example: "ok"
+        timestamp:
           type: string
           format: date-time
-        engagementScore:
-          type: number
-        notes:
-          type: array
-          items:
-            $ref: '#/components/schemas/Note'
-        createdAt:
+        service:
           type: string
-          format: date-time
-        updatedAt:
+          example: "engage360-backend"
+        version:
           type: string
-          format: date-time
+          example: "1.0.0"
 
-    CreatePersonRequest:
+    # Authentication Schemas
+    RegisterRequest:
       type: object
       required:
-        - firstName
-        - lastName
         - email
+        - password
+        - deviceName
+        - deviceType
       properties:
-        firstName:
-          type: string
-        lastName:
-          type: string
         email:
           type: string
-        phone:
+          format: email
+          description: User's email address
+        password:
           type: string
-        company:
-          type: string
-        position:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-
-    UpdatePersonRequest:
-      type: object
-      properties:
+          minLength: 8
+          maxLength: 128
+          description: User's password (will be hashed)
         firstName:
           type: string
+          minLength: 1
+          maxLength: 100
+          description: User's first name (optional)
         lastName:
           type: string
+          minLength: 1
+          maxLength: 100
+          description: User's last name (optional)
+        deviceName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Human-readable device name
+        deviceType:
+          type: string
+          enum: [desktop, laptop, mobile, tablet]
+          description: Type of device
+        devicePublicKey:
+          type: string
+          description: Device's ECDH public key (PEM format)
+        masterPublicKey:
+          type: string
+          description: User's master public key (PEM format)
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
         email:
           type: string
-        phone:
+          format: email
+        password:
           type: string
-        company:
-          type: string
-        position:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
 
-    Group:
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: JWT refresh token
+
+    AuthResponse:
       type: object
       properties:
-        id:
+        message:
           type: string
-        name:
+          example: "User registered successfully"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+            firstName:
+              type: string
+              nullable: true
+            lastName:
+              type: string
+              nullable: true
+        device:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        accessToken:
           type: string
-        description:
+          description: JWT access token (15 minutes)
+        refreshToken:
           type: string
-        type:
-          type: string
-          enum: [team, project, customer, interest]
-        members:
-          type: array
-          items:
-            $ref: '#/components/schemas/Person'
-        memberCount:
+          description: JWT refresh token (30 days)
+        expiresIn:
           type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
+          description: Token expiration time in seconds
+        recoveryKeys:
+          type: array
+          items:
+            type: string
+          description: Recovery key words (only returned on registration)
 
-    CreateGroupRequest:
-      type: object
-      required:
-        - name
-        - type
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        type:
-          type: string
-          enum: [team, project, customer, interest]
-
-    UpdateGroupRequest:
+    LoginResponse:
       type: object
       properties:
-        name:
+        message:
           type: string
-        description:
+          example: "Login successful"
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+        devices:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+        accessToken:
           type: string
-        type:
+          description: JWT access token (15 minutes)
+        refreshToken:
           type: string
-          enum: [team, project, customer, interest]
+          description: JWT refresh token (30 days)
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
 
-    Note:
+    SessionInfo:
       type: object
       properties:
         id:
           type: string
-        title:
+          format: uuid
+          description: Session (refresh token) ID
+        device_id:
           type: string
-        content:
+          format: uuid
+          description: Device ID associated with this session
+        device_name:
           type: string
-        type:
+          description: Name of the device
+          example: "MacBook Pro"
+        device_type:
           type: string
-          enum: [meeting, call, email, personal, follow_up]
-        personId:
-          type: string
-        groupId:
-          type: string
-        tags:
-          type: array
-          items:
-            type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
+          description: Type of device
+          example: "laptop"
+        last_used:
           type: string
           format: date-time
+          description: Last time this session was used
+        created_at:
+          type: string
+          format: date-time
+          description: When this session was created
+        expires_at:
+          type: string
+          format: date-time
+          description: When this session expires
 
-    CreateNoteRequest:
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: New JWT access token
+
+    CreateDataRequest:
       type: object
       required:
-        - title
-        - content
-        - type
+        - encryptedContent
+        - encryptedKeys
+        - iv
       properties:
         title:
           type: string
-        content:
+          maxLength: 255
+          description: Optional title for the data item
+        encryptedContent:
           type: string
-        type:
-          type: string
-          enum: [meeting, call, email, personal, follow_up]
-        personId:
-          type: string
-        groupId:
-          type: string
-        tags:
-          type: array
-          items:
+          description: Base64-encoded encrypted content
+        encryptedKeys:
+          type: object
+          additionalProperties:
             type: string
+          description: Device ID to encrypted symmetric key mapping
+        contentType:
+          type: string
+          default: "application/octet-stream"
+          description: MIME type of the original content
+        iv:
+          type: string
+          description: Base64-encoded initialization vector (96 bits)
 
-    UpdateNoteRequest:
+    UpdateDataRequest:
       type: object
       properties:
         title:
           type: string
-        content:
+          maxLength: 255
+        encryptedContent:
           type: string
-        type:
-          type: string
-          enum: [meeting, call, email, personal, follow_up]
-        tags:
-          type: array
-          items:
+          description: Base64-encoded encrypted content
+        encryptedKeys:
+          type: object
+          additionalProperties:
             type: string
+          description: Device ID to encrypted symmetric key mapping
+        contentType:
+          type: string
+        iv:
+          type: string
+          description: Base64-encoded initialization vector
 
-    ActionItem:
+    DataResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/DataItem'
+
+    DataItem:
       type: object
       properties:
         id:
           type: string
+          format: uuid
         title:
           type: string
-        description:
+          nullable: true
+        encryptedContent:
           type: string
-        status:
+          description: Base64-encoded encrypted content
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+          description: Device ID to encrypted symmetric key mapping
+        contentType:
           type: string
-          enum: [pending, in_progress, completed, cancelled]
-        priority:
+        iv:
           type: string
-          enum: [low, medium, high, urgent]
-        assigneeId:
-          type: string
-        assigneeName:
-          type: string
-        dueDate:
-          type: string
-          format: date
-        personId:
-          type: string
-        groupId:
-          type: string
-        noteId:
-          type: string
+          description: Base64-encoded initialization vector
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+        createdByDevice:
+          type: string
+          format: uuid
+          nullable: true
 
-    CreateActionItemRequest:
+    DataListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DataItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    RegisterDeviceRequest:
       type: object
       required:
-        - title
-        - assigneeId
+        - deviceName
+        - deviceType
+        - publicKey
       properties:
-        title:
+        deviceName:
           type: string
-        description:
+          minLength: 1
+          maxLength: 100
+        deviceType:
           type: string
-        priority:
+          enum: [desktop, laptop, mobile, tablet]
+        publicKey:
           type: string
-          enum: [low, medium, high, urgent]
-        assigneeId:
-          type: string
-        dueDate:
-          type: string
-          format: date
-        personId:
-          type: string
-        groupId:
-          type: string
-        noteId:
-          type: string
+          description: Device's ECDH public key (PEM format)
 
-    UpdateActionItemRequest:
+    UpdateDeviceRequest:
       type: object
       properties:
-        title:
+        deviceName:
           type: string
-        description:
-          type: string
-        status:
-          type: string
-          enum: [pending, in_progress, completed, cancelled]
-        priority:
-          type: string
-          enum: [low, medium, high, urgent]
-        assigneeId:
-          type: string
-        dueDate:
-          type: string
-          format: date
+          minLength: 1
+          maxLength: 100
+
+    DeviceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Device'
 
     Device:
       type: object
       properties:
         id:
           type: string
-        name:
+          format: uuid
+        deviceName:
           type: string
-        type:
+        deviceType:
           type: string
-          enum: [desktop, mobile, tablet]
-        platform:
-          type: string
-        version:
-          type: string
-        lastSeen:
+        trusted:
+          type: boolean
+          description: Whether device is trusted for encryption
+        lastUsed:
           type: string
           format: date-time
-        isActive:
-          type: boolean
-        registeredAt:
+          nullable: true
+        createdAt:
           type: string
           format: date-time
 
-    RegisterDeviceRequest:
+    DeviceListResponse:
       type: object
-      required:
-        - name
-        - type
-        - platform
       properties:
-        name:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        email:
           type: string
-        type:
+          format: email
+          description: User's email address
+        firstName:
           type: string
-          enum: [desktop, mobile, tablet]
-        platform:
+          nullable: true
+          description: User's first name
+        lastName:
           type: string
-        version:
+          nullable: true
+          description: User's last name
+        avatarUrl:
           type: string
+          nullable: true
+          description: URL to user's avatar image
 
     UserProfile:
       type: object
       properties:
         id:
           type: string
-        firstName:
-          type: string
-        lastName:
-          type: string
+          format: uuid
         email:
           type: string
-        avatar:
+          format: email
+        firstName:
           type: string
-        company:
+          nullable: true
+          description: User's first name
+        lastName:
           type: string
-        position:
+          nullable: true
+          description: User's last name
+        avatarUrl:
           type: string
-        timezone:
-          type: string
-        preferences:
-          type: object
-          properties:
-            theme:
-              type: string
-              enum: [light, dark, auto]
-            notifications:
-              type: object
-              properties:
-                email:
-                  type: boolean
-                push:
-                  type: boolean
-                actionItems:
-                  type: boolean
+          nullable: true
+          description: URL to user's avatar image
         createdAt:
           type: string
           format: date-time
@@ -851,31 +2378,803 @@ components:
           type: string
           format: date-time
 
-    UpdateUserProfileRequest:
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UserProfile'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code for programmatic handling
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+    # ============================================================================
+    # PEOPLE MANAGEMENT SCHEMAS
+    # ============================================================================
+
+    CreatePersonRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Person's first name
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Person's last name
+        jobDescription:
+          type: string
+          maxLength: 255
+          description: Person's job title or description
+        avatarUrl:
+          type: string
+          format: uri
+          description: URL to person's avatar image
+        phone:
+          type: string
+          maxLength: 20
+          description: Person's phone number
+        email:
+          type: string
+          format: email
+          description: Person's email address
+        groupId:
+          type: string
+          format: uuid
+          description: UUID of the group this person belongs to
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Array of tags for categorizing the person
+          default: []
+
+    UpdatePersonRequest:
       type: object
       properties:
         firstName:
           type: string
+          minLength: 1
+          maxLength: 100
+          description: Person's first name
         lastName:
           type: string
-        company:
+          minLength: 1
+          maxLength: 100
+          description: Person's last name
+        jobDescription:
           type: string
-        position:
+          maxLength: 255
+          description: Person's job title or description
+        avatarUrl:
           type: string
-        timezone:
+          format: uri
+          description: URL to person's avatar image
+        phone:
           type: string
-        preferences:
+          maxLength: 20
+          description: Person's phone number
+        email:
+          type: string
+          format: email
+          description: Person's email address
+        groupId:
+          type: string
+          format: uuid
+          description: UUID of the group this person belongs to
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Array of tags for categorizing the person
+
+    PersonResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Person's unique identifier
+        firstName:
+          type: string
+          description: Person's first name
+        lastName:
+          type: string
+          description: Person's last name
+        jobDescription:
+          type: string
+          nullable: true
+          description: Person's job title or description
+        avatarUrl:
+          type: string
+          nullable: true
+          description: URL to person's avatar image
+        phone:
+          type: string
+          nullable: true
+          description: Person's phone number
+        email:
+          type: string
+          nullable: true
+          description: Person's email address
+        tags:
+          type: array
+          items:
+            type: string
+          description: Array of tags for categorizing the person
+        group:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            color:
+              type: string
+              nullable: true
+          description: Group information if person belongs to a group
+        counts:
           type: object
           properties:
-            theme:
+            notes:
+              type: integer
+              description: Number of notes associated with this person
+            achievements:
+              type: integer
+              description: Number of achievements associated with this person
+            actions:
+              type: integer
+              description: Number of actions associated with this person
+        createdAt:
+          type: string
+          format: date-time
+          description: When the person was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the person was last updated
+
+    PersonDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PersonResponse'
+        - type: object
+          properties:
+            recentNotes:
+              type: array
+              items:
+                $ref: '#/components/schemas/NoteResponse'
+              description: Recent notes (up to 10)
+            recentAchievements:
+              type: array
+              items:
+                $ref: '#/components/schemas/AchievementResponse'
+              description: Recent achievements (up to 10)
+            recentActions:
+              type: array
+              items:
+                $ref: '#/components/schemas/ActionResponse'
+              description: Recent actions (up to 10)
+
+    PeopleListResponse:
+      type: object
+      properties:
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationResponse'
+
+    CreateGroupRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Group name
+        description:
+          type: string
+          description: Group description (optional)
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Array of tags for categorizing the group
+          default: []
+        color:
+          type: string
+          pattern: '^#[0-9A-F]{6}$'
+          description: Hex color code for the group (optional)
+
+    UpdateGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Array of tags for categorizing the group
+        color:
+          type: string
+          pattern: '^#[0-9A-F]{6}$'
+          description: Hex color code for the group
+
+    GroupResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Group's unique identifier
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          nullable: true
+          description: Group description
+        tags:
+          type: array
+          items:
+            type: string
+          description: Array of tags for categorizing the group
+        color:
+          type: string
+          nullable: true
+          description: Hex color code for the group
+        member_count:
+          type: integer
+          description: Number of people in this group
+        user_id:
+          type: string
+          format: uuid
+          description: ID of the user who owns this group
+        created_at:
+          type: string
+          format: date-time
+          description: When the group was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the group was last updated
+
+    AddMembersRequest:
+      type: object
+      required:
+        - memberIds
+      properties:
+        memberIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          description: Array of person IDs to add to the group
+
+    RemoveMembersRequest:
+      type: object
+      required:
+        - memberIds
+      properties:
+        memberIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          description: Array of person IDs to remove from the group
+
+    MemberOperationResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message describing the operation
+        addedCount:
+          type: integer
+          description: Number of members successfully added
+        skippedCount:
+          type: integer
+          description: Number of members that were already in the group
+
+    MemberRemovalResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message describing the operation
+        removedCount:
+          type: integer
+          description: Number of members successfully removed
+
+    GroupMemberResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Group membership ID
+        added_at:
+          type: string
+          format: date-time
+          description: When the person was added to the group
+        person:
+          type: object
+          properties:
+            id:
               type: string
-              enum: [light, dark, auto]
-            notifications:
-              type: object
-              properties:
-                email:
-                  type: boolean
-                push:
-                  type: boolean
-                actionItems:
-                  type: boolean
+              format: uuid
+              description: Person's unique identifier
+            first_name:
+              type: string
+              description: Person's first name
+            last_name:
+              type: string
+              description: Person's last name
+            email:
+              type: string
+              format: email
+              nullable: true
+              description: Person's email address
+            phone:
+              type: string
+              nullable: true
+              description: Person's phone number
+            job_description:
+              type: string
+              nullable: true
+              description: Person's job title or description
+            avatar_url:
+              type: string
+              format: uri
+              nullable: true
+              description: URL to person's avatar image
+            tags:
+              type: array
+              items:
+                type: string
+              description: Array of tags associated with the person
+
+    ActionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ActionItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    # User Management Schemas
+    CreateNoteRequest:
+      type: object
+      required:
+        - encryptedContent
+        - encryptedKeys
+        - iv
+      properties:
+        personId:
+          type: string
+          format: uuid
+          description: UUID of the associated person
+        encryptedContent:
+          type: string
+          description: Base64-encoded encrypted note content
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+          description: Device ID to encrypted symmetric key mapping
+        iv:
+          type: string
+          description: Base64-encoded initialization vector (96 bits)
+
+    UpdateNoteRequest:
+      type: object
+      properties:
+        encryptedContent:
+          type: string
+          description: Base64-encoded encrypted note content
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+          description: Device ID to encrypted symmetric key mapping
+        iv:
+          type: string
+          description: Base64-encoded initialization vector
+
+    NoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/NoteItem'
+
+    NoteItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        personId:
+          type: string
+          format: uuid
+          nullable: true
+        encryptedContent:
+          type: string
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+        iv:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    NoteListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/NoteItem'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+    # Action Items Schemas
+    CreateActionRequest:
+      type: object
+      required:
+        - encryptedContent
+        - encryptedKeys
+        - iv
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Optional title for the action item
+        encryptedContent:
+          type: string
+          description: Base64-encoded encrypted content
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+          description: Device ID to encrypted symmetric key mapping
+        contentType:
+          type: string
+          default: "application/octet-stream"
+          description: MIME type of the original content
+        iv:
+          type: string
+          description: Base64-encoded initialization vector (96 bits)
+        dueDate:
+          type: string
+          format: date-time
+          description: Optional due date for the action item
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          default: "medium"
+          description: Action priority level
+        personId:
+          type: string
+          format: uuid
+          description: Optional person ID to associate the action with
+        groupId:
+          type: string
+          format: uuid
+          description: Optional group ID to associate the action with
+        noteId:
+          type: string
+          format: uuid
+          description: Optional note ID to associate the action with
+
+    UpdateActionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        encryptedContent:
+          type: string
+          description: Base64-encoded encrypted content
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+          description: Device ID to encrypted symmetric key mapping
+        contentType:
+          type: string
+        iv:
+          type: string
+          description: Base64-encoded initialization vector
+        dueDate:
+          type: string
+          format: date-time
+          description: Optional new due date
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Optional new priority level
+        personId:
+          type: string
+          format: uuid
+          description: Optional person ID to associate the action with
+        groupId:
+          type: string
+          format: uuid
+          description: Optional group ID to associate the action with
+        noteId:
+          type: string
+          format: uuid
+          description: Optional note ID to associate the action with
+
+    UpdateActionStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+          description: New status for the action item
+
+    ActionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/ActionItem'
+
+    ActionItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        personId:
+          type: string
+          format: uuid
+          nullable: true
+        groupId:
+          type: string
+          format: uuid
+          nullable: true
+        noteId:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        encryptedContent:
+          type: string
+        encryptedKeys:
+          type: object
+          additionalProperties:
+            type: string
+        iv:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        person:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            firstName:
+              type: string
+            lastName:
+              type: string
+          description: Associated person details (if person_id is set)
+        group:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            description:
+              type: string
+          description: Associated group details (if group_id is set)
+        note:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+          description: Associated note details (if note_id is set)
+
+    # Pagination Schemas
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 25
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        pageSize:
+          type: integer
+          description: Number of items per page
+          example: 10
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 3
+        hasNext:
+          type: boolean
+          description: Whether there are more pages
+          example: true
+        hasPrev:
+          type: boolean
+          description: Whether there are previous pages
+          example: false
+
+    PaginationResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 25
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        pageSize:
+          type: integer
+          description: Number of items per page
+          example: 10
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 3
+        hasNext:
+          type: boolean
+          description: Whether there are more pages
+          example: true
+        hasPrev:
+          type: boolean
+          description: Whether there are previous pages
+          example: false
+
+    # Achievement Schema (placeholder for future implementation)
+    AchievementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Achievement's unique identifier
+        title:
+          type: string
+          description: Achievement title
+        description:
+          type: string
+          nullable: true
+          description: Achievement description
+        createdAt:
+          type: string
+          format: date-time
+          description: When the achievement was created
+
+tags:
+  - name: Health
+    description: Health check and service status
+  - name: Authentication
+    description: User registration, login, and token management
+  - name: Data Management
+    description: Encrypted data storage and retrieval
+  - name: Device Management
+    description: Multi-device key management
+  - name: User Management
+    description: User profile and account management
+  - name: People Management
+    description: People, groups, notes, achievements, and actions management
+  - name: Groups Management
+    description: Group creation, management, and member organization
+  - name: Actions Management
+    description: Action items management and organization
+  - name: Administration
+    description: Administrative tasks and background job management
