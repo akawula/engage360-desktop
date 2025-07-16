@@ -174,12 +174,50 @@ export const useUpdateActionStatus = () => {
     return useMutation({
         mutationFn: ({ id, status }: { id: string; status: 'pending' | 'in_progress' | 'completed' | 'cancelled' }) =>
             actionItemsService.updateActionStatus(id, status),
+        onMutate: async ({ id, status }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: actionItemsKeys.lists() });
+
+            // Snapshot the previous value
+            const previousActionItems = queryClient.getQueriesData({ queryKey: actionItemsKeys.lists() });
+
+            // Optimistically update the item status and move to appropriate position
+            queryClient.setQueriesData({ queryKey: actionItemsKeys.lists() }, (old: any) => {
+                if (!old || !old.data) return old;
+
+                const updatedItems = old.data.map((item: any) =>
+                    item.id === id ? { ...item, status } : item
+                );
+
+                // Sort items: in_progress items first, then pending, then others
+                const sortedItems = updatedItems.sort((a: any, b: any) => {
+                    const statusPriority: Record<string, number> = { 'in_progress': 0, 'pending': 1, 'completed': 2, 'cancelled': 3 };
+                    return (statusPriority[a.status] || 4) - (statusPriority[b.status] || 4);
+                });
+
+                return {
+                    ...old,
+                    data: sortedItems
+                };
+            });
+
+            return { previousActionItems };
+        },
         onSuccess: (response, { id }) => {
             if (response.success) {
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.detail(id) });
             }
         },
+        onError: (error, _variables, context) => {
+            console.error('Status update failed:', error);
+            // Rollback on error
+            if (context?.previousActionItems) {
+                context.previousActionItems.forEach(([queryKey, data]) => {
+                    queryClient.setQueryData(queryKey, data);
+                });
+            }
+        }
     });
 };
 
@@ -187,11 +225,53 @@ export const useDeleteActionItem = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (id: string) => actionItemsService.deleteActionItem(id),
+        mutationFn: (id: string) => {
+            console.log('useDeleteActionItem: Starting delete request for ID:', id);
+            return actionItemsService.deleteActionItem(id);
+        },
+        onMutate: async (id: string) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: actionItemsKeys.lists() });
+
+            // Snapshot the previous value
+            const previousActionItems = queryClient.getQueriesData({ queryKey: actionItemsKeys.lists() });
+
+            // Optimistically update to remove the item
+            queryClient.setQueriesData({ queryKey: actionItemsKeys.lists() }, (old: any) => {
+                if (!old || !old.data) return old;
+                return {
+                    ...old,
+                    data: old.data.filter((item: any) => item.id !== id)
+                };
+            });
+
+            // Return a context object with the snapshotted value
+            return { previousActionItems };
+        },
         onSuccess: (response) => {
+            console.log('useDeleteActionItem: Delete request successful:', response);
             if (response.success) {
+                // Invalidate and refetch to ensure data consistency
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
+                console.log('useDeleteActionItem: Cache invalidated');
+            } else {
+                console.error('useDeleteActionItem: Delete request failed:', response.error);
+                throw new Error(response.error?.message || 'Delete failed');
             }
         },
+        onError: (error, id, context) => {
+            console.error('useDeleteActionItem: Mutation error for ID:', id, error);
+
+            // If the mutation fails, use the context returned from onMutate to roll back
+            if (context?.previousActionItems) {
+                context.previousActionItems.forEach(([queryKey, data]) => {
+                    queryClient.setQueryData(queryKey, data);
+                });
+            }
+        },
+        onSettled: () => {
+            // Always refetch after error or success to ensure consistency
+            queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
+        }
     });
 };

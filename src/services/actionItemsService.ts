@@ -475,7 +475,8 @@ class ActionItemsService {    /**
 
     async updateActionStatus(id: string, status: 'pending' | 'in_progress' | 'completed' | 'cancelled'): Promise<ApiResponse<ActionItem>> {
         try {
-            const response = await apiService.patch<ActionResponse>(`/actions/${id}/status`, { status });
+            // Since PATCH is blocked by CORS, use PUT to the main action endpoint with status update
+            const response = await apiService.put<ActionResponse>(`/actions/${id}`, { status });
 
             if (response.success && response.data?.data) {
                 const item = response.data.data;
@@ -524,7 +525,9 @@ class ActionItemsService {    /**
 
     async deleteActionItem(id: string): Promise<ApiResponse<void>> {
         try {
+            console.log('actionItemsService: Sending delete request for ID:', id);
             const response = await apiService.delete(`/actions/${id}`);
+            console.log('actionItemsService: Delete response:', response);
             return {
                 success: response.success,
                 error: response.error
