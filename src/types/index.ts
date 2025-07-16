@@ -125,9 +125,6 @@ export interface UserProfile {
     lastName: string;
     email: string;
     avatar?: string;
-    company?: string;
-    position?: string;
-    timezone?: string;
     preferences: {
         theme: 'light' | 'dark' | 'auto';
         notifications: {

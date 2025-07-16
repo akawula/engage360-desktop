@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { User, Mail, MapPin, Calendar, Settings, Bell, Shield } from 'lucide-react';
+import { User, Mail, Calendar, Settings, Bell, Shield } from 'lucide-react';
 import { userProfileService } from '../services/userProfileService';
 import { useTheme } from '../contexts/ThemeContext';
+import EditProfileModal from '../components/EditProfileModal';
 
 export default function Profile() {
     const { theme, setTheme } = useTheme();
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const { data: profile, isLoading } = useQuery({
         queryKey: ['profile'],
         queryFn: async () => {
@@ -68,10 +71,11 @@ export default function Profile() {
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {profile.firstName} {profile.lastName}
                                 </h2>
-                                <p className="text-gray-600 dark:text-gray-300">{profile.position}</p>
-                                <p className="text-gray-500 dark:text-gray-400">{profile.company}</p>
                             </div>
-                            <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
+                            <button
+                                onClick={() => setIsEditModalOpen(true)}
+                                className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                            >
                                 <Settings className="h-4 w-4" />
                                 Edit Profile
                             </button>
@@ -81,10 +85,6 @@ export default function Profile() {
                             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                 <Mail className="h-4 w-4" />
                                 <span>{profile.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                                <MapPin className="h-4 w-4" />
-                                <span>{profile.timezone}</span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                 <Calendar className="h-4 w-4" />
@@ -185,6 +185,15 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            {profile && (
+                <EditProfileModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    profile={profile}
+                />
+            )}
         </div>
     );
 }
