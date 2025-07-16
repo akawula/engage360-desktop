@@ -162,6 +162,7 @@ export default function GroupDetail() {
                                         <div className="flex items-center gap-3">
                                             {avatar ? (
                                                 <img
+                                                    key={`${person.id}-avatar-${avatar}`}
                                                     src={avatar}
                                                     alt={`${firstName} ${lastName}`}
                                                     className="w-10 h-10 rounded-full object-cover"

@@ -132,9 +132,10 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="flex-shrink-0">
-                                            {person.avatar ? (
+                                            {person.avatar || person.avatarUrl ? (
                                                 <img
-                                                    src={person.avatar}
+                                                    key={`${person.id}-avatar-${person.avatar || person.avatarUrl}`}
+                                                    src={person.avatar || person.avatarUrl}
                                                     alt={`${person.firstName} ${person.lastName}`}
                                                     className="h-10 w-10 rounded-full object-cover"
                                                 />

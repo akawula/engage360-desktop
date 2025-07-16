@@ -109,6 +109,7 @@ export default function People() {
                         <div className="flex items-start space-x-4">
                             {person.avatarUrl || person.avatar ? (
                                 <img
+                                    key={`${person.id}-avatar-${person.avatarUrl || person.avatar}`}
                                     src={person.avatarUrl || person.avatar}
                                     alt={`${person.firstName} ${person.lastName}`}
                                     className="w-12 h-12 rounded-full object-cover"

@@ -57,23 +57,45 @@ export const useUpdatePerson = () => {
             peopleService.updatePerson(id, updates),
         onSuccess: (response, variables) => {
             if (response.success) {
-                // Update the cached person data directly
+                const updatedPerson = response.data;
+
+                // Update the cached person detail data directly
                 queryClient.setQueryData(
                     peopleKeys.detail(variables.id),
                     (oldData: any) => {
                         if (oldData?.success) {
                             return {
                                 ...oldData,
-                                data: response.data
+                                data: updatedPerson
                             };
                         }
                         return oldData;
                     }
                 );
 
-                // Also invalidate to ensure consistency
-                queryClient.invalidateQueries({ queryKey: peopleKeys.lists() });
-                queryClient.invalidateQueries({ queryKey: peopleKeys.detail(variables.id) });
+                // Update the person in all cached people lists immediately
+                queryClient.setQueriesData(
+                    { queryKey: peopleKeys.lists() },
+                    (oldData: any) => {
+                        if (oldData?.success && oldData?.data?.people && Array.isArray(oldData.data.people)) {
+                            return {
+                                ...oldData,
+                                data: {
+                                    ...oldData.data,
+                                    people: oldData.data.people.map((person: any) =>
+                                        person.id === variables.id ? updatedPerson : person
+                                    )
+                                }
+                            };
+                        }
+                        return oldData;
+                    }
+                );
+
+                // Only invalidate as a fallback if cache updates fail
+                setTimeout(() => {
+                    queryClient.invalidateQueries({ queryKey: peopleKeys.lists() });
+                }, 100);
             }
         },
     });

@@ -120,6 +120,7 @@ export default function PersonDetail() {
                     <div className="flex-shrink-0">
                         {person.avatarUrl ? (
                             <img
+                                key={`${person.id}-avatar-${person.avatarUrl}`}
                                 src={person.avatarUrl}
                                 alt={`${person.firstName} ${person.lastName}`}
                                 className="w-24 h-24 rounded-full object-cover"
