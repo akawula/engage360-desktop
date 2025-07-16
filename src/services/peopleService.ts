@@ -63,7 +63,9 @@ function transformPersonFromAPI(apiPerson: any): Person {
         email: apiPerson.email,
         phone: apiPerson.phone,
         avatar: apiPerson.avatar_url,
+        avatarUrl: apiPerson.avatar_url, // Add this for consistency
         position: apiPerson.job_description,
+        jobDescription: apiPerson.job_description, // Add this for consistency
         githubUsername: apiPerson.github_username,
         tags: tags,
         lastInteraction: apiPerson.last_interaction,
@@ -72,6 +74,8 @@ function transformPersonFromAPI(apiPerson: any): Person {
         groups: apiPerson.groups || [], // Include groups from API
         createdAt: apiPerson.created_at,
         updatedAt: apiPerson.updated_at,
+        counts: apiPerson.counts,
+        group: apiPerson.group,
     };
 }
 
@@ -147,7 +151,7 @@ export class PeopleService {
         return response as ApiResponse<Person>;
     }
 
-    async updatePerson(id: string, updates: Partial<CreatePersonRequest>): Promise<ApiResponse<Person>> {
+    async updatePerson(id: string, updates: Partial<CreatePersonRequest & { avatarUrl?: string }>): Promise<ApiResponse<Person>> {
         // Transform camelCase to snake_case for API
         const apiData: any = {};
 
@@ -158,6 +162,7 @@ export class PeopleService {
         if (updates.position !== undefined) apiData.job_description = updates.position;
         if (updates.githubUsername !== undefined) apiData.github_username = updates.githubUsername;
         if (updates.tags !== undefined) apiData.tags = updates.tags;
+        if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl;
 
         const response = await apiService.put<any>(`/people/${id}`, apiData);
 

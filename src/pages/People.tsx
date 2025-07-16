@@ -107,11 +107,11 @@ export default function People() {
                         className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-all p-6 group"
                     >
                         <div className="flex items-start space-x-4">
-                            {person.avatar ? (
+                            {person.avatarUrl || person.avatar ? (
                                 <img
-                                    src={person.avatar}
+                                    src={person.avatarUrl || person.avatar}
                                     alt={`${person.firstName} ${person.lastName}`}
-                                    className="w-12 h-12 rounded-full"
+                                    className="w-12 h-12 rounded-full object-cover"
                                 />
                             ) : (
                                 <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">

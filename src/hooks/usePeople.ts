@@ -53,7 +53,7 @@ export const useUpdatePerson = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, updates }: { id: string; updates: Partial<CreatePersonRequest> }) =>
+        mutationFn: ({ id, updates }: { id: string; updates: Partial<CreatePersonRequest & { avatarUrl?: string }> }) =>
             peopleService.updatePerson(id, updates),
         onSuccess: (response, variables) => {
             if (response.success) {
