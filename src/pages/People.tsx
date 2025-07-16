@@ -28,6 +28,19 @@ export default function People() {
         return matchesSearch && matchesTag;
     });
 
+    // Helper function for engagement score colors
+    const getEngagementColor = (score: number) => {
+        if (score >= 80) {
+            return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+        } else if (score >= 60) {
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        } else if (score >= 30) {
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        } else {
+            return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -165,9 +178,14 @@ export default function People() {
 
                                 {/* Engagement Score */}
                                 <div className="flex items-center justify-between mt-4">
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        Engagement: {person.engagementScore}%
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                            Engagement:
+                                        </span>
+                                        <span className={`text-sm font-medium px-2 py-1 rounded ${getEngagementColor(person.engagementScore || 0)}`}>
+                                            {person.engagementScore}%
+                                        </span>
+                                    </div>
                                     {person.lastInteraction && (
                                         <span className="text-xs text-gray-400">
                                             Last: {format(new Date(person.lastInteraction), 'MMM d')}
@@ -175,12 +193,11 @@ export default function People() {
                                     )}
                                 </div>
 
-                                {/* Progress bar */}
-                                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                                    <div
-                                        className="bg-primary-600 h-2 rounded-full"
-                                        style={{ width: `${person.engagementScore}%` }}
-                                    ></div>
+                                {/* Activity breakdown */}
+                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <span>{person.counts?.notes || 0} notes</span>
+                                    <span>{person.counts?.achievements || 0} achievements</span>
+                                    <span>{person.counts?.actions || 0} actions</span>
                                 </div>
                             </div>
                         </div>

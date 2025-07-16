@@ -12,6 +12,30 @@ export interface GetPeopleParams {
     search?: string;
 }
 
+// Helper function to calculate engagement score based on activity counts
+function calculateEngagementScore(counts: any): number {
+    // Calculate engagement score based on activity counts
+    // This is a simple algorithm that can be refined based on business requirements
+    const notesWeight = 3;
+    const achievementsWeight = 5;
+    const actionsWeight = 2;
+
+    const notesCount = counts?.notes || 0;
+    const achievementsCount = counts?.achievements || 0;
+    const actionsCount = counts?.actions || 0;
+
+    const totalActivity = (notesCount * notesWeight) +
+        (achievementsCount * achievementsWeight) +
+        (actionsCount * actionsWeight);
+
+    // Normalize to 0-100 scale
+    // Adjust the divisor based on what constitutes "high engagement"
+    const maxExpectedActivity = 50; // This can be tuned based on typical user activity
+    const score = Math.min(100, Math.round((totalActivity / maxExpectedActivity) * 100));
+
+    return score;
+}
+
 // Helper function to transform API response to frontend format
 function transformPersonFromAPI(apiPerson: any): Person {
     // Handle tags - they might be a JSON string or already an array
@@ -29,6 +53,9 @@ function transformPersonFromAPI(apiPerson: any): Person {
         }
     }
 
+    // Calculate engagement score based on activity counts
+    const engagementScore = calculateEngagementScore(apiPerson.counts);
+
     return {
         id: apiPerson.id,
         firstName: apiPerson.first_name,
@@ -40,7 +67,7 @@ function transformPersonFromAPI(apiPerson: any): Person {
         githubUsername: apiPerson.github_username,
         tags: tags,
         lastInteraction: apiPerson.last_interaction,
-        engagementScore: apiPerson.engagement_score || 0,
+        engagementScore: engagementScore,
         notes: [], // Notes would come from a separate endpoint
         groups: apiPerson.groups || [], // Include groups from API
         createdAt: apiPerson.created_at,

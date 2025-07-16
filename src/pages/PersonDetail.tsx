@@ -75,10 +75,15 @@ export default function PersonDetail() {
     }
 
     const engagementColor = (score: number) => {
-        if (score >= 80) return 'text-green-600 bg-green-100';
-        if (score >= 60) return 'text-yellow-600 bg-yellow-100';
-        if (score >= 40) return 'text-orange-600 bg-orange-100';
-        return 'text-red-600 bg-red-100';
+        if (score >= 80) {
+            return 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-600';
+        } else if (score >= 60) {
+            return 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-600';
+        } else if (score >= 30) {
+            return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-600';
+        } else {
+            return 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-600';
+        }
     };
 
     return (
@@ -129,13 +134,28 @@ export default function PersonDetail() {
                     </div>
 
                     <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {person.firstName} {person.lastName}
                             </h1>
-                            {person.engagementScore && (
-                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${engagementColor(person.engagementScore)}`}>
-                                    {person.engagementScore}% engagement
+                            {person.engagementScore !== undefined && (
+                                <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Engagement Score</div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                                            Based on {person.counts?.notes || 0} notes, {person.counts?.achievements || 0} achievements, {person.counts?.actions || 0} actions
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <div className={`px-6 py-3 rounded-xl text-xl font-bold shadow-lg border-2 ${engagementColor(person.engagementScore)}`}>
+                                            {person.engagementScore}%
+                                        </div>
+                                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                            {person.engagementScore >= 80 ? 'Highly Engaged' :
+                                                person.engagementScore >= 60 ? 'Moderately Engaged' :
+                                                    person.engagementScore >= 30 ? 'Low Engagement' : 'Inactive'}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
