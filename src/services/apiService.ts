@@ -131,13 +131,11 @@ class ApiService {
 
         // Check if token is expired
         if (this.isTokenExpired(this.token)) {
-            console.log('Token expired, attempting refresh...');
             return await this.attemptTokenRefresh();
         }
 
         // Check if token is expiring soon
         if (this.isTokenExpiringSoon(this.token)) {
-            console.log('Token expiring soon, attempting refresh...');
             await this.attemptTokenRefresh(); // Don't wait for this, let it happen in background
         }
 
@@ -205,8 +203,6 @@ class ApiService {
             if (!response.ok) {
                 // Handle 304 Not Modified - this is actually a success case for GET requests
                 if (response.status === 304) {
-                    console.log('Received 304 Not Modified, forcing fresh request');
-
                     // Force a fresh request by adding a cache-busting parameter
                     const separator = endpoint.includes('?') ? '&' : '?';
                     const freshEndpoint = `${endpoint}${separator}_t=${Date.now()}`;

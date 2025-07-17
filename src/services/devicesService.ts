@@ -95,10 +95,7 @@ class DevicesService {
                 // Wrapped in data property
                 devicesArray = response.data.data;
             } else {
-                // Unexpected format, log for debugging
-                console.warn('Unexpected devices response format:', response.data);
-                console.warn('Response data type:', typeof response.data);
-                console.warn('Response data keys:', Object.keys(response.data || {}));
+                // Unexpected format
                 devicesArray = [];
             }
 
@@ -108,8 +105,6 @@ class DevicesService {
             };
         }
 
-        // Log API failures for debugging
-        console.error('Devices API call failed:', response);
         return response as ApiResponse<Device[]>;
     }
 
@@ -546,7 +541,6 @@ class DevicesService {
                     if (currentDeviceKey) {
                         // TODO: Decrypt the note key with current device, then re-encrypt for target device
                         // This requires integration with the crypto service
-                        console.log(`Sharing note ${note.id} with device ${targetDeviceId}`);
                     }
                 }
             }
@@ -579,8 +573,7 @@ class DevicesService {
             // Then share encryption keys with the newly approved device
             const keySharingResponse = await this.shareKeysWithDevice(deviceId, password);
             if (!keySharingResponse.success) {
-                console.warn('Device approved but key sharing failed:', keySharingResponse.error);
-                // Don't fail the approval, but log the issue
+                // Don't fail the approval, but note the issue
             }
 
             return approvalResponse;

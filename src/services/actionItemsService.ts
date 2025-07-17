@@ -45,73 +45,47 @@ class ActionItemsService {    /**
         const defaultContent = { title: '', description: '' };
 
         if (!encryptedContent) {
-            console.log('No encrypted content provided, returning default');
             return defaultContent;
         }
-
-        console.log('Decoding content:', {
-            type: typeof encryptedContent,
-            value: encryptedContent,
-            length: typeof encryptedContent === 'string' ? encryptedContent.length : 'N/A'
-        });
 
         try {
             // The API should return encrypted content as Base64 encoded strings
             if (typeof encryptedContent === 'string') {
-                console.log('Processing string content:', encryptedContent);
-
                 try {
                     // Try to decode as Base64 first (our standard format)
                     // Handle Unicode characters properly
                     const decodedBase64 = decodeURIComponent(escape(atob(encryptedContent)));
-                    console.log('✅ Base64 decode successful:', decodedBase64);
-
                     const parsed = JSON.parse(decodedBase64);
-                    console.log('✅ JSON parse successful:', parsed);
 
-                    const result = {
+                    return {
                         title: parsed.title || '',
                         description: parsed.description || ''
                     };
-                    console.log('✅ Returning decoded result:', result);
-                    return result;
                 } catch (base64Error) {
-                    console.log('❌ Base64 decode failed:', base64Error instanceof Error ? base64Error.message : String(base64Error));
-
                     try {
                         // Fallback: try parsing as direct JSON (for legacy data)
                         const parsed = JSON.parse(encryptedContent);
-                        console.log('Successfully parsed as direct JSON:', parsed);
                         return {
                             title: parsed.title || '',
                             description: parsed.description || ''
                         };
                     } catch (directJsonError) {
-                        console.warn('❌ Both Base64 and direct JSON parsing failed');
-                        console.log('Original encrypted content:', encryptedContent);
-                        console.log('Content length:', encryptedContent.length);
-                        console.log('First 100 chars:', encryptedContent.substring(0, 100));
-
                         // Try to parse corrupted concatenated format from legacy data
                         const legacyResult = this.parseLegacyConcatenatedContent(encryptedContent);
                         if (legacyResult.title && legacyResult.title !== 'Unknown') {
-                            console.log('✅ Successfully parsed legacy concatenated format:', legacyResult);
                             return legacyResult;
                         }
 
                         // Last fallback: treat the string as the title with error info
-                        const fallbackResult = {
+                        return {
                             title: `Error decoding: ${encryptedContent.substring(0, 50)}...`,
-                            description: 'Content decoding failed - check console for details'
+                            description: 'Content decoding failed'
                         };
-                        console.log('🚫 Returning fallback result:', fallbackResult);
-                        return fallbackResult;
                     }
                 }
             }
             // Legacy handling for object format (should be phased out)
             else if (typeof encryptedContent === 'object' && encryptedContent !== null) {
-                console.warn('Received object format encrypted content (legacy), converting to string');
                 const uint8Array = new Uint8Array(Object.values(encryptedContent));
                 const decoder = new TextDecoder('utf-8');
                 const contentString = decoder.decode(uint8Array);
@@ -143,11 +117,6 @@ class ActionItemsService {    /**
      */
     private parseLegacyConcatenatedContent(corruptedContent: string): { title: string; description: string } {
         try {
-            console.log('Attempting to parse legacy concatenated content:', corruptedContent);
-
-            // Look for patterns in the corrupted string
-            // Pattern: "title{value}description{value}metadata{...}"
-
             let title = 'Unknown';
             let description = '';
 
@@ -155,14 +124,12 @@ class ActionItemsService {    /**
             const titleMatch = corruptedContent.match(/^title([^]*?)description/);
             if (titleMatch && titleMatch[1]) {
                 title = titleMatch[1];
-                console.log('Extracted title:', title);
             }
 
             // Try to extract description (between "description" and "metadata")
             const descriptionMatch = corruptedContent.match(/description([^]*?)metadata/);
             if (descriptionMatch && descriptionMatch[1]) {
                 description = descriptionMatch[1];
-                console.log('Extracted description:', description);
             }
 
             // If we didn't find the pattern, try a simpler approach
@@ -178,7 +145,6 @@ class ActionItemsService {    /**
                     } else {
                         title = extracted.substring(0, 50);
                     }
-                    console.log('Fallback extracted title:', title);
                 }
             }
 
@@ -222,9 +188,6 @@ class ActionItemsService {    /**
             const response = await apiService.get<any>(`/actions?${params}`);
 
             if (response.success) {
-                // Debug: Log the response structure to understand what we're getting
-                console.log('Action items API response:', response.data);
-
                 // Handle different possible response structures
                 let items: ActionItemAPI[] = [];
 
@@ -254,7 +217,6 @@ class ActionItemsService {    /**
                 }
                 // Handle empty response case
                 else {
-                    console.log('Unexpected action items response structure, returning empty array:', response.data);
                     // Return empty array instead of error for now to prevent crashes
                     items = [];
                 }
@@ -367,8 +329,6 @@ class ActionItemsService {    /**
                 noteId: actionData.noteId
                 // Note: assigneeId is not part of the API - the action is automatically assigned to the current user
             };
-
-            console.log('Sending create action request:', createRequest);
 
             const response = await apiService.post<ActionResponse>('/actions', createRequest);
 
@@ -526,9 +486,7 @@ class ActionItemsService {    /**
 
     async deleteActionItem(id: string): Promise<ApiResponse<void>> {
         try {
-            console.log('actionItemsService: Sending delete request for ID:', id);
             const response = await apiService.delete(`/actions/${id}`);
-            console.log('actionItemsService: Delete response:', response);
             return {
                 success: response.success,
                 error: response.error

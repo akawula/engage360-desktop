@@ -36,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Calculate isAuthenticated based on token only
     const isAuthenticated = useMemo(() => {
         const hasToken = !!token;
-        console.log('isAuthenticated calculation:', { hasToken, token: token ? 'present' : 'null' });
         return hasToken;
     }, [token]); // Only depend on token, not user
 
@@ -44,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const initializeAuth = async () => {
             const existingToken = authServiceToUse.getToken();
-            console.log('Initializing auth with existing token:', existingToken ? 'present' : 'null');
 
             if (existingToken) {
                 setToken(existingToken);
@@ -66,22 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                         if (userData) {
                             setUser(userData);
-                            console.log('User profile loaded:', userData);
-                        } else {
-                            console.log('Could not extract user data from response:', userResponse.data);
                         }
                     } else {
-                        console.log('Failed to load user profile:', userResponse.error);
                         // Only clear token if it's an authentication error (401)
                         if (userResponse.error?.code === 401 || userResponse.error?.message?.includes('Unauthorized')) {
-                            console.log('Authentication failed, clearing token');
                             authServiceToUse.setToken(null);
                             setToken(null);
-                        } else {
-                            console.log('Network or other error, keeping token but no user data');
-                            // Keep the token but don't set user data - this allows the app to work
-                            // User profile will be loaded when they navigate to profile page
                         }
+                        // Keep the token but don't set user data for other errors
+                        // User profile will be loaded when they navigate to profile page
                     }
                 } catch (error) {
                     console.error('Error loading user profile:', error);
@@ -101,11 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await authServiceToUse.login(credentials);
 
             if (response.success && response.data?.data) {
-                console.log('Login successful, accessToken:', response.data.data.accessToken);
                 setUser(response.data.data.user);
                 authServiceToUse.setToken(response.data.data.accessToken);
                 setToken(response.data.data.accessToken); // Update token state
-                console.log('Token state updated to:', response.data.data.accessToken);
                 showSuccess('Welcome back!', 'You have been successfully logged in.');
                 return true;
             } else {

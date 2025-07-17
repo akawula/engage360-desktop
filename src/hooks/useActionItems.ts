@@ -93,8 +93,6 @@ export const useCreateActionItem = () => {
                 ...encryptionData
             };
 
-            console.log('Creating action item with data:', requestData);
-
             return actionItemsService.createActionItem(requestData);
         },
         onSuccess: (response) => {
@@ -241,7 +239,6 @@ export const useDeleteActionItem = () => {
 
     return useMutation({
         mutationFn: (id: string) => {
-            console.log('useDeleteActionItem: Starting delete request for ID:', id);
             return actionItemsService.deleteActionItem(id);
         },
         onMutate: async (id: string) => {
@@ -264,7 +261,6 @@ export const useDeleteActionItem = () => {
             return { previousActionItems };
         },
         onSuccess: (response) => {
-            console.log('useDeleteActionItem: Delete request successful:', response);
             if (response.success) {
                 // Invalidate and refetch to ensure data consistency
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
@@ -273,7 +269,6 @@ export const useDeleteActionItem = () => {
                 // Invalidate person data to update engagement scores
                 queryClient.invalidateQueries({ queryKey: ['people'] });
                 queryClient.invalidateQueries({ queryKey: ['person'] });
-                console.log('useDeleteActionItem: Cache invalidated');
             } else {
                 console.error('useDeleteActionItem: Delete request failed:', response.error);
                 throw new Error(response.error?.message || 'Delete failed');

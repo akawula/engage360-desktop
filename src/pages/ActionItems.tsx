@@ -209,7 +209,6 @@ export default function ActionItems() {
     };
 
     const handleDeleteItem = (item: ActionItem) => {
-        console.log('Delete button clicked for item:', item);
         setItemToDelete(item);
     };
 
@@ -217,9 +216,7 @@ export default function ActionItems() {
         if (!itemToDelete) return;
 
         try {
-            console.log('User confirmed deletion, starting delete operation for item ID:', itemToDelete.id);
             await deleteActionItem.mutateAsync(itemToDelete.id);
-            console.log('Delete operation completed successfully');
             setItemToDelete(null);
             // Force a refetch to ensure UI updates
             await refetch();
@@ -230,7 +227,6 @@ export default function ActionItems() {
     };
 
     const cancelDelete = () => {
-        console.log('Delete operation cancelled by user');
         setItemToDelete(null);
     };
 

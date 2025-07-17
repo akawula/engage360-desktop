@@ -22,7 +22,6 @@ class UserProfileService {
                     user = response.data;
                 }
                 else {
-                    console.error('Unexpected profile response structure:', response);
                     return {
                         success: false,
                         error: { message: 'Invalid profile response format', code: 500 }
@@ -104,7 +103,6 @@ class UserProfileService {
                 } else if (response.data?.id) {
                     user = response.data;
                 } else {
-                    console.error('Unexpected update response structure:', response);
                     return {
                         success: false,
                         error: { message: 'Invalid update response format', code: 500 }
