@@ -605,22 +605,36 @@ export default function CreateNote() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Type */}
                         <div>
-                            <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                 Type
                             </label>
-                            <select
-                                id="type"
-                                name="type"
-                                value={formData.type}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            >
-                                <option value="personal">📝 Personal</option>
-                                <option value="meeting">🤝 Meeting</option>
-                                <option value="call">📞 Call</option>
-                                <option value="email">✉️ Email</option>
-                                <option value="follow_up">🔄 Follow Up</option>
-                            </select>
+                            <div className="grid grid-cols-5 gap-2">
+                                {[
+                                    { value: 'personal', emoji: '📝', label: 'Personal' },
+                                    { value: 'meeting', emoji: '🤝', label: 'Meeting' },
+                                    { value: 'call', emoji: '📞', label: 'Call' },
+                                    { value: 'email', emoji: '✉️', label: 'Email' },
+                                    { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
+                                ].map((type) => (
+                                    <button
+                                        key={type.value}
+                                        type="button"
+                                        onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
+                                        className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${formData.type === type.value
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        title={type.label}
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span className="text-xl">{type.emoji}</span>
+                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                {type.label}
+                                            </span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Tags */}
