@@ -39,6 +39,7 @@ export const useActionItems = (params?: {
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 10 * 60 * 1000, // 10 minutes cache
         select: (data) => data.success ? data.data : null,
+        enabled: !!params || Object.keys(params || {}).length === 0, // Allow queries with no params or valid params
     });
 };
 

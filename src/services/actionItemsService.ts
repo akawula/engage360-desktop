@@ -185,6 +185,9 @@ class ActionItemsService {    /**
             if (filters?.dueDateFrom) params.append('due_date_from', filters.dueDateFrom);
             if (filters?.dueDateTo) params.append('due_date_to', filters.dueDateTo);
 
+            console.log('ActionItemsService - filters:', filters);
+            console.log('ActionItemsService - params:', params.toString());
+
             const response = await apiService.get<any>(`/actions?${params}`);
 
             if (response.success) {
@@ -225,6 +228,8 @@ class ActionItemsService {    /**
                     // Decode the encrypted content - this should be our primary source of title/description
                     const decodedContent = this.decodeActionItemContent(item.encrypted_content);
 
+                    console.log('ActionItemsService - mapping item:', item.id, 'note_id:', item.note_id);
+
                     return {
                         id: item.id,
                         title: decodedContent.title || item.title || 'Untitled Action', // Prioritize decoded content
@@ -241,6 +246,9 @@ class ActionItemsService {    /**
                         updatedAt: item.updated_at
                     };
                 });
+
+                console.log('ActionItemsService - processed actionItems:', actionItems);
+                console.log('ActionItemsService - filtered for noteId:', filters?.noteId);
 
                 return {
                     success: true,

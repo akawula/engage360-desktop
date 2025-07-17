@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck, FileText } from 'lucide-react';
 import { useActionItems, useUpdateActionStatus, useDeleteActionItem } from '../hooks/useActionItems';
 import { peopleService } from '../services/peopleService';
 import AddActionItemModal from '../components/AddActionItemModal';
@@ -29,6 +29,14 @@ export default function ActionItems() {
     const { data: actionItems = [], isLoading, refetch } = useActionItems();
     const updateActionStatus = useUpdateActionStatus();
     const deleteActionItem = useDeleteActionItem();
+
+    // Debug logging for action items
+    useEffect(() => {
+        if (actionItems && actionItems.length > 0) {
+            console.log('ActionItems component - actionItems:', actionItems);
+            console.log('ActionItems component - first item with noteId:', actionItems.find(item => item.noteId));
+        }
+    }, [actionItems]);
 
     // Fetch people data to get avatars for assignees and associated people
     const { data: peopleResponse } = useQuery({
@@ -117,6 +125,15 @@ export default function ActionItems() {
     const archivedItems = filteredAndSortedItems.filter(item => item.status === 'cancelled');
 
     const displayedItems = activeTab === 'todo' ? todoItems : activeTab === 'completed' ? completedItems : archivedItems;
+
+    // Debug logging for filtered items
+    useEffect(() => {
+        console.log('ActionItems - activeTab:', activeTab);
+        console.log('ActionItems - displayedItems:', displayedItems);
+        console.log('ActionItems - displayedItems with noteId:', displayedItems.filter(item => item.noteId));
+        console.log('ActionItems - todoItems with noteId:', todoItems.filter(item => item.noteId));
+        console.log('ActionItems - completedItems with noteId:', completedItems.filter(item => item.noteId));
+    }, [activeTab, displayedItems, todoItems, completedItems]);
 
     const priorityTypes = [
         { value: 'all', label: 'All Priorities', icon: Target, count: filteredAndSortedItems.length },
@@ -602,6 +619,22 @@ export default function ActionItems() {
                                                     )}
                                                 </div>
 
+                                                {/* Grid View - Note Link */}
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        {item.noteId && (
+                                                            <Link
+                                                                to={`/notes/${item.noteId}`}
+                                                                className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/40"
+                                                                title="View related note"
+                                                            >
+                                                                <FileText className="h-3 w-3" />
+                                                                <span>Note</span>
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                </div>
+
                                                 {/* Action Buttons - Always at bottom */}
                                                 <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
                                                     <div className="flex items-center gap-1">
@@ -750,6 +783,16 @@ export default function ActionItems() {
                                                             <User className="h-3 w-3" />
                                                             <span>{associatedPerson.firstName} {associatedPerson.lastName}</span>
                                                         </div>
+                                                    )}
+                                                    {item.noteId && (
+                                                        <Link
+                                                            to={`/notes/${item.noteId}`}
+                                                            className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/40"
+                                                            title="View related note"
+                                                        >
+                                                            <FileText className="h-3 w-3" />
+                                                            <span>Note</span>
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles } from 'lucide-react';
+import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Square, RotateCcw, Edit2, Trash2, Target, Timer, Zap, Flame } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -9,6 +9,92 @@ import { authService } from '../services/authService';
 import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 import AddActionItemModal from '../components/AddActionItemModal';
+import { useActionItems } from '../hooks/useActionItems';
+
+// Helper functions for action item styling
+const getStatusColor = (status: string) => {
+    switch (status) {
+        case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200';
+        case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200';
+        case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200';
+        case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200';
+        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200';
+    }
+};
+
+const getPriorityColor = (priority: string) => {
+    switch (priority) {
+        case 'urgent': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200';
+        case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200';
+        case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200';
+        case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200';
+        default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200';
+    }
+};
+
+const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+        case 'urgent': return Flame;
+        case 'high': return Zap;
+        case 'medium': return Timer;
+        case 'low': return Clock;
+        default: return Clock;
+    }
+};
+
+const getStatusIcon = (status: string) => {
+    switch (status) {
+        case 'completed': return Check;
+        case 'in_progress': return Play;
+        case 'pending': return Clock;
+        case 'cancelled': return X;
+        default: return Clock;
+    }
+};
+
+const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+    if (diffInDays > 0) {
+        return diffInDays === 1 ? '1 day ago' : `${diffInDays} days ago`;
+    } else if (diffInHours > 0) {
+        return diffInHours === 1 ? '1 hour ago' : `${diffInHours} hours ago`;
+    } else if (diffInMinutes > 0) {
+        return diffInMinutes === 1 ? '1 minute ago' : `${diffInMinutes} minutes ago`;
+    } else {
+        return 'Just now';
+    }
+};
+
+const isOverdue = (dueDate?: string) => {
+    return dueDate && new Date(dueDate) < new Date();
+};
+
+const getDueDateText = (dueDate?: string) => {
+    if (!dueDate) return null;
+    const date = new Date(dueDate);
+    const now = new Date();
+    const diffInMs = date.getTime() - now.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMs < 0) {
+        const overdueDays = Math.abs(diffInDays);
+        if (overdueDays === 0) return 'Due today (overdue)';
+        if (overdueDays === 1) return '1 day overdue';
+        return `${overdueDays} days overdue`;
+    }
+
+    if (diffInDays === 0) return 'Due today';
+    if (diffInDays === 1) return 'Due tomorrow';
+    if (diffInDays < 7) return `Due in ${diffInDays} days`;
+
+    return `Due ${date.toLocaleDateString()}`;
+};
 
 export default function NoteDetail() {
     const { noteId } = useParams<{ noteId: string }>();
@@ -67,6 +153,23 @@ export default function NoteDetail() {
         },
         enabled: !!note?.groupId,
     });
+
+    // Fetch action items associated with this note
+    const { data: allActionItems } = useActionItems(
+        note?.id ? { noteId: note.id } : undefined
+    );
+
+    // Client-side filter to ensure only action items for this note are shown
+    const actionItems = allActionItems?.filter(item => item.noteId === note?.id) || [];
+
+    // Debug logging
+    useEffect(() => {
+        console.log('NoteDetail - noteId:', note?.id);
+        console.log('NoteDetail - allActionItems:', allActionItems);
+        console.log('NoteDetail - filtered actionItems:', actionItems);
+        console.log('NoteDetail - all actionItems count:', allActionItems?.length);
+        console.log('NoteDetail - filtered count:', actionItems?.length);
+    }, [note?.id, allActionItems, actionItems]);
 
     // Initialize form when note loads
     useEffect(() => {
@@ -533,6 +636,107 @@ export default function NoteDetail() {
                         />
                     </div>
                 </div>
+
+                {/* Action Items Section */}
+                {actionItems && actionItems.length > 0 && (
+                    <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                        <div className="px-6 py-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                    Related Action Items ({actionItems.length})
+                                </h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {actionItems.map((item) => {
+                                    const StatusIcon = getStatusIcon(item.status);
+                                    const PriorityIcon = getPriorityIcon(item.priority);
+                                    const dueDateText = getDueDateText(item.dueDate);
+                                    const isItemOverdue = isOverdue(item.dueDate);
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className={`group bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${isItemOverdue
+                                                ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
+                                                } p-4`}
+                                        >
+                                            <div className="h-full flex flex-col">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center">
+                                                            <StatusIcon className="h-4 w-4 text-primary-600 dark:text-primary-400" />
+                                                        </div>
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                                                                {item.status.replace('_', ' ')}
+                                                            </span>
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                                                                <PriorityIcon className="h-3 w-3 mr-1" />
+                                                                {item.priority}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-1 mb-3">
+                                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+                                                        {item.title}
+                                                    </h4>
+                                                    {item.description && (
+                                                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                                                            {item.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                <div className="space-y-2 mt-auto">
+                                                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1">
+                                                            <Clock className="h-3 w-3" />
+                                                            <span>{getRelativeTime(item.updatedAt)}</span>
+                                                        </div>
+                                                        {dueDateText && (
+                                                            <div className={`flex items-center gap-1 px-2 py-1 rounded-full font-medium ${isItemOverdue
+                                                                ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 animate-pulse'
+                                                                : item.dueDate && new Date(item.dueDate).getTime() - Date.now() < 24 * 60 * 60 * 1000
+                                                                    ? 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700'
+                                                                    : 'text-gray-600 dark:text-gray-400'
+                                                                }`}>
+                                                                <Calendar className="h-3 w-3" />
+                                                                <span className="text-xs font-semibold">{dueDateText}</span>
+                                                                {isItemOverdue && <span className="text-xs">⚠️</span>}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                        {item.assigneeName && (
+                                                            <div className="flex items-center gap-1">
+                                                                <UserCheck className="h-3 w-3" />
+                                                                <span>{item.assigneeName}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.noteId && (
+                                                            <Link
+                                                                to={`/notes/${item.noteId}`}
+                                                                className="flex items-center gap-1 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/40"
+                                                                title="View related note"
+                                                            >
+                                                                <FileText className="h-3 w-3" />
+                                                                <span>Note</span>
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Enhanced Footer */}
                 <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
