@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Calendar, User, Building } from 'lucide-react';
+import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -261,12 +261,12 @@ export default function NoteDetail() {
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case 'meeting': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-            case 'call': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-            case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-            case 'personal': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-            case 'follow_up': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            case 'meeting': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-700';
+            case 'call': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border border-green-200 dark:border-green-700';
+            case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 border border-purple-200 dark:border-purple-700';
+            case 'personal': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200 border border-orange-200 dark:border-orange-700';
+            case 'follow_up': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-700';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
         }
     };
 
@@ -287,159 +287,93 @@ export default function NoteDetail() {
     }
 
     return (
-        <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleCancel}
-                        disabled={updateMutation.isPending}
-                        className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                        Back to Notes
-                    </button>
+        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+            {/* Enhanced Header */}
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={handleCancel}
+                                disabled={updateMutation.isPending}
+                                className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                                <span className="font-medium">Notes</span>
+                            </button>
 
-                    <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
 
-                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <Calendar className="h-4 w-4" />
-                        <span>Created: {new Date(note.createdAt).toLocaleDateString()}</span>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {hasChanges && (
-                        <span className="text-sm text-amber-600 mr-2">Unsaved changes</span>
-                    )}
-                    <button
-                        onClick={handleCancel}
-                        className="px-3 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
-                    >
-                        <X className="h-4 w-4" />
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={!hasChanges || updateMutation.isPending}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                        <Save className="h-4 w-4" />
-                        {updateMutation.isPending ? 'Saving...' : 'Save'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Editor Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Note metadata */}
-                <div className="p-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors">
-                    {/* Title Section */}
-                    <div className="mb-8">
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Title *
-                        </label>
-                        <input
-                            type="text"
-                            id="title"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
-                            placeholder="Enter note title..."
-                            required
-                        />
-                    </div>
-
-                    {/* Related items */}
-                    {(note.personId || note.groupId) && (
-                        <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
-                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                                Related To
-                            </h3>
-                            <div className="flex flex-wrap gap-3">
-                                {note.personId && relatedPerson && (
-                                    <Link
-                                        to={`/people/${note.personId}`}
-                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            {formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar) ? (
-                                                <img
-                                                    src={formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar)!}
-                                                    alt={`${relatedPerson.firstName} ${relatedPerson.lastName}`}
-                                                    className="w-10 h-10 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                                                    <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                                                        {relatedPerson.firstName[0]}{relatedPerson.lastName[0]}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-gray-900 dark:text-white">
-                                                    {relatedPerson.firstName} {relatedPerson.lastName}
-                                                </span>
-                                                {relatedPerson.position && (
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {relatedPerson.position}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <User className="h-4 w-4 text-gray-400" />
-                                    </Link>
-                                )}
-                                {note.groupId && relatedGroup && (
-                                    <Link
-                                        to={`/groups/${note.groupId}`}
-                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                                                <Building className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-medium text-gray-900 dark:text-white">
-                                                    {relatedGroup.name}
-                                                </span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    {relatedGroup.memberCount || 0} members
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Building className="h-4 w-4 text-gray-400" />
-                                    </Link>
+                            <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                    <Calendar className="h-4 w-4" />
+                                    <span>Created {new Date(note.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                {note.updatedAt !== note.createdAt && (
+                                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                        <Clock className="h-4 w-4" />
+                                        <span>Updated {new Date(note.updatedAt).toLocaleDateString()}</span>
+                                    </div>
                                 )}
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {/* Content Editor */}
-                <div className="flex-1 p-4">
-                    <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Content
-                    </label>
-                    <RichTextEditor
-                        ref={editorRef}
-                        content={formData.content}
-                        onChange={handleContentChange}
-                        placeholder="Start writing your note here..."
-                        className="h-full min-h-[400px]"
-                    />
+                        <div className="flex items-center gap-3">
+                            {hasChanges && (
+                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                                    <span className="text-sm font-medium">Unsaved changes</span>
+                                </div>
+                            )}
+                            <button
+                                onClick={handleCancel}
+                                className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 hover:shadow-md flex items-center gap-2"
+                            >
+                                <X className="h-4 w-4" />
+                                <span>Cancel</span>
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                disabled={!hasChanges || updateMutation.isPending}
+                                className="px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg disabled:shadow-none"
+                            >
+                                <Save className="h-4 w-4" />
+                                <span className="font-medium">
+                                    {updateMutation.isPending ? 'Saving...' : 'Save'}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                {/* Type and Tags Section - Below Content */}
-                <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Type Selection */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                Type
-                            </label>
-                            <div className="grid grid-cols-5 gap-2">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Title and Metadata Section */}
+                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <div className="px-6 py-6">
+                        {/* Title Input */}
+                        <div className="mb-6">
+                            <input
+                                type="text"
+                                id="title"
+                                name="title"
+                                value={formData.title}
+                                onChange={handleChange}
+                                className="w-full px-0 py-2 border-0 bg-transparent text-gray-900 dark:text-white text-2xl font-semibold placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-none resize-none"
+                                placeholder="Untitled note..."
+                                style={{ lineHeight: '1.2' }}
+                            />
+                            <div className="h-0.5 bg-gradient-to-r from-primary-500 via-primary-400 to-transparent mt-2"></div>
+                        </div>
+
+                        {/* Note Type Selection */}
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Sparkles className="h-4 w-4 text-primary-500" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Note Type</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                                 {[
                                     { value: 'personal', emoji: '📝', label: 'Personal' },
                                     { value: 'meeting', emoji: '🤝', label: 'Meeting' },
@@ -451,15 +385,14 @@ export default function NoteDetail() {
                                         key={type.value}
                                         type="button"
                                         onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
-                                        className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${formData.type === type.value
-                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                        className={`group px-4 py-2 rounded-full border-2 transition-all duration-200 hover:shadow-md ${formData.type === type.value
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
+                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                                             }`}
-                                        title={type.label}
                                     >
-                                        <div className="flex flex-col items-center gap-1">
-                                            <span className="text-xl">{type.emoji}</span>
-                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg group-hover:scale-110 transition-transform">{type.emoji}</span>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                 {type.label}
                                             </span>
                                         </div>
@@ -469,72 +402,162 @@ export default function NoteDetail() {
                         </div>
 
                         {/* Tags Section */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                Tags
-                            </label>
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Tag className="h-4 w-4 text-primary-500" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</span>
+                            </div>
 
-                            {/* Display existing tags as chips */}
-                            {formData.tags && formData.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {formData.tags.map((tag, index) => (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {formData.tags && formData.tags.length > 0 && (
+                                    formData.tags.map((tag, index) => (
                                         <span
                                             key={index}
-                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 border border-primary-200 dark:border-primary-700"
+                                            className="group inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-all duration-200"
                                         >
+                                            <span className="mr-1">#</span>
                                             {tag}
                                             <button
                                                 type="button"
                                                 onClick={() => removeTag(tag)}
-                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors"
+                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors opacity-0 group-hover:opacity-100"
                                                 title="Remove tag"
                                             >
                                                 <X className="h-3 w-3" />
                                             </button>
                                         </span>
-                                    ))}
-                                </div>
-                            )}
+                                    ))
+                                )}
 
-                            {/* Input for adding new tags */}
-                            <input
-                                type="text"
-                                value={tagInput}
-                                onChange={handleTagInputChange}
-                                onKeyPress={handleTagKeyPress}
-                                onBlur={handleTagBlur}
-                                placeholder="Type and press Enter or comma to add tags"
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            />
-
-                            {/* Helper text */}
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Press Enter or comma to add tags. Click × to remove.
-                            </p>
+                                <input
+                                    type="text"
+                                    value={tagInput}
+                                    onChange={handleTagInputChange}
+                                    onKeyPress={handleTagKeyPress}
+                                    onBlur={handleTagBlur}
+                                    placeholder="Add tags..."
+                                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-32"
+                                />
+                            </div>
                         </div>
+
+                        {/* Related Items */}
+                        {(note.personId || note.groupId) && (
+                            <div className="pt-6 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <User className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Related To
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    {note.personId && relatedPerson && (
+                                        <Link
+                                            to={`/people/${note.personId}`}
+                                            className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-0.5"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar) ? (
+                                                    <img
+                                                        src={formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar)!}
+                                                        alt={`${relatedPerson.firstName} ${relatedPerson.lastName}`}
+                                                        className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
+                                                    />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
+                                                        <span className="text-lg font-semibold text-primary-700 dark:text-primary-300">
+                                                            {relatedPerson.firstName[0]}{relatedPerson.lastName[0]}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                        {relatedPerson.firstName} {relatedPerson.lastName}
+                                                    </span>
+                                                    {relatedPerson.position && (
+                                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {relatedPerson.position}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )}
+                                    {note.groupId && relatedGroup && (
+                                        <Link
+                                            to={`/groups/${note.groupId}`}
+                                            className="group flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-0.5"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
+                                                    <Building className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                        {relatedGroup.name}
+                                                    </span>
+                                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                        {relatedGroup.memberCount || 0} members
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* Keyboard shortcuts info */}
-            <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors">
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center gap-6">
-                        <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Cmd/Ctrl + S</kbd> to save</span>
-                        <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Esc</kbd> to cancel</span>
-                        <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Cmd/Ctrl + B</kbd> bold</span>
-                        <span><kbd className="px-1 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Cmd/Ctrl + I</kbd> italic</span>
+                {/* Content Editor */}
+                <div className="flex-1 bg-white dark:bg-gray-800 p-6">
+                    <div className="h-full">
+                        <RichTextEditor
+                            ref={editorRef}
+                            content={formData.content}
+                            onChange={handleContentChange}
+                            placeholder="Start writing your note here..."
+                            className="h-full min-h-[400px] prose prose-lg max-w-none dark:prose-invert prose-primary"
+                        />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
-                            {formData.type.replace('_', ' ')}
-                        </span>
-                        {formData.tags && formData.tags.length > 0 && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                                {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
+                </div>
+
+                {/* Enhanced Footer */}
+                <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-4">
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘S</kbd>
+                                    Save
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">Esc</kbd>
+                                    Cancel
+                                </span>
+                            </div>
+                            <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="flex items-center gap-4">
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘B</kbd>
+                                    Bold
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘I</kbd>
+                                    Italic
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
+                                {formData.type.replace('_', ' ')}
                             </span>
-                        )}
-                        <span>Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
+                            {formData.tags && formData.tags.length > 0 && (
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700">
+                                    {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
