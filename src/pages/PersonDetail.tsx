@@ -256,10 +256,13 @@ export default function PersonDetail() {
                             <FileText className="h-5 w-5" />
                             Notes ({notes.length})
                         </h2>
-                        <button className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm">
+                        <Link
+                            to={`/notes/create?personId=${personId}`}
+                            className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm"
+                        >
                             <Plus className="h-4 w-4" />
                             Add Note
-                        </button>
+                        </Link>
                     </div>
                 </div>
 

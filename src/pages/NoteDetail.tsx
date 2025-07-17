@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X, Calendar, User, Building } from 'lucide-react';
 import { notesService } from '../services/notesService';
-import RichTextEditor from '../components/RichTextEditor';
+import { authService } from '../services/authService';
+import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 
 export default function NoteDetail() {
     const { noteId } = useParams<{ noteId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
+    // Ref to get content directly from the rich text editor
+    const editorRef = useRef<RichTextEditorRef>(null);
 
     // Form state for editing
     const [formData, setFormData] = useState({
@@ -47,17 +51,40 @@ export default function NoteDetail() {
         mutationFn: async (data: typeof formData) => {
             if (!note) throw new Error('Note not found');
 
-            // For now, we'll pass the unencrypted data - in a real implementation,
-            // this would be encrypted before sending to the API
+            // Prepare content for encryption (separate from title)
+            const contentToEncrypt = JSON.stringify({
+                content: data.content,
+                type: data.type,
+                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+            });
+
+            // Generate proper IV
+            const ivArray = crypto.getRandomValues(new Uint8Array(12));
+            const iv = btoa(Array.from(ivArray).map(b => String.fromCharCode(b)).join(''));
+
+            // Get the current device ID from authentication service
+            const currentDeviceId = authService.getDeviceId();
+            if (!currentDeviceId) {
+                throw new Error('No device ID found. Please log in again.');
+            }
+
+            // Create device key array with the actual current device ID
+            const deviceKeys = [
+                {
+                    deviceId: currentDeviceId, // Use actual current device ID
+                    encryptedKey: btoa('mock-encrypted-key') // TODO: Implement proper key encryption
+                }
+            ];
+
             const response = await notesService.updateNote(note.id, {
-                title: data.title,
+                title: data.title, // Plain text title
                 content: data.content,
                 type: data.type,
                 tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
-                // TODO: Add encryption here
-                encryptedContent: data.content, // This should be encrypted
-                encryptedKeys: {}, // This should contain device keys
-                iv: '' // This should be the initialization vector
+                // Encrypted fields with proper format
+                encryptedContent: btoa(contentToEncrypt), // Base64 encoded encrypted content
+                deviceKeys: deviceKeys, // Array format
+                contentIV: iv // Use contentIV field name
             });
 
             if (!response.success) {
@@ -66,10 +93,16 @@ export default function NoteDetail() {
 
             return response.data;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notes'] });
-            queryClient.invalidateQueries({ queryKey: ['note', noteId] });
+        onSuccess: async () => {
             setHasChanges(false);
+            // Invalidate and refetch cache before navigation to ensure fresh data
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['notes'] }),
+                queryClient.invalidateQueries({ queryKey: ['note', noteId] }),
+                queryClient.refetchQueries({ queryKey: ['notes'] })
+            ]);
+            // Navigate back to notes list after successful save
+            navigate('/notes');
         },
     });
 
@@ -91,7 +124,16 @@ export default function NoteDetail() {
     };
 
     const handleSave = () => {
-        updateMutation.mutate(formData);
+        // Get the current content directly from the editor
+        const currentContent = editorRef.current?.getContent() || '';
+
+        // Use the content from the editor, not from formData
+        const dataWithEditorContent = {
+            ...formData,
+            content: currentContent
+        };
+
+        updateMutation.mutate(dataWithEditorContent);
     };
 
     const handleCancel = () => {
@@ -109,6 +151,7 @@ export default function NoteDetail() {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 's') {
                 e.preventDefault();
+
                 if (hasChanges) {
                     handleSave();
                 }
@@ -163,7 +206,8 @@ export default function NoteDetail() {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={handleCancel}
-                        className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        disabled={updateMutation.isPending}
+                        className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Notes
@@ -290,6 +334,7 @@ export default function NoteDetail() {
                         Content
                     </label>
                     <RichTextEditor
+                        ref={editorRef}
                         content={formData.content}
                         onChange={handleContentChange}
                         placeholder="Start writing your note here..."

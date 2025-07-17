@@ -161,8 +161,8 @@ export interface CreateNoteRequest {
     title: string;
     content: string;
     type: 'meeting' | 'call' | 'email' | 'personal' | 'follow_up';
-    personId?: string;
-    groupId?: string;
+    personId?: string | null;
+    groupId?: string | null;
     tags?: string[];
 }
 

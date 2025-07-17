@@ -61,3 +61,45 @@ function isBase64(str: string): boolean {
         return false;
     }
 }
+
+/**
+ * Strips HTML tags from a string and truncates it to a specified length
+ * @param html - HTML string to process
+ * @param maxLength - Maximum length of the resulting text (default: 150)
+ * @returns Plain text truncated to maxLength with ellipsis if needed
+ */
+export function stripHtmlAndTruncate(html: string, maxLength: number = 150): string {
+    if (!html || html.trim() === '') {
+        return '';
+    }
+
+    // Remove HTML tags using regex
+    const plainText = html.replace(/<[^>]*>/g, '');
+
+    // Decode HTML entities
+    const decoded = plainText
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+    // Remove extra whitespace and normalize
+    const normalized = decoded.replace(/\s+/g, ' ').trim();
+
+    // Truncate if needed
+    if (normalized.length <= maxLength) {
+        return normalized;
+    }
+
+    // Find the last space before maxLength to avoid cutting words
+    const truncated = normalized.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+
+    if (lastSpace > maxLength * 0.8) { // Only cut at word boundary if it's not too far back
+        return normalized.substring(0, lastSpace) + '...';
+    }
+
+    return truncated + '...';
+}

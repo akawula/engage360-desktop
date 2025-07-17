@@ -1,6 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { forwardRef, useImperativeHandle, useEffect } from 'react';
 import {
     Bold,
     Italic,
@@ -15,6 +16,10 @@ import {
     Heading3
 } from 'lucide-react';
 
+export interface RichTextEditorRef {
+    getContent: () => string;
+}
+
 interface RichTextEditorProps {
     content: string;
     onChange: (content: string) => void;
@@ -22,7 +27,7 @@ interface RichTextEditorProps {
     className?: string;
 }
 
-export default function RichTextEditor({ content, onChange, placeholder = "Start writing...", className = "" }: RichTextEditorProps) {
+const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "" }, ref) => {
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -41,14 +46,35 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
         ],
         content,
         onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
+            const html = editor.getHTML();
+            onChange(html);
         },
         editorProps: {
             attributes: {
                 class: 'focus:outline-none min-h-[300px]',
             },
         },
+        onCreate: () => {
+            // Editor initialized successfully
+        },
     });
+
+    useImperativeHandle(ref, () => ({
+        getContent: () => {
+            if (!editor) return '';
+
+            // Get the current content from the editor
+            const currentContent = editor.getHTML();
+            return currentContent;
+        }
+    }));
+
+    // Update editor content when the content prop changes
+    useEffect(() => {
+        if (editor && content !== editor.getHTML()) {
+            editor.commands.setContent(content);
+        }
+    }, [editor, content]);
 
     if (!editor) {
         return null;
@@ -188,4 +214,8 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
             </div>
         </div>
     );
-}
+});
+
+RichTextEditor.displayName = 'RichTextEditor';
+
+export default RichTextEditor;

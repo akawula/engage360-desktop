@@ -12,6 +12,7 @@ import PersonDetail from './pages/PersonDetail';
 import Groups from './pages/Groups';
 import GroupDetail from './pages/GroupDetail';
 import Notes from './pages/Notes';
+import CreateNote from './pages/CreateNote';
 import NoteDetail from './pages/NoteDetail';
 import ActionItems from './pages/ActionItems';
 import ActionItemDetail from './pages/ActionItemDetail';
@@ -61,6 +62,7 @@ function App() {
                       <Route path="/groups" element={<Groups />} />
                       <Route path="/groups/:groupId" element={<GroupDetail />} />
                       <Route path="/notes" element={<Notes />} />
+                      <Route path="/notes/create" element={<CreateNote />} />
                       <Route path="/notes/:noteId" element={<NoteDetail />} />
                       <Route path="/action-items" element={<ActionItems />} />
                       <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, FileText, User, Calendar, Tag } from 'lucide-react';
 import { notesService } from '../services/notesService';
+import { stripHtmlAndTruncate } from '../lib/utils';
 
 export default function Notes() {
     const { data: notes = [], isLoading } = useQuery({
@@ -61,10 +62,13 @@ export default function Notes() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notes</h1>
-                <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2">
+                <Link
+                    to="/notes/create"
+                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
                     <Plus className="h-4 w-4" />
                     New Note
-                </button>
+                </Link>
             </div>
 
             <div className="space-y-4">
@@ -90,7 +94,7 @@ export default function Notes() {
                         </div>
 
                         <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
-                            {note.content}
+                            {stripHtmlAndTruncate(note.content, 200)}
                         </p>
 
                         <div className="flex items-center justify-between">
@@ -132,9 +136,12 @@ export default function Notes() {
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No notes yet</h3>
                     <p className="text-gray-600 dark:text-gray-300 mb-4">Create your first note to get started</p>
-                    <button className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors">
+                    <Link
+                        to="/notes/create"
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                    >
                         Create Note
-                    </button>
+                    </Link>
                 </div>
             )}
         </div>

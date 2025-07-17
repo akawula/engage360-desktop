@@ -139,7 +139,7 @@ class DevicesService {
 
             // For device registration, we need to handle 401 errors directly without token refresh retry
             // because 401 here means "invalid password", not "expired token"
-            const SERVER_BASE_URL = 'http://45.86.33.25:2137';
+            const SERVER_BASE_URL = 'http://localhost:3000';
             const url = `${SERVER_BASE_URL}/api/devices`;
 
             const headers: Record<string, string> = {
