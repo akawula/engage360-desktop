@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSq
 import { notesService } from '../services/notesService';
 import { actionItemsService } from '../services/actionItemsService';
 import { usePerson, useDeletePerson } from '../hooks/usePeople';
+import { formatAvatarSrc } from '../lib/utils';
 import EditPersonModal from '../components/EditPersonModal';
 
 export default function PersonDetail() {
@@ -118,10 +119,10 @@ export default function PersonDetail() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
                 <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
-                        {person.avatarUrl ? (
+                        {formatAvatarSrc(person.avatarUrl) ? (
                             <img
                                 key={`${person.id}-avatar-${person.avatarUrl}`}
-                                src={person.avatarUrl}
+                                src={formatAvatarSrc(person.avatarUrl)!}
                                 alt={`${person.firstName} ${person.lastName}`}
                                 className="w-24 h-24 rounded-full object-cover"
                             />

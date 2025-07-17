@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { User, Mail, Calendar, Settings, Bell, Shield } from 'lucide-react';
 import { userProfileService } from '../services/userProfileService';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatAvatarSrc } from '../lib/utils';
 import EditProfileModal from '../components/EditProfileModal';
 
 export default function Profile() {
@@ -52,9 +53,9 @@ export default function Profile() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
                 <div className="flex items-start gap-6">
                     <div className="flex-shrink-0">
-                        {profile.avatar ? (
+                        {formatAvatarSrc(profile.avatar) ? (
                             <img
-                                src={profile.avatar}
+                                src={formatAvatarSrc(profile.avatar)!}
                                 alt={`${profile.firstName} ${profile.lastName}`}
                                 className="w-24 h-24 rounded-full object-cover"
                             />

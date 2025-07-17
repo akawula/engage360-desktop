@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Upload, User } from 'lucide-react';
+import { X } from 'lucide-react';
 import Modal from './Modal';
 import { Person } from '../types';
 import { useUpdatePerson } from '../hooks/usePeople';
-import { validateImageFile, resizeImage } from '../lib/imageUtils';
+import AvatarInput from './AvatarInput';
 
 interface EditPersonModalProps {
     isOpen: boolean;
@@ -24,8 +24,6 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
     });
 
     const [tagInput, setTagInput] = useState('');
-    const [avatarPreview, setAvatarPreview] = useState<string | null>(person.avatarUrl || null);
-    const [avatarError, setAvatarError] = useState<string | null>(null);
 
     const mutation = useUpdatePerson();
 
@@ -41,7 +39,6 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
             tags: person.tags || [],
             avatarUrl: person.avatarUrl || '',
         });
-        setAvatarPreview(person.avatarUrl || null);
     }, [person]);
 
     const addTag = (tag: string) => {
@@ -54,38 +51,10 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
         }
     };
 
-    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setAvatarError(null);
-
-        // Validate the file
-        const validation = validateImageFile(file);
-        if (!validation.isValid) {
-            setAvatarError(validation.error || 'Invalid file');
-            return;
-        } try {
-            // Resize and convert to base64 (100x100 square)
-            const base64Avatar = await resizeImage(file, 100);
-
-            setAvatarPreview(base64Avatar);
-            setFormData(prev => ({
-                ...prev,
-                avatarUrl: base64Avatar
-            }));
-        } catch (error) {
-            console.error('Error processing avatar:', error);
-            setAvatarError('Failed to process image. Please try again.');
-        }
-    };
-
-    const removeAvatar = () => {
-        setAvatarPreview(null);
-        setAvatarError(null);
+    const handleAvatarChange = (avatar: string | null) => {
         setFormData(prev => ({
             ...prev,
-            avatarUrl: ''
+            avatarUrl: avatar || ''
         }));
     };
 
@@ -239,61 +208,14 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
                     />
                 </div>
 
-                {/* Avatar Upload Section */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Avatar
-                    </label>
-                    <div className="flex items-start gap-4">
-                        {/* Avatar Preview */}
-                        <div className="flex-shrink-0">
-                            {avatarPreview ? (
-                                <img
-                                    src={avatarPreview}
-                                    alt="Avatar preview"
-                                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
-                                />
-                            ) : (
-                                <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-gray-300 dark:border-gray-600">
-                                    <User className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Upload Controls */}
-                        <div className="flex-1">
-                            <div className="flex gap-2 mb-2">
-                                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                                    <Upload className="h-4 w-4" />
-                                    <span className="text-sm">Choose Image</span>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleAvatarChange}
-                                        className="hidden"
-                                    />
-                                </label>
-                                {avatarPreview && (
-                                    <button
-                                        type="button"
-                                        onClick={removeAvatar}
-                                        className="px-4 py-2 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        Remove
-                                    </button>
-                                )}
-                            </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Upload a JPEG, PNG, GIF, or WebP image (max 5MB). Image will be resized to 100x100px.
-                            </p>
-                            {avatarError && (
-                                <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                    {avatarError}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                {/* Avatar Input */}
+                <AvatarInput
+                    value={formData.avatarUrl}
+                    onChange={handleAvatarChange}
+                    size="md"
+                    label="Avatar"
+                    placeholder="Enter image URL"
+                />
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Mail, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePeople } from '../hooks/usePeople';
+import { formatAvatarSrc } from '../lib/utils';
 import AddPersonModal from '../components/AddPersonModal';
 
 export default function People() {
@@ -107,10 +108,10 @@ export default function People() {
                         className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-all p-6 group"
                     >
                         <div className="flex items-start space-x-4">
-                            {person.avatarUrl || person.avatar ? (
+                            {formatAvatarSrc(person.avatarUrl || person.avatar) ? (
                                 <img
                                     key={`${person.id}-avatar-${person.avatarUrl || person.avatar}`}
-                                    src={person.avatarUrl || person.avatar}
+                                    src={formatAvatarSrc(person.avatarUrl || person.avatar)!}
                                     alt={`${person.firstName} ${person.lastName}`}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />

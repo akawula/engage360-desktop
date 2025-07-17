@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Search, Plus } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
 import { PeopleService } from '../services/peopleService';
+import { formatAvatarSrc } from '../lib/utils';
 import type { Person } from '../types';
 
 const peopleService = new PeopleService();
@@ -132,10 +133,10 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="flex-shrink-0">
-                                            {person.avatar || person.avatarUrl ? (
+                                            {formatAvatarSrc(person.avatar || person.avatarUrl) ? (
                                                 <img
                                                     key={`${person.id}-avatar-${person.avatar || person.avatarUrl}`}
-                                                    src={person.avatar || person.avatarUrl}
+                                                    src={formatAvatarSrc(person.avatar || person.avatarUrl)!}
                                                     alt={`${person.firstName} ${person.lastName}`}
                                                     className="h-10 w-10 rounded-full object-cover"
                                                 />
