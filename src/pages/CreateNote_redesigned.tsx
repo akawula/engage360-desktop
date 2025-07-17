@@ -456,8 +456,8 @@ export default function CreateNote() {
                                                 type="button"
                                                 onClick={() => handleChange({ target: { name: 'personId', value: person.id } } as any)}
                                                 className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${formData.personId === person.id
-                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                                                     }`}
                                             >
                                                 <div className="flex flex-col items-center gap-2">
@@ -499,6 +499,15 @@ export default function CreateNote() {
                                             {personSearch ? 'No people found matching your search' : 'No people available'}
                                         </div>
                                     )}
+
+                                {formData.personId && (
+                                    <div className="mt-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                                        <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-300">
+                                            <span>✓</span>
+                                            <span>Selected: {people.find(p => p.id === formData.personId)?.firstName} {people.find(p => p.id === formData.personId)?.lastName}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -535,8 +544,8 @@ export default function CreateNote() {
                                                 type="button"
                                                 onClick={() => handleChange({ target: { name: 'groupId', value: group.id } } as any)}
                                                 className={`p-4 rounded-lg border-2 transition-all hover:shadow-md text-left ${formData.groupId === group.id
-                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                    : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
