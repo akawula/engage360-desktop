@@ -43,9 +43,11 @@ export default function Layout({ children }: LayoutProps) {
                 {/* Logo */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">E3</span>
-                        </div>
+                        <img
+                            src="/logo-engage360.png"
+                            alt="Engage360 Logo"
+                            className="w-8 h-8 object-contain"
+                        />
                         <span className="text-xl font-bold text-gray-900 dark:text-white">Engage360</span>
                     </div>
                 </div>
