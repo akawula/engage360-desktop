@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, User, Tag, Search, Filter, Grid, List, StickyNote, ArrowRight, Clock, MessageCircle, Phone, Mail, UserCheck, RotateCcw } from 'lucide-react';
 import { notesService } from '../services/notesService';
-import { stripHtmlAndTruncate } from '../lib/utils';
+import { peopleService } from '../services/peopleService';
+import { stripHtmlAndTruncate, formatAvatarSrc } from '../lib/utils';
 import { useState, useMemo } from 'react';
 
 export default function Notes() {
@@ -20,6 +21,21 @@ export default function Notes() {
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 15 * 60 * 1000, // 15 minutes cache
     });
+
+    // Fetch people data to get avatars for note associations
+    const { data: peopleResponse } = useQuery({
+        queryKey: ['people'],
+        queryFn: () => peopleService.getPeople(),
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    const people = peopleResponse?.success ? peopleResponse.data?.people || [] : [];
+
+    // Helper function to get person data by ID
+    const getPersonById = (personId: string | undefined) => {
+        if (!personId) return null;
+        return people.find(person => person.id === personId) || null;
+    };
 
     // Filter and sort notes
     const filteredAndSortedNotes = useMemo(() => {
@@ -168,8 +184,8 @@ export default function Notes() {
                                 <button
                                     onClick={() => setViewMode('grid')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid'
-                                            ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     <Grid className="h-4 w-4" />
@@ -177,8 +193,8 @@ export default function Notes() {
                                 <button
                                     onClick={() => setViewMode('list')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list'
-                                            ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                         }`}
                                 >
                                     <List className="h-4 w-4" />
@@ -221,8 +237,8 @@ export default function Notes() {
                                 key={type.value}
                                 onClick={() => setSelectedType(type.value)}
                                 className={`group flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${selectedType === type.value
-                                        ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 shadow-sm'
+                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 <span className="text-lg group-hover:scale-110 transition-transform">
@@ -230,8 +246,8 @@ export default function Notes() {
                                 </span>
                                 <span className="font-medium">{type.label}</span>
                                 <span className={`text-xs px-2 py-1 rounded-full ${selectedType === type.value
-                                        ? 'bg-primary-200 text-primary-800 dark:bg-primary-800 dark:text-primary-200'
-                                        : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                    ? 'bg-primary-200 text-primary-800 dark:bg-primary-800 dark:text-primary-200'
+                                    : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                                     }`}>
                                     {type.count}
                                 </span>
@@ -280,6 +296,7 @@ export default function Notes() {
                     }>
                         {filteredAndSortedNotes.map((note) => {
                             const IconComponent = getNoteTypeIcon(note.type);
+                            const associatedPerson = getPersonById(note.personId);
 
                             return (
                                 <Link
@@ -302,7 +319,27 @@ export default function Notes() {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
+                                                <div className="flex items-center gap-2">
+                                                    {associatedPerson && (
+                                                        <div className="flex items-center gap-1">
+                                                            {formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
+                                                                <img
+                                                                    src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
+                                                                    alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                                    className="w-6 h-6 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
+                                                                    title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                                />
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
+                                                                    <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                                                                        {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
+                                                </div>
                                             </div>
 
                                             <div>
@@ -319,10 +356,10 @@ export default function Notes() {
                                                     <Clock className="h-3 w-3" />
                                                     <span>{getRelativeTime(note.updatedAt)}</span>
                                                 </div>
-                                                {note.personId && (
+                                                {associatedPerson && (
                                                     <div className="flex items-center gap-1">
                                                         <User className="h-3 w-3" />
-                                                        <span>Person</span>
+                                                        <span>{associatedPerson.firstName} {associatedPerson.lastName}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -348,8 +385,28 @@ export default function Notes() {
                                     ) : (
                                         // List View
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <IconComponent className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <IconComponent className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                                                </div>
+                                                {associatedPerson && (
+                                                    <div className="flex items-center gap-2">
+                                                        {formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
+                                                            <img
+                                                                src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
+                                                                alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                                className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
+                                                                title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
+                                                                <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                                                                    {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="flex-1 min-w-0">
@@ -369,10 +426,10 @@ export default function Notes() {
                                                         <Clock className="h-3 w-3" />
                                                         <span>{getRelativeTime(note.updatedAt)}</span>
                                                     </div>
-                                                    {note.personId && (
+                                                    {associatedPerson && (
                                                         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                                                             <User className="h-3 w-3" />
-                                                            <span>Person</span>
+                                                            <span>{associatedPerson.firstName} {associatedPerson.lastName}</span>
                                                         </div>
                                                     )}
                                                     {note.tags && note.tags.length > 0 && (
