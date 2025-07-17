@@ -42,7 +42,7 @@ export default function CreateNote() {
         title: string;
         content: string;
         type: 'meeting' | 'call' | 'email' | 'personal' | 'follow_up';
-        tags: string;
+        tags: string[];
         personId: string | null;
         groupId: string | null;
         noteAssociation: 'person' | 'group' | 'standalone';
@@ -50,7 +50,7 @@ export default function CreateNote() {
         title: '',
         content: '',
         type: 'personal',
-        tags: '',
+        tags: [],
         personId: personId || null,
         groupId: groupId || null,
         noteAssociation: personId ? 'person' : groupId ? 'group' : 'standalone',
@@ -62,6 +62,9 @@ export default function CreateNote() {
     // Search states for people and groups
     const [personSearch, setPersonSearch] = useState('');
     const [groupSearch, setGroupSearch] = useState('');
+
+    // Tag input state
+    const [tagInput, setTagInput] = useState('');
 
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
@@ -111,7 +114,7 @@ export default function CreateNote() {
             const contentToEncrypt = JSON.stringify({
                 content: data.content,
                 type: data.type,
-                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+                tags: data.tags || []
             });
 
             // Generate proper IV
@@ -146,7 +149,7 @@ export default function CreateNote() {
                 type: data.type,
                 personId: data.personId || null, // Send null instead of empty string
                 groupId: data.groupId || null, // Send null instead of empty string
-                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+                tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
                 // Encrypted fields
                 encryptedContent: btoa(unescape(encodeURIComponent(contentToEncrypt))), // Use UTF-8 safe base64 encoding
                 deviceKeys: deviceKeys, // Array format as expected by API
@@ -230,6 +233,49 @@ export default function CreateNote() {
             content,
         }));
         setHasChanges(true);
+    };
+
+    // Tag handling functions
+    const addTag = (tag: string) => {
+        const trimmedTag = tag.trim();
+        if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...prev.tags, trimmedTag]
+            }));
+            setHasChanges(true);
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(tag => tag !== tagToRemove)
+        }));
+        setHasChanges(true);
+    };
+
+    const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTagInput(e.target.value);
+    };
+
+    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        } else if (e.key === ',') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        }
+    };
+
+    const handleTagBlur = () => {
+        if (tagInput.trim()) {
+            addTag(tagInput);
+            setTagInput('');
+        }
     };
 
     const handleSave = useCallback(async () => {
@@ -621,8 +667,8 @@ export default function CreateNote() {
                                         type="button"
                                         onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
                                         className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${formData.type === type.value
-                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                                             }`}
                                         title={type.label}
                                     >
@@ -639,18 +685,47 @@ export default function CreateNote() {
 
                         {/* Tags */}
                         <div>
-                            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                 Tags
                             </label>
+
+                            {/* Display existing tags as chips */}
+                            {formData.tags && formData.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {formData.tags.map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 border border-primary-200 dark:border-primary-700"
+                                        >
+                                            {tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeTag(tag)}
+                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors"
+                                                title="Remove tag"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Input for adding new tags */}
                             <input
                                 type="text"
-                                id="tags"
-                                name="tags"
-                                value={formData.tags}
-                                onChange={handleChange}
+                                value={tagInput}
+                                onChange={handleTagInputChange}
+                                onKeyPress={handleTagKeyPress}
+                                onBlur={handleTagBlur}
+                                placeholder="Type and press Enter or comma to add tags"
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                placeholder="tag1, tag2, tag3..."
                             />
+
+                            {/* Helper text */}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Press Enter or comma to add tags. Click × to remove.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -687,6 +762,11 @@ export default function CreateNote() {
                             {formData.noteAssociation === 'person' ? '👤 Person' :
                                 formData.noteAssociation === 'group' ? '👥 Group' : '📝 Standalone'}
                         </span>
+                        {formData.tags && formData.tags.length > 0 && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
