@@ -307,7 +307,7 @@ export default function CreateNote() {
         createMutation.mutate(noteDataWithEditorContent);
     }, [formData, editorRef, createMutation]);
 
-    const handleCancel = () => {
+    const handleCancel = useCallback(() => {
         if (hasChanges) {
             if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
                 navigate('/notes');
@@ -315,7 +315,7 @@ export default function CreateNote() {
         } else {
             navigate('/notes');
         }
-    };
+    }, [hasChanges, navigate]);
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -333,7 +333,7 @@ export default function CreateNote() {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [hasChanges, formData.title, handleSave]);
+    }, [formData.title, handleSave, handleCancel]);
 
     const getTypeColor = (type: string) => {
         switch (type) {

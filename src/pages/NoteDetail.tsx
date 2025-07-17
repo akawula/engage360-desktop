@@ -3,7 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X, Calendar, User, Building } from 'lucide-react';
 import { notesService } from '../services/notesService';
+import { peopleService } from '../services/peopleService';
+import { groupsService } from '../services/groupsService';
 import { authService } from '../services/authService';
+import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 
 export default function NoteDetail() {
@@ -19,11 +22,14 @@ export default function NoteDetail() {
         title: '',
         content: '',
         type: 'personal' as 'meeting' | 'call' | 'email' | 'personal' | 'follow_up',
-        tags: '',
+        tags: [] as string[],
     });
 
     // Track if there are unsaved changes
     const [hasChanges, setHasChanges] = useState(false);
+
+    // Tag input state
+    const [tagInput, setTagInput] = useState('');
 
     const { data: note, isLoading } = useQuery({
         queryKey: ['note', noteId],
@@ -35,6 +41,28 @@ export default function NoteDetail() {
         enabled: !!noteId,
     });
 
+    // Fetch related person data if note has personId
+    const { data: relatedPerson } = useQuery({
+        queryKey: ['person', note?.personId],
+        queryFn: async () => {
+            if (!note?.personId) return null;
+            const response = await peopleService.getPersonById(note.personId);
+            return response.success ? response.data : null;
+        },
+        enabled: !!note?.personId,
+    });
+
+    // Fetch related group data if note has groupId
+    const { data: relatedGroup } = useQuery({
+        queryKey: ['group', note?.groupId],
+        queryFn: async () => {
+            if (!note?.groupId) return null;
+            const response = await groupsService.getGroupById(note.groupId);
+            return response.success ? response.data : null;
+        },
+        enabled: !!note?.groupId,
+    });
+
     // Initialize form when note loads
     useEffect(() => {
         if (note) {
@@ -42,7 +70,7 @@ export default function NoteDetail() {
                 title: note.title,
                 content: note.content,
                 type: note.type,
-                tags: note.tags?.join(', ') || '',
+                tags: note.tags || [],
             });
         }
     }, [note]);
@@ -55,7 +83,7 @@ export default function NoteDetail() {
             const contentToEncrypt = JSON.stringify({
                 content: data.content,
                 type: data.type,
-                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+                tags: data.tags || []
             });
 
             // Generate proper IV
@@ -80,7 +108,7 @@ export default function NoteDetail() {
                 title: data.title, // Plain text title
                 content: data.content,
                 type: data.type,
-                tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : undefined,
+                tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
                 // Encrypted fields with proper format
                 encryptedContent: btoa(contentToEncrypt), // Base64 encoded encrypted content
                 deviceKeys: deviceKeys, // Array format
@@ -121,6 +149,49 @@ export default function NoteDetail() {
             content,
         }));
         setHasChanges(true);
+    };
+
+    // Tag handling functions
+    const addTag = (tag: string) => {
+        const trimmedTag = tag.trim();
+        if (trimmedTag && !formData.tags.includes(trimmedTag)) {
+            setFormData(prev => ({
+                ...prev,
+                tags: [...prev.tags, trimmedTag]
+            }));
+            setHasChanges(true);
+        }
+    };
+
+    const removeTag = (tagToRemove: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.filter(tag => tag !== tagToRemove)
+        }));
+        setHasChanges(true);
+    };
+
+    const handleTagInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setTagInput(e.target.value);
+    };
+
+    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        } else if (e.key === ',') {
+            e.preventDefault();
+            addTag(tagInput);
+            setTagInput('');
+        }
+    };
+
+    const handleTagBlur = () => {
+        if (tagInput.trim()) {
+            addTag(tagInput);
+            setTagInput('');
+        }
     };
 
     const handleSave = () => {
@@ -190,14 +261,30 @@ export default function NoteDetail() {
 
     const getTypeColor = (type: string) => {
         switch (type) {
-            case 'meeting': return 'bg-blue-100 text-blue-800';
-            case 'call': return 'bg-green-100 text-green-800';
-            case 'email': return 'bg-purple-100 text-purple-800';
-            case 'personal': return 'bg-orange-100 text-orange-800';
-            case 'follow_up': return 'bg-red-100 text-red-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'meeting': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            case 'call': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            case 'personal': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+            case 'follow_up': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="h-full flex items-center justify-center">
+                <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading note...</div>
+            </div>
+        );
+    }
+
+    if (!note) {
+        return (
+            <div className="h-full flex items-center justify-center">
+                <div className="text-gray-500 dark:text-gray-400">Note not found</div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full flex flex-col">
@@ -246,86 +333,88 @@ export default function NoteDetail() {
             {/* Editor Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Note metadata */}
-                <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Title */}
-                        <div>
-                            <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Title
-                            </label>
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                placeholder="Note title..."
-                            />
-                        </div>
-
-                        {/* Type */}
-                        <div>
-                            <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Type
-                            </label>
-                            <select
-                                id="type"
-                                name="type"
-                                value={formData.type}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            >
-                                <option value="meeting">Meeting</option>
-                                <option value="call">Call</option>
-                                <option value="email">Email</option>
-                                <option value="personal">Personal</option>
-                                <option value="follow_up">Follow Up</option>
-                            </select>
-                        </div>
-
-                        {/* Tags */}
-                        <div>
-                            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Tags
-                            </label>
-                            <input
-                                type="text"
-                                id="tags"
-                                name="tags"
-                                value={formData.tags}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                placeholder="tag1, tag2, tag3..."
-                            />
-                        </div>
+                <div className="p-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 transition-colors">
+                    {/* Title Section */}
+                    <div className="mb-8">
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Title *
+                        </label>
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
+                            placeholder="Enter note title..."
+                            required
+                        />
                     </div>
 
                     {/* Related items */}
-                    <div className="mt-4 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
-                        {note.personId && (
-                            <div className="flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                <Link
-                                    to={`/people/${note.personId}`}
-                                    className="text-primary-600 hover:text-primary-700"
-                                >
-                                    Related person
-                                </Link>
+                    {(note.personId || note.groupId) && (
+                        <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
+                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                                Related To
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                                {note.personId && relatedPerson && (
+                                    <Link
+                                        to={`/people/${note.personId}`}
+                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            {formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar) ? (
+                                                <img
+                                                    src={formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar)!}
+                                                    alt={`${relatedPerson.firstName} ${relatedPerson.lastName}`}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                                                    <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
+                                                        {relatedPerson.firstName[0]}{relatedPerson.lastName[0]}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {relatedPerson.firstName} {relatedPerson.lastName}
+                                                </span>
+                                                {relatedPerson.position && (
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        {relatedPerson.position}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <User className="h-4 w-4 text-gray-400" />
+                                    </Link>
+                                )}
+                                {note.groupId && relatedGroup && (
+                                    <Link
+                                        to={`/groups/${note.groupId}`}
+                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                                                <Building className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-gray-900 dark:text-white">
+                                                    {relatedGroup.name}
+                                                </span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {relatedGroup.memberCount || 0} members
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <Building className="h-4 w-4 text-gray-400" />
+                                    </Link>
+                                )}
                             </div>
-                        )}
-                        {note.groupId && (
-                            <div className="flex items-center gap-1">
-                                <Building className="h-4 w-4" />
-                                <Link
-                                    to={`/groups/${note.groupId}`}
-                                    className="text-primary-600 hover:text-primary-700"
-                                >
-                                    Related group
-                                </Link>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Content Editor */}
@@ -340,6 +429,90 @@ export default function NoteDetail() {
                         placeholder="Start writing your note here..."
                         className="h-full min-h-[400px]"
                     />
+                </div>
+
+                {/* Type and Tags Section - Below Content */}
+                <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 transition-colors">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Type Selection */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                Type
+                            </label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {[
+                                    { value: 'personal', emoji: '📝', label: 'Personal' },
+                                    { value: 'meeting', emoji: '🤝', label: 'Meeting' },
+                                    { value: 'call', emoji: '📞', label: 'Call' },
+                                    { value: 'email', emoji: '✉️', label: 'Email' },
+                                    { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
+                                ].map((type) => (
+                                    <button
+                                        key={type.value}
+                                        type="button"
+                                        onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
+                                        className={`p-3 rounded-lg border-2 transition-all hover:shadow-md ${formData.type === type.value
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
+                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                            }`}
+                                        title={type.label}
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            <span className="text-xl">{type.emoji}</span>
+                                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                {type.label}
+                                            </span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Tags Section */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                Tags
+                            </label>
+
+                            {/* Display existing tags as chips */}
+                            {formData.tags && formData.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {formData.tags.map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 border border-primary-200 dark:border-primary-700"
+                                        >
+                                            {tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeTag(tag)}
+                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors"
+                                                title="Remove tag"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Input for adding new tags */}
+                            <input
+                                type="text"
+                                value={tagInput}
+                                onChange={handleTagInputChange}
+                                onKeyPress={handleTagKeyPress}
+                                onBlur={handleTagBlur}
+                                placeholder="Type and press Enter or comma to add tags"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            />
+
+                            {/* Helper text */}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Press Enter or comma to add tags. Click × to remove.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -356,6 +529,11 @@ export default function NoteDetail() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
                             {formData.type.replace('_', ' ')}
                         </span>
+                        {formData.tags && formData.tags.length > 0 && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
+                            </span>
+                        )}
                         <span>Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
                     </div>
                 </div>
