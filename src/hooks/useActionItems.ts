@@ -100,6 +100,11 @@ export const useCreateActionItem = () => {
         onSuccess: (response) => {
             if (response.success) {
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
+                // Also invalidate person-specific action item queries
+                queryClient.invalidateQueries({ queryKey: ['actionItems'] });
+                // Invalidate person data to update engagement scores
+                queryClient.invalidateQueries({ queryKey: ['people'] });
+                queryClient.invalidateQueries({ queryKey: ['person'] });
             }
         },
     });
@@ -163,6 +168,11 @@ export const useUpdateActionItem = () => {
             if (response.success) {
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.detail(id) });
+                // Also invalidate person-specific action item queries
+                queryClient.invalidateQueries({ queryKey: ['actionItems'] });
+                // Invalidate person data to update engagement scores
+                queryClient.invalidateQueries({ queryKey: ['people'] });
+                queryClient.invalidateQueries({ queryKey: ['person'] });
             }
         },
     });
@@ -207,6 +217,11 @@ export const useUpdateActionStatus = () => {
             if (response.success) {
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.detail(id) });
+                // Also invalidate person-specific action item queries
+                queryClient.invalidateQueries({ queryKey: ['actionItems'] });
+                // Invalidate person data to update engagement scores
+                queryClient.invalidateQueries({ queryKey: ['people'] });
+                queryClient.invalidateQueries({ queryKey: ['person'] });
             }
         },
         onError: (error, _variables, context) => {
@@ -253,6 +268,11 @@ export const useDeleteActionItem = () => {
             if (response.success) {
                 // Invalidate and refetch to ensure data consistency
                 queryClient.invalidateQueries({ queryKey: actionItemsKeys.lists() });
+                // Also invalidate person-specific action item queries
+                queryClient.invalidateQueries({ queryKey: ['actionItems'] });
+                // Invalidate person data to update engagement scores
+                queryClient.invalidateQueries({ queryKey: ['people'] });
+                queryClient.invalidateQueries({ queryKey: ['person'] });
                 console.log('useDeleteActionItem: Cache invalidated');
             } else {
                 console.error('useDeleteActionItem: Delete request failed:', response.error);
