@@ -82,7 +82,14 @@ export default function Layout({ children }: LayoutProps) {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white capitalize">
-                                {location.pathname === '/' ? 'Dashboard' : location.pathname.slice(1).replace('-', ' ')}
+                                {(() => {
+                                    if (location.pathname === '/') return 'Dashboard';
+                                    if (location.pathname.startsWith('/people/')) return 'People';
+                                    if (location.pathname.startsWith('/groups/')) return 'Groups';
+                                    if (location.pathname.startsWith('/notes/')) return 'Notes';
+                                    if (location.pathname.startsWith('/action-items/')) return 'Action Items';
+                                    return location.pathname.slice(1).replace('-', ' ');
+                                })()}
                             </h1>
                         </div>
 
