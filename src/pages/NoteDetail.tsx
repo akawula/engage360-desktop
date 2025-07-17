@@ -8,6 +8,7 @@ import { groupsService } from '../services/groupsService';
 import { authService } from '../services/authService';
 import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
+import AddActionItemModal from '../components/AddActionItemModal';
 
 export default function NoteDetail() {
     const { noteId } = useParams<{ noteId: string }>();
@@ -30,6 +31,10 @@ export default function NoteDetail() {
 
     // Tag input state
     const [tagInput, setTagInput] = useState('');
+
+    // Action item modal state
+    const [showActionItemModal, setShowActionItemModal] = useState(false);
+    const [actionItemTitle, setActionItemTitle] = useState('');
 
     const { data: note, isLoading } = useQuery({
         queryKey: ['note', noteId],
@@ -217,6 +222,12 @@ export default function NoteDetail() {
         }
     };
 
+    const handleCreateActionItem = (selectedText: string) => {
+        // Open the modal with the selected text
+        setActionItemTitle(selectedText);
+        setShowActionItemModal(true);
+    };
+
     // Handle keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -386,8 +397,8 @@ export default function NoteDetail() {
                                         type="button"
                                         onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
                                         className={`group px-4 py-2 rounded-full border-2 transition-all duration-200 hover:shadow-md ${formData.type === type.value
-                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
-                                                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
+                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2">
@@ -518,6 +529,7 @@ export default function NoteDetail() {
                             onChange={handleContentChange}
                             placeholder="Start writing your note here..."
                             className="h-full min-h-[400px] prose prose-lg max-w-none dark:prose-invert prose-primary"
+                            onCreateActionItem={handleCreateActionItem}
                         />
                     </div>
                 </div>
@@ -546,6 +558,10 @@ export default function NoteDetail() {
                                     <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘I</kbd>
                                     Italic
                                 </span>
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘⇧A</kbd>
+                                    Action Item
+                                </span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -561,6 +577,16 @@ export default function NoteDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Action Item Modal */}
+            <AddActionItemModal
+                isOpen={showActionItemModal}
+                onClose={() => setShowActionItemModal(false)}
+                prefilledTitle={actionItemTitle}
+                preselectedNoteId={note?.id}
+                preselectedPersonId={note?.personId}
+                preselectedGroupId={note?.groupId}
+            />
         </div>
     );
 }

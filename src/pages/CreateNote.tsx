@@ -9,6 +9,7 @@ import { authService } from '../services/authService';
 import { useAuth } from '../contexts/AuthContext';
 import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
+import AddActionItemModal from '../components/AddActionItemModal';
 import type { CreateNoteRequest } from '../types';
 
 export default function CreateNote() {
@@ -65,6 +66,10 @@ export default function CreateNote() {
 
     // Tag input state
     const [tagInput, setTagInput] = useState('');
+
+    // Action item modal state
+    const [showActionItemModal, setShowActionItemModal] = useState(false);
+    const [actionItemTitle, setActionItemTitle] = useState('');
 
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
@@ -306,6 +311,12 @@ export default function CreateNote() {
 
         createMutation.mutate(noteDataWithEditorContent);
     }, [formData, editorRef, createMutation]);
+
+    const handleCreateActionItem = (selectedText: string) => {
+        // Open the modal with the selected text
+        setActionItemTitle(selectedText);
+        setShowActionItemModal(true);
+    };
 
     const handleCancel = useCallback(() => {
         const confirmLeave = () => {
@@ -765,6 +776,7 @@ export default function CreateNote() {
                             onChange={handleContentChange}
                             placeholder="Start writing your note here..."
                             className="h-full min-h-[400px] prose prose-lg max-w-none dark:prose-invert prose-primary"
+                            onCreateActionItem={handleCreateActionItem}
                         />
                     </div>
                 </div>
@@ -793,6 +805,10 @@ export default function CreateNote() {
                                     <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘I</kbd>
                                     Italic
                                 </span>
+                                <span className="flex items-center gap-1">
+                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘⇧A</kbd>
+                                    Action Item
+                                </span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -812,6 +828,15 @@ export default function CreateNote() {
                     </div>
                 </div>
             </div>
+
+            {/* Action Item Modal */}
+            <AddActionItemModal
+                isOpen={showActionItemModal}
+                onClose={() => setShowActionItemModal(false)}
+                prefilledTitle={actionItemTitle}
+                preselectedPersonId={formData.personId || undefined}
+                preselectedGroupId={formData.groupId || undefined}
+            />
         </div>
     );
 }

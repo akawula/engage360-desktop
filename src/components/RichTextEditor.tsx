@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { forwardRef, useImperativeHandle, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useState } from 'react';
 import {
     Bold,
     Italic,
@@ -13,11 +13,13 @@ import {
     Redo,
     Heading1,
     Heading2,
-    Heading3
+    Heading3,
+    CheckSquare
 } from 'lucide-react';
 
 export interface RichTextEditorRef {
     getContent: () => string;
+    getSelectedText: () => string;
 }
 
 interface RichTextEditorProps {
@@ -25,9 +27,13 @@ interface RichTextEditorProps {
     onChange: (content: string) => void;
     placeholder?: string;
     className?: string;
+    onCreateActionItem?: (selectedText: string) => void;
 }
 
-const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "" }, ref) => {
+const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "", onCreateActionItem }, ref) => {
+    const [hasSelection, setHasSelection] = useState(false);
+    const [selectedText, setSelectedText] = useState('');
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -49,9 +55,29 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             const html = editor.getHTML();
             onChange(html);
         },
+        onSelectionUpdate: ({ editor }) => {
+            const { from, to } = editor.state.selection;
+            const selection = editor.state.doc.textBetween(from, to, ' ').trim();
+            setSelectedText(selection);
+            setHasSelection(selection.length > 0);
+        },
         editorProps: {
             attributes: {
                 class: 'focus:outline-none min-h-[300px]',
+            },
+            handleKeyDown: (view, event) => {
+                // Handle Cmd+Shift+A
+                if (event.metaKey && event.shiftKey && event.key === 'A') {
+                    event.preventDefault();
+
+                    if (onCreateActionItem) {
+                        const { from, to } = view.state.selection;
+                        const selectedText = view.state.doc.textBetween(from, to, ' ').trim();
+                        onCreateActionItem(selectedText);
+                    }
+                    return true;
+                }
+                return false;
             },
         },
         onCreate: () => {
@@ -66,6 +92,17 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             // Get the current content from the editor
             const currentContent = editor.getHTML();
             return currentContent;
+        },
+        getSelectedText: () => {
+            if (!editor) return '';
+
+            // Get the current text selection
+            const { from, to } = editor.state.selection;
+            if (from === to) return ''; // No selection
+
+            // Get the selected text
+            const selectedText = editor.state.doc.textBetween(from, to, ' ');
+            return selectedText.trim();
         }
     }));
 
@@ -203,7 +240,29 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                         <Redo className="w-4 h-4" />
                     </ToolbarButton>
                 </div>
+
+                {/* Action Item Creation - Only show when text is selected */}
+                {hasSelection && onCreateActionItem && (
+                    <div className="flex items-center gap-1 pl-2 border-l border-gray-300 dark:border-gray-600">
+                        <button
+                            type="button"
+                            onClick={() => onCreateActionItem(selectedText)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded-lg transition-colors"
+                            title="Create Action Item from Selection (Cmd+Shift+A)"
+                        >
+                            <CheckSquare className="w-4 h-4" />
+                            Create Action Item
+                        </button>
+                    </div>
+                )}
             </div>
+
+            {/* Helpful hint for action item creation */}
+            {onCreateActionItem && (
+                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    💡 Tip: Select text and press <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 rounded">Cmd+Shift+A</kbd> or use the button above to create an action item
+                </div>
+            )}
 
             {/* Editor */}
             <div className="bg-white dark:bg-gray-800 transition-colors">

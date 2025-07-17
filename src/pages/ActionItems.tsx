@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, X, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck } from 'lucide-react';
 import { useActionItems, useUpdateActionStatus, useDeleteActionItem } from '../hooks/useActionItems';
 import { peopleService } from '../services/peopleService';
 import AddActionItemModal from '../components/AddActionItemModal';
@@ -8,110 +9,12 @@ import EditActionItemModal from '../components/EditActionItemModal';
 import { formatAvatarSrc } from '../lib/utils';
 import type { ActionItem } from '../types';
 
-// Helper function to format dates in a human-readable way
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+// Helper function to format dates in a human-readable way for due dates
 
-    // Same day
-    if (diffInDays === 0) {
-        if (diffInHours === 0) {
-            if (diffInMinutes < 1) return 'Just now';
-            if (diffInMinutes === 1) return '1 minute ago';
-            return `${diffInMinutes} minutes ago`;
-        }
-        if (diffInHours === 1) return '1 hour ago';
-        return `${diffInHours} hours ago`;
-    }
-
-    // Yesterday
-    if (diffInDays === 1) {
-        return `Yesterday at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    // This week (within 7 days)
-    if (diffInDays < 7) {
-        const dayName = date.toLocaleDateString([], { weekday: 'long' });
-        return `${dayName} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    // This year
-    const isThisYear = date.getFullYear() === now.getFullYear();
-    if (isThisYear) {
-        return date.toLocaleDateString([], {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    // Different year
-    return date.toLocaleDateString([], {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-// Helper function to format due dates
-const formatDueDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = date.getTime() - now.getTime();
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-    // Overdue
-    if (diffInMs < 0) {
-        const overdueDays = Math.abs(diffInDays);
-        if (overdueDays === 0) return 'Due today';
-        if (overdueDays === 1) return 'Due yesterday';
-        return `${overdueDays} days overdue`;
-    }
-
-    // Today
-    if (diffInDays === 0) {
-        return `Due today at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    // Tomorrow
-    if (diffInDays === 1) {
-        return `Due tomorrow at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    // This week
-    if (diffInDays < 7) {
-        const dayName = date.toLocaleDateString([], { weekday: 'long' });
-        return `Due ${dayName} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-
-    // Future dates
-    const isThisYear = date.getFullYear() === now.getFullYear();
-    if (isThisYear) {
-        return `Due ${date.toLocaleDateString([], {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        })}`;
-    }
-
-    return `Due ${date.toLocaleDateString([], {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    })}`;
-};
+// Helper function to format dates in a human-readable way for due dates
 
 export default function ActionItems() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
     const [itemToDelete, setItemToDelete] = useState<ActionItem | null>(null);
@@ -120,6 +23,8 @@ export default function ActionItems() {
     const [selectedPriority, setSelectedPriority] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'dueDate'>('updated');
+    const [prefilledTitle, setPrefilledTitle] = useState<string>('');
+    const [prefilledNoteId, setPrefilledNoteId] = useState<string>('');
 
     const { data: actionItems = [], isLoading, refetch } = useActionItems();
     const updateActionStatus = useUpdateActionStatus();
@@ -134,6 +39,35 @@ export default function ActionItems() {
 
     const people = peopleResponse?.success ? peopleResponse.data?.people || [] : [];
 
+    // Handle URL parameters for pre-filling action item creation
+    useEffect(() => {
+        const title = searchParams.get('title');
+        const noteId = searchParams.get('noteId');
+
+        console.log('URL params:', { title, noteId });
+
+        if (title || noteId) {
+            setPrefilledTitle(title || '');
+            setPrefilledNoteId(noteId || '');
+            setIsAddModalOpen(true);
+
+            console.log('Setting prefilled values:', { title, noteId });
+
+            // Clear the URL parameters after a small delay to allow modal to initialize
+            setTimeout(() => {
+                setSearchParams({});
+            }, 100);
+        }
+    }, [searchParams, setSearchParams]);
+
+    // Reset prefilled values when modal closes
+    useEffect(() => {
+        if (!isAddModalOpen) {
+            setPrefilledTitle('');
+            setPrefilledNoteId('');
+        }
+    }, [isAddModalOpen]);
+
     // Helper function to get person data by ID
     const getPersonById = (personId: string | undefined) => {
         if (!personId) return null;
@@ -142,6 +76,8 @@ export default function ActionItems() {
 
     // Filter and sort action items
     const filteredAndSortedItems = useMemo(() => {
+        if (!actionItems) return [];
+
         let filtered = actionItems.filter(item => {
             const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -359,13 +295,6 @@ export default function ActionItems() {
         await updateActionStatus.mutateAsync({
             id: item.id,
             status: 'pending'
-        });
-    };
-
-    const handleCancelItem = async (item: ActionItem) => {
-        await updateActionStatus.mutateAsync({
-            id: item.id,
-            status: 'cancelled'
         });
     };
 
@@ -949,6 +878,8 @@ export default function ActionItems() {
             <AddActionItemModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
+                prefilledTitle={prefilledTitle}
+                preselectedNoteId={prefilledNoteId}
             />
 
             {editingItem && (

@@ -13,6 +13,7 @@ interface AddActionItemModalProps {
     preselectedPersonId?: string;
     preselectedGroupId?: string;
     preselectedNoteId?: string;
+    prefilledTitle?: string;
 }
 
 export default function AddActionItemModal({
@@ -20,10 +21,11 @@ export default function AddActionItemModal({
     onClose,
     preselectedPersonId,
     preselectedGroupId,
-    preselectedNoteId
+    preselectedNoteId,
+    prefilledTitle
 }: AddActionItemModalProps) {
     const [formData, setFormData] = useState<CreateActionItemRequest>({
-        title: '',
+        title: prefilledTitle || '',
         description: '',
         priority: 'medium',
         dueDate: '',
@@ -48,6 +50,36 @@ export default function AddActionItemModal({
             loadNotes();
         }
     }, [isOpen]);
+
+    // Update form data when prefilled values change
+    useEffect(() => {
+        console.log('AddActionItemModal useEffect:', { isOpen, prefilledTitle, preselectedPersonId, preselectedGroupId, preselectedNoteId });
+
+        if (isOpen && (prefilledTitle || preselectedPersonId || preselectedGroupId || preselectedNoteId)) {
+            console.log('Setting form data with prefilled values');
+            setFormData({
+                title: prefilledTitle || '',
+                description: '',
+                priority: 'medium',
+                dueDate: '',
+                personId: preselectedPersonId || '',
+                groupId: preselectedGroupId || '',
+                noteId: preselectedNoteId || '',
+            });
+        } else if (isOpen && !prefilledTitle && !preselectedPersonId && !preselectedGroupId && !preselectedNoteId) {
+            // Only reset if no prefilled values are provided
+            console.log('Resetting form data');
+            setFormData({
+                title: '',
+                description: '',
+                priority: 'medium',
+                dueDate: '',
+                personId: '',
+                groupId: '',
+                noteId: '',
+            });
+        }
+    }, [isOpen, prefilledTitle, preselectedPersonId, preselectedGroupId, preselectedNoteId]);
 
     const loadGroups = async () => {
         setLoadingGroups(true);
@@ -122,7 +154,7 @@ export default function AddActionItemModal({
                         onClose();
                         // Reset form
                         setFormData({
-                            title: '',
+                            title: prefilledTitle || '',
                             description: '',
                             priority: 'medium',
                             dueDate: '',
@@ -160,7 +192,7 @@ export default function AddActionItemModal({
         onClose();
         // Reset form
         setFormData({
-            title: '',
+            title: prefilledTitle || '',
             description: '',
             priority: 'medium',
             dueDate: '',
