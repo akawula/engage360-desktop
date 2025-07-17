@@ -62,7 +62,8 @@ class ActionItemsService {    /**
 
                 try {
                     // Try to decode as Base64 first (our standard format)
-                    const decodedBase64 = atob(encryptedContent);
+                    // Handle Unicode characters properly
+                    const decodedBase64 = decodeURIComponent(escape(atob(encryptedContent)));
                     console.log('✅ Base64 decode successful:', decodedBase64);
 
                     const parsed = JSON.parse(decodedBase64);

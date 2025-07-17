@@ -83,7 +83,7 @@ export const useCreateActionItem = () => {
             }
 
             const encryptionData = {
-                encryptedContent: btoa(contentToEncrypt), // Encode as Base64 to prevent API mangling
+                encryptedContent: btoa(unescape(encodeURIComponent(contentToEncrypt))), // Properly encode Unicode characters
                 encryptedKeys: { 'default-device': btoa('placeholder-key-' + Date.now()) },
                 iv: btoa(String.fromCharCode(...ivArray))
             };
@@ -142,7 +142,7 @@ export const useUpdateActionItem = () => {
                 }
 
                 const encryptionData = {
-                    encryptedContent: btoa(contentToEncrypt), // Encode as Base64 to prevent API mangling
+                    encryptedContent: btoa(unescape(encodeURIComponent(contentToEncrypt))), // Properly encode Unicode characters
                     encryptedKeys: { 'default-device': btoa('placeholder-key-' + Date.now()) },
                     iv: btoa(String.fromCharCode(...ivArray))
                 };

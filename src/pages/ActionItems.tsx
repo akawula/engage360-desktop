@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, X, Play, Square } from 'lucide-react';
+import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, X, Play, Square, Archive, Ban, RotateCcw } from 'lucide-react';
 import { useActionItems, useUpdateActionStatus, useDeleteActionItem } from '../hooks/useActionItems';
 import AddActionItemModal from '../components/AddActionItemModal';
 import EditActionItemModal from '../components/EditActionItemModal';
@@ -112,7 +112,7 @@ export default function ActionItems() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
     const [itemToDelete, setItemToDelete] = useState<ActionItem | null>(null);
-    const [activeTab, setActiveTab] = useState<'todo' | 'completed'>('todo');
+    const [activeTab, setActiveTab] = useState<'todo' | 'completed' | 'archived'>('todo');
 
     const { data: actionItems = [], isLoading, refetch } = useActionItems();
     const updateActionStatus = useUpdateActionStatus();
@@ -171,7 +171,14 @@ export default function ActionItems() {
             return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
         });
 
-    const displayedItems = activeTab === 'todo' ? todoItems : completedItems;
+    const archivedItems = (actionItems || [])
+        .filter(item => item.status === 'cancelled')
+        .sort((a, b) => {
+            // Sort archived items by updated date (newest first)
+            return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        });
+
+    const displayedItems = activeTab === 'todo' ? todoItems : activeTab === 'completed' ? completedItems : archivedItems;
 
     const getPriorityIcon = (priority: string) => {
         switch (priority) {
@@ -190,6 +197,8 @@ export default function ActionItems() {
                 return <CheckSquare className="h-4 w-4 text-green-500" />;
             case 'in_progress':
                 return <Clock className="h-4 w-4 text-blue-500" />;
+            case 'cancelled':
+                return <Ban className="h-4 w-4 text-red-500" />;
             default:
                 return <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
         }
@@ -247,6 +256,20 @@ export default function ActionItems() {
         });
     };
 
+    const handleCancelItem = async (item: ActionItem) => {
+        await updateActionStatus.mutateAsync({
+            id: item.id,
+            status: 'cancelled'
+        });
+    };
+
+    const handleRestoreItem = async (item: ActionItem) => {
+        await updateActionStatus.mutateAsync({
+            id: item.id,
+            status: 'pending'
+        });
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -291,6 +314,20 @@ export default function ActionItems() {
                             </span>
                         )}
                     </button>
+                    <button
+                        onClick={() => setActiveTab('archived')}
+                        className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'archived'
+                            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                            }`}
+                    >
+                        Archived
+                        {archivedItems.length > 0 && (
+                            <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs">
+                                {archivedItems.length}
+                            </span>
+                        )}
+                    </button>
                 </nav>
             </div>
 
@@ -304,11 +341,17 @@ export default function ActionItems() {
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No pending action items</h3>
                                 <p className="text-gray-500 dark:text-gray-400">Create your first action item to get started!</p>
                             </>
-                        ) : (
+                        ) : activeTab === 'completed' ? (
                             <>
                                 <Check className="h-12 w-12 mx-auto mb-4" />
                                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No completed items yet</h3>
                                 <p className="text-gray-500 dark:text-gray-400">Complete some action items to see them here.</p>
+                            </>
+                        ) : (
+                            <>
+                                <Archive className="h-12 w-12 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No archived items</h3>
+                                <p className="text-gray-500 dark:text-gray-400">Cancelled action items will appear here.</p>
                             </>
                         )}
                     </div>
@@ -395,7 +438,7 @@ export default function ActionItems() {
                                     )}
 
                                     {/* Complete button for non-completed items */}
-                                    {item.status !== 'completed' && (
+                                    {item.status !== 'completed' && item.status !== 'cancelled' && (
                                         <button
                                             onClick={() => handleToggleStatus(item)}
                                             disabled={updateActionStatus.isPending}
@@ -403,6 +446,18 @@ export default function ActionItems() {
                                             title="Mark as done"
                                         >
                                             <Check className="h-4 w-4" />
+                                        </button>
+                                    )}
+
+                                    {/* Cancel button for active items (pending or in_progress) */}
+                                    {(item.status === 'pending' || item.status === 'in_progress') && (
+                                        <button
+                                            onClick={() => handleCancelItem(item)}
+                                            disabled={updateActionStatus.isPending}
+                                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
+                                            title="Cancel this item"
+                                        >
+                                            <Ban className="h-4 w-4" />
                                         </button>
                                     )}
 
@@ -415,6 +470,18 @@ export default function ActionItems() {
                                             title="Mark as pending"
                                         >
                                             <X className="h-4 w-4" />
+                                        </button>
+                                    )}
+
+                                    {/* Restore button for cancelled items */}
+                                    {item.status === 'cancelled' && (
+                                        <button
+                                            onClick={() => handleRestoreItem(item)}
+                                            disabled={updateActionStatus.isPending}
+                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors disabled:opacity-50"
+                                            title="Restore to pending"
+                                        >
+                                            <RotateCcw className="h-4 w-4" />
                                         </button>
                                     )}
 
