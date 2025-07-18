@@ -5,6 +5,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { StoreErrorHandler } from './components/StoreErrorHandler';
+import { TauriEventHandler } from './components/TauriEventHandler';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import People from './pages/People';
@@ -50,6 +51,7 @@ function App() {
       <ThemeProvider>
         <NotificationProvider>
           <StoreErrorHandler />
+          <TauriEventHandler />
           <AuthProvider>
             <Router>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
