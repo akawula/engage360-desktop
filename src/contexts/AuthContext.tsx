@@ -92,9 +92,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await authServiceToUse.login(credentials);
 
             if (response.success && response.data?.data) {
-                setUser(response.data.data.user);
                 authServiceToUse.setToken(response.data.data.accessToken);
                 setToken(response.data.data.accessToken); // Update token state
+
+                // Explicitly fetch user profile after setting the token
+                const userResponse = await authServiceToUse.getUserProfile();
+                if (userResponse.success && userResponse.data) {
+                    let userData: AuthUser | null = null;
+                    // Check if the response has the expected structure: response.data.user
+                    if (userResponse.data && typeof userResponse.data === 'object' && 'user' in userResponse.data) {
+                        userData = (userResponse.data as any).user;
+                    }
+                    // Fallback to direct user data
+                    else if (userResponse.data && 'id' in userResponse.data) {
+                        userData = userResponse.data as AuthUser;
+                    }
+
+                    if (userData) {
+                        setUser(userData);
+                    } else {
+                        showError('Login Failed', 'Could not retrieve user profile.');
+                        return false;
+                    }
+                } else {
+                    showError('Login Failed', userResponse.error?.message || 'Could not retrieve user profile.');
+                    return false;
+                }
+
                 showSuccess('Welcome back!', 'You have been successfully logged in.');
                 return true;
             } else {

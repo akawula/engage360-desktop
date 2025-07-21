@@ -4,7 +4,18 @@
   "description": "Capability for the main window",
   "windows": ["main"],
   "permissions": [
-    "core:default",
-    "opener:default"
+    {
+      "identifier": "core:default"
+    },
+    {
+      "identifier": "opener:default"
+    },
+    {
+      "identifier": "http:default",
+      "allow": ["http://45.86.33.25:2137/**"]
+    },
+    {
+      "identifier": "notification:default"
+    }
   ]
 }

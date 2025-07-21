@@ -137,53 +137,28 @@ class DevicesService {
             // Store encrypted private key locally
             this.storeEncryptedPrivateKey(keyPair.privateKey);
 
-            // For device registration, we need to handle 401 errors directly without token refresh retry
-            // because 401 here means "invalid password", not "expired token"
-            const SERVER_BASE_URL = 'http://localhost:3000';
-            const url = `${SERVER_BASE_URL}/api/devices`;
-
-            const headers: Record<string, string> = {
-                'Content-Type': 'application/json',
-            };
-
-            // Add auth token if available
-            const token = apiService.getToken();
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-
             // Include public key in the request
             const requestWithKey = {
                 ...request,
                 publicKey: keyPair.publicKey
             };
 
-            const fetchResponse = await fetch(url, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(requestWithKey),
-            });
+            // For device registration, we need to handle 401 errors directly without token refresh retry
+            // because 401 here means "invalid password", not "expired token"
+            const response = await apiService.post<DeviceRegistrationResponse>('/devices', requestWithKey, { disableTokenRefresh: true });
 
-            let data;
-            const contentType = fetchResponse.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                data = await fetchResponse.json();
-            } else {
-                data = await fetchResponse.text();
-            }
-
-            if (!fetchResponse.ok) {
+            if (!response.success) {
                 // Clear stored private key on failure
                 this.clearEncryptedPrivateKey();
 
                 // Handle specific 401 error for device registration (invalid password)
-                if (fetchResponse.status === 401) {
+                if (response.error?.code === 401) {
                     return {
                         success: false,
                         error: {
                             message: 'Invalid password. Please enter your correct account password.',
                             code: 401,
-                            details: typeof data === 'string' ? data : data?.message || data?.error,
+                            details: response.error.details,
                         },
                     };
                 }
@@ -192,20 +167,20 @@ class DevicesService {
                 return {
                     success: false,
                     error: {
-                        message: `Device registration failed (${fetchResponse.status})`,
-                        code: fetchResponse.status,
-                        details: typeof data === 'string' ? data : data?.message || data?.error,
+                        message: `Device registration failed (${response.error?.code})`,
+                        code: response.error?.code || 500,
+                        details: response.error?.details,
                     },
                 };
             }
 
             // Success case
-            if (data?.device) {
+            if (response.data?.device) {
                 return {
                     success: true,
                     data: {
-                        ...data,
-                        device: transformDeviceData(data.device),
+                        ...response.data,
+                        device: transformDeviceData(response.data.device),
                     },
                 };
             }

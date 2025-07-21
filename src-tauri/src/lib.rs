@@ -64,6 +64,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![greet, get_background_task_status, trigger_background_task, send_notification, notify_due_action_item, clear_due_item_notifications])
         .setup(|app| {
             // Disable default menu to prevent keyboard shortcut interception

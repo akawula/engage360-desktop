@@ -1,5 +1,12 @@
 import type { ApiResponse, ApiError } from '../types';
 
+export interface ApiRequestOptions {
+    disableTokenRefresh?: boolean;
+}
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+
 // Base server URL without any prefix
 const SERVER_BASE_URL = 'http://45.86.33.25:2137';
 // API prefix for protected endpoints
@@ -97,7 +104,8 @@ class ApiService {
 
     private async performTokenRefresh(): Promise<boolean> {
         try {
-            const response = await fetch(`${this.serverBaseURL}/auth/refresh`, {
+            const url = `${this.serverBaseURL}/auth/refresh`;
+            const options = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -105,7 +113,16 @@ class ApiService {
                 body: JSON.stringify({
                     refreshToken: this.refreshToken
                 }),
-            });
+            };
+
+            let response: Response;
+
+            if (isTauri) {
+                const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+                response = await tauriFetch(url, options);
+            } else {
+                response = await fetch(url, options);
+            }
 
             if (response.ok) {
                 const data = await response.json();
@@ -124,9 +141,13 @@ class ApiService {
         }
     }
 
-    private async ensureValidToken(): Promise<boolean> {
+    private async ensureValidToken(apiRequestOptions: ApiRequestOptions = {}): Promise<boolean> {
         if (!this.token) {
             return false;
+        }
+
+        if (apiRequestOptions.disableTokenRefresh) {
+            return !this.isTokenExpired(this.token);
         }
 
         // Check if token is expired
@@ -142,11 +163,12 @@ class ApiService {
         return true;
     } private async request<T>(
         endpoint: string,
-        options: RequestInit = {}
+        options: RequestInit = {},
+        apiRequestOptions: ApiRequestOptions = {}
     ): Promise<ApiResponse<T>> {
         // For non-auth endpoints, ensure we have a valid token
         if (!endpoint.startsWith('/auth/') && this.token) {
-            const hasValidToken = await this.ensureValidToken();
+            const hasValidToken = await this.ensureValidToken(apiRequestOptions);
             if (!hasValidToken) {
                 // Token refresh failed, redirect to login
                 const error: ApiError = {
@@ -187,12 +209,30 @@ class ApiService {
         }
 
         try {
-            const response = await fetch(url, {
-                ...options,
-                headers,
-            });
+            let response: Response;
 
-            let data;
+            if (isTauri) {
+                try {
+                    // Use Tauri's HTTP client in Tauri environment
+                    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+                    response = await tauriFetch(url, {
+                        ...options,
+                        headers,
+                    });
+                } catch (importError) {
+                    // Fallback to browser fetch
+                    response = await fetch(url, {
+                        ...options,
+                        headers,
+                    });
+                }
+            } else {
+                // Use browser's fetch API in web environment
+                response = await fetch(url, {
+                    ...options,
+                    headers,
+                });
+            } let data;
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
@@ -208,15 +248,15 @@ class ApiService {
                     const freshEndpoint = `${endpoint}${separator}_t=${Date.now()}`;
 
                     // Retry without cache-busting headers to avoid CORS issues
-                    return this.request(freshEndpoint, options);
+                    return this.request(freshEndpoint, options, apiRequestOptions);
                 }
 
                 // Handle 401 errors by attempting token refresh
-                if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+                if (response.status === 401 && !endpoint.startsWith('/auth/') && !apiRequestOptions.disableTokenRefresh) {
                     const refreshSuccess = await this.attemptTokenRefresh();
                     if (refreshSuccess) {
                         // Retry the request with the new token
-                        return this.request(endpoint, options);
+                        return this.request(endpoint, options, apiRequestOptions);
                     }
                 }
 
@@ -281,7 +321,7 @@ class ApiService {
         }
     }
 
-    async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    async get<T>(endpoint: string, apiRequestOptions?: ApiRequestOptions): Promise<ApiResponse<T>> {
         // Add cache-busting for profile requests to avoid 304 responses
         let requestEndpoint = endpoint;
         if (endpoint.includes('/users/profile')) {
@@ -289,32 +329,32 @@ class ApiService {
             requestEndpoint = `${endpoint}${separator}_cb=${Date.now()}`;
         }
 
-        return this.request<T>(requestEndpoint, { method: 'GET' });
+        return this.request<T>(requestEndpoint, { method: 'GET' }, apiRequestOptions);
     }
 
-    async post<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+    async post<T>(endpoint: string, body?: any, apiRequestOptions?: ApiRequestOptions): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'POST',
             body: body ? JSON.stringify(body) : undefined,
-        });
+        }, apiRequestOptions);
     }
 
-    async put<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+    async put<T>(endpoint: string, body?: any, apiRequestOptions?: ApiRequestOptions): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'PUT',
             body: body ? JSON.stringify(body) : undefined,
-        });
+        }, apiRequestOptions);
     }
 
-    async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'DELETE' });
+    async delete<T>(endpoint: string, apiRequestOptions?: ApiRequestOptions): Promise<ApiResponse<T>> {
+        return this.request<T>(endpoint, { method: 'DELETE' }, apiRequestOptions);
     }
 
-    async patch<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+    async patch<T>(endpoint: string, body?: any, apiRequestOptions?: ApiRequestOptions): Promise<ApiResponse<T>> {
         return this.request<T>(endpoint, {
             method: 'PATCH',
             body: body ? JSON.stringify(body) : undefined,
-        });
+        }, apiRequestOptions);
     }
 }
 

@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' http://45.86.33.25:2137; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+      "csp": "default-src 'self'; connect-src 'self' http: https: ws: wss: ipc: ipc.localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:;"
     }
   },
   "bundle": {
@@ -34,6 +34,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "entitlements": "entitlements.plist"
+    }
   }
 }
