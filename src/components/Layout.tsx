@@ -27,7 +27,6 @@ const navItems = [
     { path: '/action-items', label: 'Action Items', icon: CheckSquare },
     { path: '/guides', label: 'Career Guides', icon: BookOpen },
     { path: '/devices', label: 'Devices', icon: Monitor },
-    { path: '/profile', label: 'Profile', icon: User },
 ];
 
 export default function Layout({ children }: LayoutProps) {
