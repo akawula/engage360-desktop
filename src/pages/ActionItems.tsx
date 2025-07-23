@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck, FileText } from 'lucide-react';
@@ -25,6 +25,8 @@ export default function ActionItems() {
     const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'dueDate'>('updated');
     const [prefilledTitle, setPrefilledTitle] = useState<string>('');
     const [prefilledNoteId, setPrefilledNoteId] = useState<string>('');
+    const [showHighlight, setShowHighlight] = useState<boolean>(true);
+    const [highlightProgress, setHighlightProgress] = useState<number>(100);
 
     const { data: actionItems = [], isLoading, refetch } = useActionItems();
     const updateActionStatus = useUpdateActionStatus();
@@ -47,12 +49,80 @@ export default function ActionItems() {
 
     const people = peopleResponse?.success ? peopleResponse.data?.people || [] : [];
 
-    // Handle URL parameters for pre-filling action item creation
+    // Handle URL parameters for pre-filling action item creation and highlighting
+    const highlightItemId = searchParams.get('highlight');
+
+    // Auto-fadeout highlight after 5 seconds
+    useEffect(() => {
+        if (highlightItemId) {
+            setShowHighlight(true);
+            setHighlightProgress(100);
+
+            // Update progress every 100ms for smooth animation
+            const progressInterval = setInterval(() => {
+                setHighlightProgress(prev => {
+                    const newProgress = prev - 2; // 100ms * 50 intervals = 5 seconds
+                    if (newProgress <= 0) {
+                        clearInterval(progressInterval);
+                        return 0;
+                    }
+                    return newProgress;
+                });
+            }, 100);
+
+            // Hide highlight after 5 seconds
+            const fadeTimer = setTimeout(() => {
+                setShowHighlight(false);
+            }, 5000);
+
+            return () => {
+                clearInterval(progressInterval);
+                clearTimeout(fadeTimer);
+            };
+        } else {
+            setShowHighlight(true);
+            setHighlightProgress(100);
+        }
+    }, [highlightItemId]);
+
+    // Automatically switch to the correct tab for highlighted item
+    useEffect(() => {
+        if (highlightItemId && actionItems && actionItems.length > 0) {
+            const highlightedItem = actionItems.find(item => item.id === highlightItemId);
+            if (highlightedItem) {
+                if (highlightedItem.status === 'pending' || highlightedItem.status === 'in_progress') {
+                    setActiveTab('todo');
+                } else if (highlightedItem.status === 'completed') {
+                    setActiveTab('completed');
+                } else if (highlightedItem.status === 'cancelled') {
+                    setActiveTab('archived');
+                }
+            }
+        }
+    }, [highlightItemId, actionItems]);
+
+    // Scroll to highlighted item
+    useEffect(() => {
+        if (highlightItemId && actionItems && actionItems.length > 0) {
+            const timer = setTimeout(() => {
+                const element = document.getElementById(`action-item-${highlightItemId}`);
+                if (element) {
+                    element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
+            }, 300); // Small delay to ensure rendering is complete
+
+            return () => clearTimeout(timer);
+        }
+    }, [highlightItemId, actionItems, activeTab]); // Added activeTab to dependencies
+
     useEffect(() => {
         const title = searchParams.get('title');
         const noteId = searchParams.get('noteId');
 
-        console.log('URL params:', { title, noteId });
+        console.log('URL params:', { title, noteId, highlight: highlightItemId });
 
         if (title || noteId) {
             setPrefilledTitle(title || '');
@@ -63,10 +133,15 @@ export default function ActionItems() {
 
             // Clear the URL parameters after a small delay to allow modal to initialize
             setTimeout(() => {
-                setSearchParams({});
+                setSearchParams(prev => {
+                    const newParams = new URLSearchParams(prev);
+                    newParams.delete('title');
+                    newParams.delete('noteId');
+                    return newParams;
+                });
             }, 100);
         }
-    }, [searchParams, setSearchParams]);
+    }, [searchParams, setSearchParams, highlightItemId]);
 
     // Reset prefilled values when modal closes
     useEffect(() => {
@@ -523,18 +598,41 @@ export default function ActionItems() {
                             const associatedPerson = getPersonById(item.personId);
                             const dueDateText = getDueDateText(item.dueDate);
                             const isItemOverdue = isOverdue(item.dueDate);
+                            const isHighlighted = highlightItemId === item.id && showHighlight;
 
                             return (
                                 <div
                                     key={item.id}
-                                    className={`group bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${isItemOverdue
-                                        ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
+                                    id={`action-item-${item.id}`}
+                                    className={`group bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-1000 hover:shadow-lg ${isHighlighted
+                                        ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-primary-200/50 dark:shadow-primary-900/30 shadow-lg ring-2 ring-primary-200 dark:ring-primary-800 hover:shadow-primary-300/60 dark:hover:shadow-primary-900/40'
+                                        : isItemOverdue
+                                            ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
                                         } ${viewMode === 'grid' ? 'p-6' : 'p-4'}`}
                                 >
                                     {viewMode === 'grid' ? (
                                         // Grid View
                                         <div className="h-full flex flex-col">
+                                            {/* Highlighted indicator */}
+                                            {isHighlighted && (
+                                                <div className="mb-3 flex flex-col gap-2 px-3 py-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-700 transition-all duration-1000 ease-in-out animate-in slide-in-from-top-2 fade-in">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
+                                                        <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                                                            {associatedPerson ? `Highlighted from ${associatedPerson.firstName} ${associatedPerson.lastName}'s profile` : 'Highlighted from person profile'}
+                                                        </span>
+                                                    </div>
+                                                    {/* Progress bar showing fadeout countdown */}
+                                                    <div className="w-full bg-primary-200 dark:bg-primary-800 rounded-full h-1">
+                                                        <div
+                                                            className="bg-primary-500 h-1 rounded-full transition-all duration-100 ease-linear"
+                                                            style={{ width: `${highlightProgress}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-start justify-between mb-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center">

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Filter, Mail, Phone, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePeople } from '../hooks/usePeople';
+import { useGrowthAnalytics } from '../hooks/useGrowth';
 import { formatAvatarSrc } from '../lib/utils';
 import AddPersonModal from '../components/AddPersonModal';
 
@@ -28,6 +29,24 @@ export default function People() {
 
         return matchesSearch && matchesTag;
     });
+
+    // Growth Progress Component
+    const GrowthProgress = ({ personId }: { personId: string }) => {
+        const { data: analytics } = useGrowthAnalytics(personId);
+
+        if (!analytics) return null;
+
+        return (
+            <div className="flex items-center gap-2 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                <TrendingUp className="w-4 h-4 text-green-600" />
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                    <span className="font-medium">{analytics.totalGoals}</span> goals •
+                    <span className="font-medium"> {analytics.skillsCount}</span> skills •
+                    <span className="font-medium"> {analytics.averageProgress}%</span> avg progress
+                </div>
+            </div>
+        );
+    };
 
     // Helper function for engagement score colors
     const getEngagementColor = (score: number) => {
@@ -105,18 +124,19 @@ export default function People() {
                     <Link
                         key={person.id}
                         to={`/people/${person.id}`}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-all p-6 group"
+                        className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-all p-6 group flex flex-col h-full"
                     >
-                        <div className="flex items-start space-x-4">
+                        {/* Header Section */}
+                        <div className="flex items-start space-x-4 mb-4">
                             {formatAvatarSrc(person.avatarUrl || person.avatar) ? (
                                 <img
                                     key={`${person.id}-avatar-${person.avatarUrl || person.avatar}`}
                                     src={formatAvatarSrc(person.avatarUrl || person.avatar)!}
                                     alt={`${person.firstName} ${person.lastName}`}
-                                    className="w-12 h-12 rounded-full object-cover"
+                                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                                 />
                             ) : (
-                                <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+                                <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
                                     <span className="text-white font-medium">
                                         {person.firstName[0]}{person.lastName[0]}
                                     </span>
@@ -133,74 +153,84 @@ export default function People() {
                                         {person.position}
                                     </p>
                                 )}
+                            </div>
+                        </div>
 
-                                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    {person.email && (
-                                        <div className="flex items-center">
-                                            <Mail className="w-4 h-4 mr-1" />
-                                            <span className="truncate">{person.email}</span>
-                                        </div>
-                                    )}
-                                </div>
+                        {/* Content Section - Flexible height */}
+                        <div className="flex-1 space-y-3">
+                            {/* Contact Info */}
+                            <div className="space-y-1">
+                                {person.email && (
+                                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <Mail className="w-4 h-4 mr-2 flex-shrink-0" />
+                                        <span className="truncate">{person.email}</span>
+                                    </div>
+                                )}
 
                                 {person.phone && (
-                                    <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        <Phone className="w-4 h-4 mr-1" />
+                                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
                                         <span>{person.phone}</span>
                                     </div>
                                 )}
 
                                 {person.githubUsername && (
-                                    <div className="flex items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                                        <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd" />
                                         </svg>
                                         <span>@{person.githubUsername}</span>
                                     </div>
                                 )}
+                            </div>
 
-                                {/* Tags */}
-                                {person.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-3">
-                                        {person.tags.slice(0, 3).map(tag => (
-                                            <span
-                                                key={tag}
-                                                className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
-                                            >
-                                                {tag}
-                                            </span>
-                                        ))}
-                                        {person.tags.length > 3 && (
-                                            <span className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
-                                                +{person.tags.length - 3}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Engagement Score */}
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                                            Engagement:
+                            {/* Tags */}
+                            {person.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                    {person.tags.slice(0, 3).map(tag => (
+                                        <span
+                                            key={tag}
+                                            className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full"
+                                        >
+                                            {tag}
                                         </span>
-                                        <span className={`text-sm font-medium px-2 py-1 rounded ${getEngagementColor(person.engagementScore || 0)}`}>
-                                            {person.engagementScore}%
-                                        </span>
-                                    </div>
-                                    {person.lastInteraction && (
-                                        <span className="text-xs text-gray-400">
-                                            Last: {format(new Date(person.lastInteraction), 'MMM d')}
+                                    ))}
+                                    {person.tags.length > 3 && (
+                                        <span className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                                            +{person.tags.length - 3}
                                         </span>
                                     )}
                                 </div>
+                            )}
+                        </div>
 
-                                {/* Activity breakdown */}
-                                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                    <span>{person.counts?.notes || 0} notes</span>
-                                    <span>{person.counts?.achievements || 0} achievements</span>
-                                    <span>{person.counts?.actions || 0} actions</span>
+                        {/* Footer Section - Always at bottom */}
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+                            {/* Growth Progress */}
+                            <GrowthProgress personId={person.id} />
+
+                            {/* Engagement Score */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        Engagement:
+                                    </span>
+                                    <span className={`text-sm font-medium px-2 py-1 rounded ${getEngagementColor(person.engagementScore || 0)}`}>
+                                        {person.engagementScore}%
+                                    </span>
                                 </div>
+                                {person.lastInteraction && (
+                                    <span className="text-xs text-gray-400">
+                                        Last: {format(new Date(person.lastInteraction), 'MMM d')}
+                                    </span>
+                                )}
+                            </div>
+
+                            {/* Activity breakdown */}
+                            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                <span>{person.counts?.notes || 0} notes</span>
+                                <span>{person.counts?.achievements || 0} achievements</span>
+                                <span>{person.counts?.actions || 0} actions</span>
                             </div>
                         </div>
                     </Link>

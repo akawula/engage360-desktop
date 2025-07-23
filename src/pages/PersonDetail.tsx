@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Edit, Plus, FileText, CheckSquare, Trash2, Users, TrendingUp, ExternalLink } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { actionItemsService } from '../services/actionItemsService';
 import { usePerson, useDeletePerson } from '../hooks/usePeople';
 import { formatAvatarSrc } from '../lib/utils';
 import EditPersonModal from '../components/EditPersonModal';
+import GrowthDashboard from '../components/GrowthDashboard';
+import SkillsManagement from '../components/SkillsManagement';
 
 export default function PersonDetail() {
     const { personId } = useParams<{ personId: string }>();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'actions' | 'growth'>('overview');
     const navigate = useNavigate();
 
     const { data: person, isLoading } = usePerson(personId || '');
@@ -47,6 +50,170 @@ export default function PersonDetail() {
                     }
                 },
             });
+        }
+    };
+
+    const renderTabContent = () => {
+        if (!person) return null;
+
+        const personName = `${person.firstName} ${person.lastName}`;
+
+        switch (activeTab) {
+            case 'overview':
+                return (
+                    <div className="space-y-6">
+                        {/* Groups */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                Groups ({person.groups?.length || 0})
+                            </h3>
+                            {person.groups && person.groups.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {person.groups.map((group) => (
+                                        <Link
+                                            key={group.id}
+                                            to={`/groups/${group.id}`}
+                                            className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h4 className="font-medium text-gray-900 dark:text-white">{group.name}</h4>
+                                                {group.tags && group.tags.length > 0 && (
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${group.color
+                                                        ? 'text-white'
+                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                                        }`}
+                                                        style={group.color ? { backgroundColor: group.color } : undefined}>
+                                                        {group.tags[0]}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {group.description && (
+                                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-2">
+                                                    {group.description}
+                                                </p>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 dark:text-gray-400 text-center py-8">Not a member of any groups</p>
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 'notes':
+                return (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <FileText className="h-5 w-5" />
+                                Notes ({notes.length})
+                            </h3>
+                            <Link
+                                to={`/notes/create?personId=${personId}`}
+                                className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add Note
+                            </Link>
+                        </div>
+                        {notes.length > 0 ? (
+                            <div className="space-y-4">
+                                {notes.map((note) => (
+                                    <Link
+                                        key={note.id}
+                                        to={`/notes/${note.id}`}
+                                        className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all"
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <h4 className="font-medium text-gray-900 dark:text-white">{note.title}</h4>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                {new Date(note.createdAt).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{note.content}</p>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No notes yet</p>
+                        )}
+                    </div>
+                );
+
+            case 'actions':
+                return (
+                    <div>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <CheckSquare className="h-5 w-5" />
+                                Action Items ({actionItems.length})
+                            </h3>
+                            <button className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm">
+                                <Plus className="h-4 w-4" />
+                                Add Action Item
+                            </button>
+                        </div>
+                        {actionItems.length > 0 ? (
+                            <div className="space-y-3">
+                                {actionItems.map((item) => (
+                                    <Link
+                                        key={item.id}
+                                        to={`/action-items?highlight=${item.id}`}
+                                        className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-200 hover:shadow-md group"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <h4 className="font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                        {item.title}
+                                                    </h4>
+                                                    <ExternalLink className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-colors" />
+                                                </div>
+                                                <p className="text-gray-600 dark:text-gray-300 text-sm">{item.description}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                    Click to view in Action Items with highlighting
+                                                </p>
+                                            </div>
+                                            <div className="text-right ml-4">
+                                                <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200' :
+                                                    item.status === 'in_progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200' :
+                                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
+                                                    }`}>
+                                                    {item.status.replace('_', ' ')}
+                                                </span>
+                                                {item.dueDate && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                        Due: {new Date(item.dueDate).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No action items yet</p>
+                        )}
+                    </div>
+                );
+
+            case 'growth':
+                return (
+                    <div className="space-y-6">
+                        <GrowthDashboard personId={person.id} personName={personName} />
+                        <SkillsManagement
+                            personId={person.id}
+                            personName={personName}
+                            personAvatar={person.avatarUrl}
+                        />
+                    </div>
+                );
+
+            default:
+                return <div>Tab content not found</div>;
         }
     };
 
@@ -204,157 +371,35 @@ export default function PersonDetail() {
                 </div>
             </div>
 
-            {/* Groups Section */}
+            {/* Tab Navigation */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Groups ({person.groups?.length || 0})
-                    </h2>
-                </div>
+                <nav className="flex space-x-8 px-6 pt-6" aria-label="Tabs">
+                    {[
+                        { id: 'overview' as const, label: 'Overview', icon: Users },
+                        { id: 'notes' as const, label: 'Notes', icon: FileText },
+                        { id: 'actions' as const, label: 'Action Items', icon: CheckSquare },
+                        { id: 'growth' as const, label: 'Growth', icon: TrendingUp },
+                    ].map((tab) => {
+                        const IconComponent = tab.icon;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`${activeTab === tab.id
+                                    ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                                    } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 transition-colors`}
+                            >
+                                <IconComponent className="w-4 h-4" />
+                                <span>{tab.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
 
+                {/* Tab Content */}
                 <div className="p-6">
-                    {person.groups && person.groups.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {person.groups.map((group) => (
-                                <Link
-                                    key={group.id}
-                                    to={`/groups/${group.id}`}
-                                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all hover:border-primary-300 dark:hover:border-primary-600"
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-medium text-gray-900 dark:text-white">{group.name}</h3>
-                                        {group.tags && group.tags.length > 0 && (
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${group.color
-                                                ? 'text-white'
-                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                                }`}
-                                                style={group.color ? { backgroundColor: group.color } : undefined}>
-                                                {group.tags[0]}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {group.description && (
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-2 line-clamp-2">
-                                            {group.description}
-                                        </p>
-                                    )}
-                                </Link>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">Not a member of any groups</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Notes Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Notes ({notes.length})
-                        </h2>
-                        <Link
-                            to={`/notes/create?personId=${personId}`}
-                            className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add Note
-                        </Link>
-                    </div>
-                </div>
-
-                <div className="p-6">
-                    {notes.length > 0 ? (
-                        <div className="space-y-4">
-                            {notes.slice(0, 3).map((note) => (
-                                <Link
-                                    key={note.id}
-                                    to={`/notes/${note.id}`}
-                                    className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all"
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-medium text-gray-900 dark:text-white">{note.title}</h3>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                            {new Date(note.createdAt).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{note.content}</p>
-                                </Link>
-                            ))}
-                            {notes.length > 3 && (
-                                <Link
-                                    to={`/notes?personId=${personId}`}
-                                    className="block text-center py-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
-                                >
-                                    View all {notes.length} notes
-                                </Link>
-                            )}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No notes yet</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Action Items Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <CheckSquare className="h-5 w-5" />
-                            Action Items ({actionItems.length})
-                        </h2>
-                        <button className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm">
-                            <Plus className="h-4 w-4" />
-                            Add Action Item
-                        </button>
-                    </div>
-                </div>
-
-                <div className="p-6">
-                    {actionItems.length > 0 ? (
-                        <div className="space-y-3">
-                            {actionItems.slice(0, 3).map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <h3 className="font-medium text-gray-900 dark:text-white">{item.title}</h3>
-                                            <p className="text-gray-600 dark:text-gray-300 text-sm">{item.description}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${item.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                                item.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                {item.status.replace('_', ' ')}
-                                            </span>
-                                            {item.dueDate && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    Due: {new Date(item.dueDate).toLocaleDateString()}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                            {actionItems.length > 3 && (
-                                <Link
-                                    to={`/action-items?assigneeId=${personId}`}
-                                    className="block text-center py-2 text-primary-600 hover:text-primary-700 text-sm font-medium"
-                                >
-                                    View all {actionItems.length} action items
-                                </Link>
-                            )}
-                        </div>
-                    ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No action items yet</p>
-                    )}
+                    {renderTabContent()}
                 </div>
             </div>
 
