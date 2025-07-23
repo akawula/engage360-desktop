@@ -24,6 +24,11 @@ export interface Person {
     avatar?: string; // Alias for avatarUrl
     position?: string; // Alias for jobDescription
     githubUsername?: string; // Additional profile field
+    // Growth-related fields
+    growthPlans?: GrowthPlan[];
+    skills?: PersonSkill[];
+    currentGrowthGoals?: GrowthGoal[];
+    recentAssessments?: GrowthAssessment[];
 }
 
 export interface Group {
@@ -175,6 +180,151 @@ export interface CreateActionItemRequest {
     groupId?: string;
     noteId?: string;
     // Note: assigneeId is not part of the API - actions are automatically assigned to the current user
+}
+
+// Personal Growth Types
+export interface GrowthGoal {
+    id: string;
+    personId: string;
+    title: string;
+    description?: string;
+    category: 'technical' | 'leadership' | 'communication' | 'business' | 'personal' | 'other';
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    status: 'not_started' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
+    targetDate?: string;
+    startDate?: string;
+    completedDate?: string;
+    progress: number; // 0-100
+    milestones: GrowthMilestone[];
+    skills: string[]; // Related skills this goal develops
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GrowthMilestone {
+    id: string;
+    goalId: string;
+    title: string;
+    description?: string;
+    targetDate?: string;
+    completedDate?: string;
+    isCompleted: boolean;
+    order: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface Skill {
+    id: string;
+    name: string;
+    category: 'technical' | 'soft' | 'leadership' | 'domain';
+    description?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface PersonSkill {
+    id: string;
+    personId: string;
+    skillId: string;
+    skill: Skill;
+    currentLevel: 1 | 2 | 3 | 4 | 5; // 1: Beginner, 2: Novice, 3: Intermediate, 4: Advanced, 5: Expert
+    targetLevel: 1 | 2 | 3 | 4 | 5;
+    lastAssessmentDate?: string;
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GrowthPlan {
+    id: string;
+    personId: string;
+    title: string;
+    description?: string;
+    startDate: string;
+    endDate?: string;
+    status: 'draft' | 'active' | 'completed' | 'archived';
+    goals: GrowthGoal[];
+    reviewFrequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+    lastReviewDate?: string;
+    nextReviewDate?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GrowthAssessment {
+    id: string;
+    personId: string;
+    planId?: string;
+    assessmentDate: string;
+    overallProgress: number; // 0-100
+    strengths: string[];
+    areasForImprovement: string[];
+    achievements: string[];
+    challenges: string[];
+    feedback?: string;
+    assessorId?: string; // Could be manager, mentor, or self
+    assessorType: 'self' | 'manager' | 'peer' | 'mentor' | 'external';
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GrowthTemplate {
+    id: string;
+    name: string;
+    description?: string;
+    category: string;
+    targetRole?: string;
+    goals: Omit<GrowthGoal, 'id' | 'personId' | 'createdAt' | 'updatedAt'>[];
+    skills: string[];
+    duration?: number; // in months
+    isPublic: boolean;
+    createdBy: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+// Form types for growth features
+export interface CreateGrowthGoalRequest {
+    personId: string;
+    title: string;
+    description?: string;
+    category: 'technical' | 'leadership' | 'communication' | 'business' | 'personal' | 'other';
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    targetDate?: string;
+    skills?: string[];
+    milestones?: Omit<GrowthMilestone, 'id' | 'goalId' | 'createdAt' | 'updatedAt'>[];
+}
+
+export interface CreateGrowthPlanRequest {
+    personId: string;
+    title: string;
+    description?: string;
+    startDate: string;
+    endDate?: string;
+    reviewFrequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+    goals?: CreateGrowthGoalRequest[];
+}
+
+export interface CreatePersonSkillRequest {
+    personId: string;
+    skillId: string;
+    currentLevel: 1 | 2 | 3 | 4 | 5;
+    targetLevel: 1 | 2 | 3 | 4 | 5;
+    notes?: string;
+}
+
+export interface CreateGrowthAssessmentRequest {
+    personId: string;
+    planId?: string;
+    overallProgress: number;
+    strengths: string[];
+    areasForImprovement: string[];
+    achievements: string[];
+    challenges: string[];
+    feedback?: string;
+    assessorType: 'self' | 'manager' | 'peer' | 'mentor' | 'external';
 }
 
 // Authentication types
