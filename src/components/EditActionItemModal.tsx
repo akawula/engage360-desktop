@@ -67,7 +67,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
         <Modal isOpen={isOpen} onClose={onClose} title="Edit Action Item">
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="title" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Title *
                     </label>
                     <input
@@ -77,12 +77,12 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         value={formData.title}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Description
                     </label>
                     <textarea
@@ -91,13 +91,13 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         value={formData.description}
                         onChange={handleChange}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="status" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Status
                         </label>
                         <select
@@ -105,7 +105,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         >
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
@@ -115,7 +115,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                     </div>
 
                     <div>
-                        <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="priority" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Priority
                         </label>
                         <select
@@ -123,7 +123,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                             name="priority"
                             value={formData.priority}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -134,7 +134,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                 </div>
 
                 <div>
-                    <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="dueDate" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Due Date
                     </label>
                     <input
@@ -143,7 +143,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                 </div>
 
@@ -151,7 +151,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        className="flex-1 px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
                     >
                         Cancel
                     </button>

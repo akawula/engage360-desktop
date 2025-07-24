@@ -50,17 +50,17 @@ export default function DeviceApprovalModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div className="flex items-center justify-between p-4 border-b border-dark-300 dark:border-dark-800">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
                             <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-lg font-semibold text-dark-950 dark:text-white">
                                 Approve Device
                             </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-dark-700 dark:text-dark-500">
                                 Grant access to encrypted data
                             </p>
                         </div>
@@ -76,7 +76,7 @@ export default function DeviceApprovalModal({
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="password" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Your Account Password
                         </label>
                         <div className="relative">
@@ -88,8 +88,8 @@ export default function DeviceApprovalModal({
                                     setPassword(e.target.value);
                                     if (error) setError('');
                                 }}
-                                className={`w-full px-3 py-2 border ${error ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10`}
+                                className={`w-full px-3 py-2 border ${error ? 'border-red-300 dark:border-red-600' : 'border-dark-400 dark:border-dark-700'
+                                    } bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10`}
                                 placeholder="Enter your password"
                                 required
                                 autoFocus
@@ -98,7 +98,7 @@ export default function DeviceApprovalModal({
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                className="absolute inset-y-0 right-3 flex items-center text-dark-500 hover:text-dark-700 dark:hover:text-dark-400"
                                 disabled={isLoading}
                             >
                                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -109,7 +109,7 @@ export default function DeviceApprovalModal({
                                 {error}
                             </p>
                         )}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-dark-600 dark:text-dark-500 mt-1">
                             Required to decrypt your device keys and share them securely
                         </p>
                     </div>
@@ -126,7 +126,7 @@ export default function DeviceApprovalModal({
                             type="button"
                             onClick={handleClose}
                             disabled={isLoading}
-                            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors disabled:opacity-50"
                         >
                             Cancel
                         </button>

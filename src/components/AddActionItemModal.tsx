@@ -207,7 +207,7 @@ export default function AddActionItemModal({
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Title */}
                 <div>
-                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="title" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Title *
                     </label>
                     <input
@@ -218,13 +218,13 @@ export default function AddActionItemModal({
                         onChange={handleChange}
                         required
                         placeholder="Enter action item title"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
                     />
                 </div>
 
                 {/* Description */}
                 <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Description
                     </label>
                     <textarea
@@ -234,13 +234,13 @@ export default function AddActionItemModal({
                         onChange={handleChange}
                         rows={3}
                         placeholder="Enter action item description"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
                     />
                 </div>
 
                 {/* Priority */}
                 <div>
-                    <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="priority" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Priority
                     </label>
                     <select
@@ -248,7 +248,7 @@ export default function AddActionItemModal({
                         name="priority"
                         value={formData.priority}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
                     >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -259,7 +259,7 @@ export default function AddActionItemModal({
 
                 {/* Due Date */}
                 <div>
-                    <label htmlFor="dueDate" className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="dueDate" className="flex items-center text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         <Calendar className="h-4 w-4 mr-1" />
                         Due Date
                     </label>
@@ -269,13 +269,13 @@ export default function AddActionItemModal({
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
                     />
                 </div>
 
                 {/* Associated Person */}
                 <div>
-                    <label htmlFor="personId" className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="personId" className="flex items-center text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         <User className="h-4 w-4 mr-1" />
                         Associated Person
                     </label>
@@ -284,7 +284,7 @@ export default function AddActionItemModal({
                         name="personId"
                         value={formData.personId}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
                     >
                         <option value="">None</option>
                         {people?.people?.map((person: Person) => (
@@ -297,7 +297,7 @@ export default function AddActionItemModal({
 
                 {/* Associated Group */}
                 <div>
-                    <label htmlFor="groupId" className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="groupId" className="flex items-center text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         <Users className="h-4 w-4 mr-1" />
                         Associated Group
                     </label>
@@ -307,7 +307,7 @@ export default function AddActionItemModal({
                         value={formData.groupId}
                         onChange={handleChange}
                         disabled={loadingGroups}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50"
                     >
                         <option value="">None</option>
                         {groups.map((group) => (
@@ -320,7 +320,7 @@ export default function AddActionItemModal({
 
                 {/* Associated Note */}
                 <div>
-                    <label htmlFor="noteId" className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="noteId" className="flex items-center text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         <FileText className="h-4 w-4 mr-1" />
                         Associated Note
                     </label>
@@ -330,7 +330,7 @@ export default function AddActionItemModal({
                         value={formData.noteId}
                         onChange={handleChange}
                         disabled={loadingNotes}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50"
+                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50"
                     >
                         <option value="">None</option>
                         {notes.map((note) => (
@@ -346,7 +346,7 @@ export default function AddActionItemModal({
                     <button
                         type="button"
                         onClick={handleCancel}
-                        className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
+                        className="flex-1 px-4 py-2 text-dark-800 bg-dark-300 rounded-md hover:bg-dark-400 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-dark-700 dark:text-dark-400 dark:hover:bg-dark-600"
                     >
                         Cancel
                     </button>

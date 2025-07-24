@@ -46,17 +46,17 @@ export default function RecoveryKeysModal({ isOpen, recoveryKeys, onConfirm, onC
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <div className="p-6 border-b border-dark-300 dark:border-dark-800">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
                             <AlertTriangle className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-xl font-semibold text-dark-950 dark:text-white">
                                 Save Your Recovery Keys
                             </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-dark-700 dark:text-dark-500">
                                 These keys are required to recover your account if you lose all devices
                             </p>
                         </div>
@@ -79,9 +79,9 @@ export default function RecoveryKeysModal({ isOpen, recoveryKeys, onConfirm, onC
                         </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mb-4">
+                    <div className="bg-dark-100 dark:bg-dark-950/50 rounded-lg p-4 mb-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <h3 className="text-sm font-medium text-dark-800 dark:text-dark-400">
                                 Recovery Keys (12 total)
                             </h3>
                             <div className="flex gap-2">
@@ -106,12 +106,12 @@ export default function RecoveryKeysModal({ isOpen, recoveryKeys, onConfirm, onC
                             {recoveryKeys.map((key, index) => (
                                 <div
                                     key={index}
-                                    className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded"
+                                    className="flex items-center gap-2 p-2 bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-800 rounded"
                                 >
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 w-6">
+                                    <span className="text-xs text-dark-600 dark:text-dark-500 w-6">
                                         {index + 1}.
                                     </span>
-                                    <span className="text-gray-900 dark:text-white flex-1">
+                                    <span className="text-dark-950 dark:text-white flex-1">
                                         {key}
                                     </span>
                                 </div>
@@ -131,23 +131,23 @@ export default function RecoveryKeysModal({ isOpen, recoveryKeys, onConfirm, onC
                         </ol>
                     </div>
 
-                    <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg cursor-pointer">
+                    <label className="flex items-center gap-3 p-4 bg-dark-100 dark:bg-dark-950/50 rounded-lg cursor-pointer">
                         <input
                             type="checkbox"
                             checked={confirmed}
                             onChange={(e) => setConfirmed(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600 border-dark-400 rounded focus:ring-blue-500"
                         />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="text-sm text-dark-800 dark:text-dark-400">
                             I have safely stored these recovery keys and understand that losing them along with all my devices will result in permanent data loss.
                         </span>
                     </label>
                 </div>
 
-                <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex gap-3 p-6 border-t border-dark-300 dark:border-dark-800">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        className="flex-1 px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
                     >
                         Cancel Registration
                     </button>

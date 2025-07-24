@@ -77,40 +77,40 @@ export default function Notes() {
 
     if (isLoading) {
         return (
-            <div className="h-full bg-gray-50 dark:bg-gray-900">
+            <div className="h-full bg-dark-100 dark:bg-dark-950">
                 {/* Enhanced Loading State */}
-                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                     <div className="px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                                <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                <div className="w-8 h-8 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
+                                <div className="w-32 h-8 bg-dark-300 dark:bg-dark-800 rounded animate-pulse"></div>
                             </div>
-                            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                            <div className="w-32 h-10 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
                         </div>
                     </div>
                 </div>
 
                 <div className="p-6">
                     <div className="mb-6">
-                        <div className="w-full h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-4"></div>
+                        <div className="w-full h-12 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse mb-4"></div>
                         <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                                <div key={i} className="w-24 h-8 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
                             ))}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
-                                <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-                                <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                                <div className="w-1/2 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-                                <div className="w-full h-20 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                            <div key={i} className="bg-white dark:bg-dark-900 rounded-xl border border-dark-300 dark:border-dark-800 p-6 animate-pulse">
+                                <div className="w-full h-4 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
+                                <div className="w-3/4 h-4 bg-dark-300 dark:bg-dark-800 rounded mb-2"></div>
+                                <div className="w-1/2 h-4 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
+                                <div className="w-full h-20 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
                                 <div className="flex justify-between">
-                                    <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                                    <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    <div className="w-16 h-4 bg-dark-300 dark:bg-dark-800 rounded"></div>
+                                    <div className="w-20 h-4 bg-dark-300 dark:bg-dark-800 rounded"></div>
                                 </div>
                             </div>
                         ))}
@@ -127,7 +127,7 @@ export default function Notes() {
             case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 border border-purple-200 dark:border-purple-700';
             case 'personal': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200 border border-orange-200 dark:border-orange-700';
             case 'follow_up': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-700';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
+            default: return 'bg-dark-200 text-dark-900 dark:bg-dark-950/30 dark:text-dark-300 border border-dark-300 dark:border-dark-800';
         }
     };
 
@@ -162,9 +162,9 @@ export default function Notes() {
     };
 
     return (
-        <div className="h-full bg-gray-50 dark:bg-gray-900">
+        <div className="h-full bg-dark-100 dark:bg-dark-950">
             {/* Enhanced Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -172,8 +172,8 @@ export default function Notes() {
                                 <StickyNote className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Notes</h1>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Notes</h1>
+                                <p className="text-sm text-dark-700 dark:text-dark-500">
                                     {filteredAndSortedNotes.length} of {notes.length} notes
                                 </p>
                             </div>
@@ -185,7 +185,7 @@ export default function Notes() {
                                     onClick={() => setViewMode('grid')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid'
                                         ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                         }`}
                                 >
                                     <Grid className="h-4 w-4" />
@@ -194,14 +194,14 @@ export default function Notes() {
                                     onClick={() => setViewMode('list')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list'
                                         ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                         }`}
                                 >
                                     <List className="h-4 w-4" />
                                 </button>
                             </div>
 
-                            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
 
                             <Link
                                 to="/notes/create"
@@ -216,17 +216,17 @@ export default function Notes() {
             </div>
 
             {/* Search and Filter Section */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
                 <div className="px-6 py-4">
                     {/* Search Bar */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
                         <input
                             type="text"
                             placeholder="Search notes by title, content, or tags..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            className="w-full pl-10 pr-4 py-3 bg-dark-100 dark:bg-dark-950 border border-dark-300 dark:border-dark-800 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-dark-950 dark:text-white placeholder-dark-600 dark:placeholder-dark-500 transition-all duration-200"
                         />
                     </div>
 
@@ -238,7 +238,7 @@ export default function Notes() {
                                 onClick={() => setSelectedType(type.value)}
                                 className={`group flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${selectedType === type.value
                                     ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 shadow-sm'
-                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                    : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                     }`}
                             >
                                 <span className="text-lg group-hover:scale-110 transition-transform">
@@ -247,7 +247,7 @@ export default function Notes() {
                                 <span className="font-medium">{type.label}</span>
                                 <span className={`text-xs px-2 py-1 rounded-full ${selectedType === type.value
                                     ? 'bg-primary-200 text-primary-800 dark:bg-primary-800 dark:text-primary-200'
-                                    : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                    : 'bg-dark-300 text-dark-700 dark:bg-dark-800 dark:text-dark-500'
                                     }`}>
                                     {type.count}
                                 </span>
@@ -258,12 +258,12 @@ export default function Notes() {
                     {/* Sort Options */}
                     <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-2">
-                            <Filter className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Sort by:</span>
+                            <Filter className="h-4 w-4 text-dark-500" />
+                            <span className="text-sm text-dark-700 dark:text-dark-500">Sort by:</span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as 'created' | 'updated' | 'title')}
-                                className="text-sm bg-transparent border-0 text-gray-700 dark:text-gray-300 focus:ring-0 cursor-pointer"
+                                className="text-sm bg-transparent border-0 text-dark-800 dark:text-dark-400 focus:ring-0 cursor-pointer"
                             >
                                 <option value="updated">Last Updated</option>
                                 <option value="created">Date Created</option>
@@ -302,7 +302,7 @@ export default function Notes() {
                                 <Link
                                     key={note.id}
                                     to={`/notes/${note.id}`}
-                                    className={`group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/10 ${viewMode === 'grid' ? 'p-6' : 'p-4'
+                                    className={`group block bg-white dark:bg-dark-900 rounded-xl border border-dark-300 dark:border-dark-800 hover:border-primary-200 dark:hover:border-primary-700 transition-all duration-200 hover:shadow-lg hover:shadow-primary-500/10 ${viewMode === 'grid' ? 'p-6' : 'p-4'
                                         }`}
                                 >
                                     {viewMode === 'grid' ? (
@@ -338,20 +338,20 @@ export default function Notes() {
                                                             )}
                                                         </div>
                                                     )}
-                                                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
+                                                    <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+                                                <h3 className="font-semibold text-dark-950 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
                                                     {note.title}
                                                 </h3>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-3">
                                                     {stripHtmlAndTruncate(note.content, 150)}
                                                 </p>
                                             </div>
 
-                                            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
                                                 <div className="flex items-center gap-1">
                                                     <Clock className="h-3 w-3" />
                                                     <span>{getRelativeTime(note.updatedAt)}</span>
@@ -365,7 +365,7 @@ export default function Notes() {
                                             </div>
 
                                             {note.tags && note.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                                <div className="flex flex-wrap gap-1 pt-2 border-t border-dark-200 dark:border-dark-800">
                                                     {note.tags.slice(0, 3).map((tag) => (
                                                         <span
                                                             key={tag}
@@ -375,7 +375,7 @@ export default function Notes() {
                                                         </span>
                                                     ))}
                                                     {note.tags.length > 3 && (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs text-gray-500 dark:text-gray-400">
+                                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs text-dark-600 dark:text-dark-500">
                                                             +{note.tags.length - 3}
                                                         </span>
                                                     )}
@@ -411,29 +411,29 @@ export default function Notes() {
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                                                    <h3 className="font-semibold text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                                                         {note.title}
                                                     </h3>
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getNoteTypeColor(note.type)}`}>
                                                         {note.type.replace('_', ' ')}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">
+                                                <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-1">
                                                     {stripHtmlAndTruncate(note.content, 100)}
                                                 </p>
                                                 <div className="flex items-center gap-4 mt-2">
-                                                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                         <Clock className="h-3 w-3" />
                                                         <span>{getRelativeTime(note.updatedAt)}</span>
                                                     </div>
                                                     {associatedPerson && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                             <User className="h-3 w-3" />
                                                             <span>{associatedPerson.firstName} {associatedPerson.lastName}</span>
                                                         </div>
                                                     )}
                                                     {note.tags && note.tags.length > 0 && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                             <Tag className="h-3 w-3" />
                                                             <span>{note.tags.length} tags</span>
                                                         </div>
@@ -441,7 +441,7 @@ export default function Notes() {
                                                 </div>
                                             </div>
 
-                                            <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1 flex-shrink-0" />
+                                            <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1 flex-shrink-0" />
                                         </div>
                                     )}
                                 </Link>
@@ -459,11 +459,11 @@ export default function Notes() {
                             )}
                         </div>
 
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-xl font-semibold text-dark-950 dark:text-white mb-2">
                             {searchTerm || selectedType !== 'all' ? 'No notes found' : 'No notes yet'}
                         </h3>
 
-                        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                        <p className="text-dark-700 dark:text-dark-500 mb-6 max-w-md mx-auto">
                             {searchTerm || selectedType !== 'all'
                                 ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
                                 : 'Create your first note to start organizing your thoughts, meetings, and ideas.'

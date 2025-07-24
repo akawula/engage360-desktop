@@ -137,7 +137,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="firstName" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             First Name *
                         </label>
                         <input
@@ -147,11 +147,11 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                             value={formData.firstName}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                         />
                     </div>
                     <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label htmlFor="lastName" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Last Name *
                         </label>
                         <input
@@ -161,13 +161,13 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                             value={formData.lastName}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Email *
                     </label>
                     <input
@@ -177,12 +177,12 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="phone" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Phone
                     </label>
                     <input
@@ -191,12 +191,12 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="githubUsername" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="githubUsername" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         GitHub Username
                     </label>
                     <input
@@ -206,12 +206,12 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         value={formData.githubUsername}
                         onChange={handleChange}
                         placeholder="e.g., octocat"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="position" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Position
                     </label>
                     <input
@@ -220,7 +220,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         name="position"
                         value={formData.position}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                     />
                 </div>
 
@@ -234,7 +234,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                 />
 
                 <div>
-                    <label htmlFor="tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="tags" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                         Tags
                     </label>
 
@@ -269,7 +269,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         onKeyPress={handleTagKeyPress}
                         onBlur={handleTagBlur}
                         placeholder="Type and press Enter or comma to add tags"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                     />
                 </div>
 
@@ -277,7 +277,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-900 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                     >
                         Cancel
                     </button>

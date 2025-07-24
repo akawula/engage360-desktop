@@ -172,7 +172,7 @@ export default function AvatarInput({
 
     return (
         <div className={className}>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-2">
                 {label}
             </label>
 
@@ -184,7 +184,7 @@ export default function AvatarInput({
                             <img
                                 src={avatarSrc}
                                 alt="Avatar preview"
-                                className={`${sizeClasses[size]} rounded-full object-cover border-2 border-gray-300 dark:border-gray-600`}
+                                className={`${sizeClasses[size]} rounded-full object-cover border-2 border-dark-400 dark:border-dark-700`}
                             />
                             <button
                                 onClick={handleClear}
@@ -195,7 +195,7 @@ export default function AvatarInput({
                             </button>
                         </div>
                     ) : (
-                        <div className={`${sizeClasses[size]} rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-gray-300 dark:border-gray-600`}>
+                        <div className={`${sizeClasses[size]} rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center border-2 border-dark-400 dark:border-dark-700`}>
                             <User className={`${iconSizes[size]} text-primary-600 dark:text-primary-400`} />
                         </div>
                     )}
@@ -210,7 +210,7 @@ export default function AvatarInput({
                             onClick={() => setInputMethod('upload')}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${inputMethod === 'upload'
                                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border border-primary-300 dark:border-primary-700'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                : 'bg-dark-200 dark:bg-dark-800 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 hover:bg-dark-300 dark:hover:bg-dark-700'
                                 }`}
                         >
                             <Upload className="h-4 w-4" />
@@ -221,7 +221,7 @@ export default function AvatarInput({
                             onClick={() => setInputMethod('url')}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${inputMethod === 'url'
                                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 border border-primary-300 dark:border-primary-700'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                : 'bg-dark-200 dark:bg-dark-800 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 hover:bg-dark-300 dark:hover:bg-dark-700'
                                 }`}
                         >
                             <Link className="h-4 w-4" />
@@ -232,7 +232,7 @@ export default function AvatarInput({
                     {/* Upload Method */}
                     {inputMethod === 'upload' && (
                         <div>
-                            <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                            <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-800 border border-dark-400 dark:border-dark-700 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <Upload className="h-4 w-4" />
                                 <span className="text-sm">
                                     {isLoading ? 'Processing...' : 'Choose Image'}
@@ -245,7 +245,7 @@ export default function AvatarInput({
                                     className="hidden"
                                 />
                             </label>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <p className="text-xs text-dark-600 dark:text-dark-500 mt-1">
                                 Max 10MB. Supports JPG, PNG, GIF, WebP
                             </p>
                         </div>
@@ -262,7 +262,7 @@ export default function AvatarInput({
                                     onKeyPress={handleUrlKeyPress}
                                     placeholder={placeholder}
                                     disabled={isLoading}
-                                    className="flex-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                                    className="flex-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                                 />
                                 <button
                                     type="button"
@@ -273,7 +273,7 @@ export default function AvatarInput({
                                     {isLoading ? 'Loading...' : 'Add'}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <p className="text-xs text-dark-600 dark:text-dark-500 mt-1">
                                 Enter a direct link to an image (will be converted to base64)
                             </p>
                         </div>

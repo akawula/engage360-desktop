@@ -150,10 +150,10 @@ const AuthScreen: React.FC = () => {
                     <div className="mx-auto h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center">
                         <span className="text-white font-bold text-xl">E360</span>
                     </div>
-                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+                    <h2 className="mt-6 text-3xl font-extrabold text-dark-950 dark:text-white">
                         {mode === 'login' ? 'Sign in to your account' : 'Create your account'}
                     </h2>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-2 text-sm text-dark-700 dark:text-dark-500">
                         {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
                         <button
                             type="button"
@@ -178,7 +178,7 @@ const AuthScreen: React.FC = () => {
                                         </label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                                <User className="h-5 w-5 text-gray-400" />
+                                                <User className="h-5 w-5 text-dark-500" />
                                             </div>
                                             <input
                                                 id="firstName"
@@ -187,8 +187,8 @@ const AuthScreen: React.FC = () => {
                                                 autoComplete="given-name"
                                                 value={formData.firstName}
                                                 onChange={handleInputChange}
-                                                className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.firstName ? 'border-red-300' : 'border-gray-300'
-                                                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400`}
+                                                className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.firstName ? 'border-red-300' : 'border-dark-400'
+                                                    } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white dark:placeholder-dark-500`}
                                                 placeholder="👤 First name"
                                             />
                                         </div>
@@ -203,7 +203,7 @@ const AuthScreen: React.FC = () => {
                                         </label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                                <User className="h-5 w-5 text-gray-400" />
+                                                <User className="h-5 w-5 text-dark-500" />
                                             </div>
                                             <input
                                                 id="lastName"
@@ -212,8 +212,8 @@ const AuthScreen: React.FC = () => {
                                                 autoComplete="family-name"
                                                 value={formData.lastName}
                                                 onChange={handleInputChange}
-                                                className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.lastName ? 'border-red-300' : 'border-gray-300'
-                                                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400`}
+                                                className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.lastName ? 'border-red-300' : 'border-dark-400'
+                                                    } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white dark:placeholder-dark-500`}
                                                 placeholder="👤 Last name"
                                             />
                                         </div>
@@ -230,7 +230,7 @@ const AuthScreen: React.FC = () => {
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                            <span className="text-gray-400">💻</span>
+                                            <span className="text-dark-500">💻</span>
                                         </div>
                                         <input
                                             id="deviceName"
@@ -238,8 +238,8 @@ const AuthScreen: React.FC = () => {
                                             type="text"
                                             value={formData.deviceName}
                                             onChange={handleInputChange}
-                                            className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.deviceName ? 'border-red-300' : 'border-gray-300'
-                                                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400`}
+                                            className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.deviceName ? 'border-red-300' : 'border-dark-400'
+                                                } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white dark:placeholder-dark-500`}
                                             placeholder="💻 Device name (e.g., My MacBook Pro)"
                                         />
                                     </div>
@@ -254,15 +254,15 @@ const AuthScreen: React.FC = () => {
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                            <span className="text-gray-400">📱</span>
+                                            <span className="text-dark-500">📱</span>
                                         </div>
                                         <select
                                             id="deviceType"
                                             name="deviceType"
                                             value={formData.deviceType}
                                             onChange={handleInputChange}
-                                            className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.deviceType ? 'border-red-300' : 'border-gray-300'
-                                                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white`}
+                                            className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.deviceType ? 'border-red-300' : 'border-dark-400'
+                                                } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white`}
                                         >
                                             <option value="desktop">🖥️ Desktop</option>
                                             <option value="mobile">📱 Mobile</option>
@@ -283,7 +283,7 @@ const AuthScreen: React.FC = () => {
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <Mail className="h-5 w-5 text-gray-400" />
+                                    <Mail className="h-5 w-5 text-dark-500" />
                                 </div>
                                 <input
                                     id="email"
@@ -292,8 +292,8 @@ const AuthScreen: React.FC = () => {
                                     autoComplete="email"
                                     value={formData.email}
                                     onChange={handleInputChange}
-                                    className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400`}
+                                    className={`appearance-none relative block w-full pl-10 pr-3 py-2 border ${errors.email ? 'border-red-300' : 'border-dark-400'
+                                        } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white dark:placeholder-dark-500`}
                                     placeholder="📧 Email address"
                                 />
                             </div>
@@ -309,7 +309,7 @@ const AuthScreen: React.FC = () => {
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock className="h-5 w-5 text-dark-500" />
                                 </div>
                                 <input
                                     id="password"
@@ -318,15 +318,15 @@ const AuthScreen: React.FC = () => {
                                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                                     value={formData.password}
                                     onChange={handleInputChange}
-                                    className={`appearance-none relative block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400`}
+                                    className={`appearance-none relative block w-full pl-10 pr-10 py-2 border ${errors.password ? 'border-red-300' : 'border-dark-400'
+                                        } placeholder-dark-600 text-dark-950 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm dark:bg-dark-800 dark:border-dark-700 dark:text-white dark:placeholder-dark-500`}
                                     placeholder="🔒 Password"
                                 />
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                        className="text-dark-500 hover:text-dark-700 dark:hover:text-dark-400"
                                     >
                                         {showPassword ? (
                                             <EyeOff className="h-5 w-5" />

@@ -26,7 +26,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             case 'personal':
                 return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+                return 'bg-dark-200 text-dark-900 dark:bg-dark-950 dark:text-dark-300';
         }
     };
 
@@ -39,9 +39,9 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             case 'medium':
                 return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
             case 'low':
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+                return 'bg-dark-200 text-dark-900 dark:bg-dark-950 dark:text-dark-300';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+                return 'bg-dark-200 text-dark-900 dark:bg-dark-950 dark:text-dark-300';
         }
     };
 
@@ -56,7 +56,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             case 'cancelled':
                 return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+                return 'bg-dark-200 text-dark-900 dark:bg-dark-950 dark:text-dark-300';
         }
     };
 
@@ -78,9 +78,9 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
 
     if (compact) {
         return (
-            <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all">
+            <div className="p-4 border border-dark-300 dark:border-dark-800 rounded-lg hover:shadow-md transition-all">
                 <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 dark:text-white text-sm">
+                    <h4 className="font-medium text-dark-950 dark:text-white text-sm">
                         {goal.title}
                     </h4>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(goal.category)}`}>
@@ -90,10 +90,10 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
 
                 <div className="mb-3">
                     <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-600 dark:text-gray-300">Progress</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{goal.progress}%</span>
+                        <span className="text-dark-700 dark:text-dark-400">Progress</span>
+                        <span className="font-medium text-dark-950 dark:text-white">{goal.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-dark-300 dark:bg-dark-800 rounded-full h-2">
                         <div
                             className="bg-primary-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${goal.progress}%` }}
@@ -102,7 +102,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                 </div>
 
                 {goal.targetDate && (
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center text-xs text-dark-600 dark:text-dark-500">
                         <Calendar className="w-3 h-3 mr-1" />
                         Due {format(new Date(goal.targetDate), 'MMM d, yyyy')}
                     </div>
@@ -112,12 +112,12 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
     }
 
     return (
-        <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all bg-white dark:bg-gray-800">
+        <div className="p-6 border border-dark-300 dark:border-dark-800 rounded-lg hover:shadow-md transition-all bg-white dark:bg-dark-900">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h3 className="text-lg font-semibold text-dark-950 dark:text-white">
                             {goal.title}
                         </h3>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(goal.category)}`}>
@@ -128,7 +128,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                         </span>
                     </div>
                     {goal.description && (
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">
+                        <p className="text-dark-700 dark:text-dark-400 text-sm">
                             {goal.description}
                         </p>
                     )}
@@ -138,7 +138,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(goal.status)}`}>
                         {goal.status.replace('_', ' ')}
                     </span>
-                    <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <button className="p-1 text-dark-500 hover:text-dark-700 dark:hover:text-dark-400">
                         <MoreHorizontal className="w-4 h-4" />
                     </button>
                 </div>
@@ -147,13 +147,13 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             {/* Progress */}
             <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
+                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Progress</span>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">{goal.progress}%</span>
+                        <span className="text-sm font-bold text-dark-950 dark:text-white">{goal.progress}%</span>
                         <TrendingUp className="w-4 h-4 text-green-500" />
                     </div>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div className="w-full bg-dark-300 dark:bg-dark-800 rounded-full h-3">
                     <div
                         className="bg-gradient-to-r from-primary-500 to-primary-600 h-3 rounded-full transition-all duration-500"
                         style={{ width: `${goal.progress}%` }}
@@ -163,7 +163,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
 
             {/* Dates */}
             <div className="flex items-center justify-between mb-4 text-sm">
-                <div className="flex items-center text-gray-600 dark:text-gray-300">
+                <div className="flex items-center text-dark-700 dark:text-dark-400">
                     {goal.startDate && (
                         <>
                             <Calendar className="w-4 h-4 mr-1" />
@@ -172,7 +172,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                     )}
                 </div>
                 {goal.targetDate && (
-                    <div className="flex items-center text-gray-600 dark:text-gray-300">
+                    <div className="flex items-center text-dark-700 dark:text-dark-400">
                         <Target className="w-4 h-4 mr-1" />
                         Due {format(new Date(goal.targetDate), 'MMM d, yyyy')}
                     </div>
@@ -184,7 +184,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                 <div className="mb-4">
                     <button
                         onClick={() => setShowMilestones(!showMilestones)}
-                        className="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                        className="flex items-center justify-between w-full text-sm font-medium text-dark-800 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white"
                     >
                         <span>Milestones ({completedMilestones}/{totalMilestones})</span>
                         <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                                         key={milestone.id}
                                         className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${milestone.isCompleted
                                                 ? 'bg-green-500'
-                                                : 'bg-gray-300 dark:bg-gray-600'
+                                                : 'bg-dark-400 dark:bg-dark-700'
                                             }`}
                                     >
                                         {milestone.isCompleted && (
@@ -203,7 +203,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                                     </div>
                                 ))}
                                 {goal.milestones.length > 3 && (
-                                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-xs text-white">
+                                    <div className="w-6 h-6 rounded-full border-2 border-white bg-dark-500 flex items-center justify-center text-xs text-white">
                                         +{goal.milestones.length - 3}
                                     </div>
                                 )}
@@ -214,20 +214,20 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                     {showMilestones && (
                         <div className="mt-3 space-y-2">
                             {goal.milestones.map((milestone) => (
-                                <div key={milestone.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                <div key={milestone.id} className="flex items-center gap-3 p-2 bg-dark-100 dark:bg-dark-800 rounded">
                                     <button className="flex-shrink-0">
                                         {milestone.isCompleted ? (
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         ) : (
-                                            <Circle className="w-5 h-5 text-gray-400" />
+                                            <Circle className="w-5 h-5 text-dark-500" />
                                         )}
                                     </button>
                                     <div className="flex-1 min-w-0">
-                                        <p className={`text-sm ${milestone.isCompleted ? 'line-through text-gray-500' : 'text-gray-900 dark:text-white'}`}>
+                                        <p className={`text-sm ${milestone.isCompleted ? 'line-through text-dark-600' : 'text-dark-950 dark:text-white'}`}>
                                             {milestone.title}
                                         </p>
                                         {milestone.targetDate && (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-dark-600 dark:text-dark-500">
                                                 Due: {format(new Date(milestone.targetDate), 'MMM d, yyyy')}
                                             </p>
                                         )}
@@ -242,14 +242,14 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             {/* Skills */}
             {goal.skills.length > 0 && (
                 <div className="mb-4">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400 mb-2 block">
                         Skills Developed:
                     </span>
                     <div className="flex flex-wrap gap-1">
                         {goal.skills.map((skill) => (
                             <span
                                 key={skill}
-                                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-dark-200 text-dark-800 dark:bg-dark-800 dark:text-dark-400"
                             >
                                 {skill}
                             </span>
@@ -259,7 +259,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between pt-4 border-t border-dark-300 dark:border-dark-800">
                 <div className="flex items-center gap-2">
                     {goal.status !== 'completed' && (
                         <>
@@ -283,7 +283,7 @@ export default function GrowthGoalCard({ goal, compact = false }: GrowthGoalCard
                     )}
                 </div>
 
-                <button className="flex items-center gap-1 px-3 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <button className="flex items-center gap-1 px-3 py-1 text-xs text-dark-700 dark:text-dark-500 hover:text-dark-950 dark:hover:text-white">
                     <Edit className="w-3 h-3" />
                     Edit
                 </button>

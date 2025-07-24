@@ -78,7 +78,7 @@ export default function CreateNote() {
     if (!personId && !user) {
         return (
             <div className="h-full flex items-center justify-center">
-                <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading user information...</div>
+                <div className="animate-pulse text-dark-600 dark:text-dark-500">Loading user information...</div>
             </div>
         );
     }
@@ -360,14 +360,14 @@ export default function CreateNote() {
             case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 border border-purple-200 dark:border-purple-700';
             case 'personal': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200 border border-orange-200 dark:border-orange-700';
             case 'follow_up': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-700';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
+            default: return 'bg-dark-200 text-dark-900 dark:bg-dark-950/30 dark:text-dark-300 border border-dark-300 dark:border-dark-800';
         }
     };
 
     return (
-        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+        <div className="h-full flex flex-col bg-dark-100 dark:bg-dark-950">
             {/* Enhanced Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -376,17 +376,17 @@ export default function CreateNote() {
                                     e.preventDefault();
                                     handleCancel();
                                 }}
-                                className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                className="group flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-all duration-200 px-3 py-2 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-800"
                             >
                                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
                                 <span className="font-medium">Notes</span>
                             </button>
 
-                            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
 
                             <div className="flex items-center gap-2">
                                 <Plus className="h-5 w-5 text-primary-500" />
-                                <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h1 className="text-lg font-semibold text-dark-950 dark:text-white">
                                     Create New Note
                                 </h1>
                             </div>
@@ -404,7 +404,7 @@ export default function CreateNote() {
                                     e.preventDefault();
                                     handleCancel();
                                 }}
-                                className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-200 hover:shadow-md flex items-center gap-2"
+                                className="px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-2"
                             >
                                 <X className="h-4 w-4" />
                                 <span>Cancel</span>
@@ -430,7 +430,7 @@ export default function CreateNote() {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Title and Metadata Section */}
-                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
                     <div className="px-6 py-6">
                         {/* Title Input */}
                         <div className="mb-6">
@@ -445,7 +445,7 @@ export default function CreateNote() {
                                         e.preventDefault();
                                     }
                                 }}
-                                className="w-full px-0 py-2 border-0 bg-transparent text-gray-900 dark:text-white text-2xl font-semibold placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:outline-none resize-none"
+                                className="w-full px-0 py-2 border-0 bg-transparent text-dark-950 dark:text-white text-2xl font-semibold placeholder-dark-500 dark:placeholder-dark-600 focus:ring-0 focus:outline-none resize-none"
                                 placeholder="Untitled note..."
                                 style={{ lineHeight: '1.2' }}
                             />
@@ -456,7 +456,7 @@ export default function CreateNote() {
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <Sparkles className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Note Type</span>
+                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Note Type</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {[
@@ -472,12 +472,12 @@ export default function CreateNote() {
                                         onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
                                         className={`group px-4 py-2 rounded-full border-2 transition-all duration-200 hover:shadow-md ${formData.type === type.value
                                             ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
-                                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className="text-lg group-hover:scale-110 transition-transform">{type.emoji}</span>
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
                                                 {type.label}
                                             </span>
                                         </div>
@@ -490,7 +490,7 @@ export default function CreateNote() {
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <Tag className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Tags</span>
+                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Tags</span>
                             </div>
 
                             <div className="flex flex-wrap gap-2 mb-3">
@@ -521,7 +521,7 @@ export default function CreateNote() {
                                     onKeyPress={handleTagKeyPress}
                                     onBlur={handleTagBlur}
                                     placeholder="Add tags..."
-                                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-32"
+                                    className="px-3 py-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-32"
                                 />
                             </div>
                         </div>
@@ -530,7 +530,7 @@ export default function CreateNote() {
                         <div className="mb-6">
                             <div className="flex items-center gap-2 mb-3">
                                 <Users className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Association</span>
+                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Association</span>
                             </div>
 
                             {/* Association Type Selector */}
@@ -540,13 +540,13 @@ export default function CreateNote() {
                                     onClick={() => handleAssociationChange('standalone')}
                                     className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'standalone'
                                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
+                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
                                         }`}
                                 >
                                     <div className="flex flex-col items-center gap-2">
                                         <div className="text-2xl">📝</div>
                                         <div className="text-sm font-medium">Standalone</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
                                             Independent note
                                         </div>
                                     </div>
@@ -557,13 +557,13 @@ export default function CreateNote() {
                                     onClick={() => handleAssociationChange('person')}
                                     className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'person'
                                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
+                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
                                         }`}
                                 >
                                     <div className="flex flex-col items-center gap-2">
                                         <div className="text-2xl">👤</div>
                                         <div className="text-sm font-medium">Person</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
                                             Linked to a person
                                         </div>
                                     </div>
@@ -574,13 +574,13 @@ export default function CreateNote() {
                                     onClick={() => handleAssociationChange('group')}
                                     className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'group'
                                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-500'
+                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
                                         }`}
                                 >
                                     <div className="flex flex-col items-center gap-2">
                                         <div className="text-2xl">👥</div>
                                         <div className="text-sm font-medium">Group</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
                                             Linked to a group
                                         </div>
                                     </div>
@@ -589,19 +589,19 @@ export default function CreateNote() {
 
                             {/* Person Selector */}
                             {formData.noteAssociation === 'person' && (
-                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
+                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
                                     <div className="flex items-center justify-between mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400">
                                             Select Person *
                                         </label>
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
                                             <input
                                                 type="text"
                                                 placeholder="Search people..."
                                                 value={personSearch}
                                                 onChange={(e) => setPersonSearch(e.target.value)}
-                                                className="pl-10 pr-4 py-2 w-64 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                                                className="pl-10 pr-4 py-2 w-64 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                                             />
                                         </div>
                                     </div>
@@ -621,7 +621,7 @@ export default function CreateNote() {
                                                     onClick={() => handleChange({ target: { name: 'personId', value: person.id } } as any)}
                                                     className={`group p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.personId === person.id
                                                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
                                                         }`}
                                                 >
                                                     <div className="flex flex-col items-center gap-2">
@@ -639,11 +639,11 @@ export default function CreateNote() {
                                                             </div>
                                                         )}
                                                         <div className="text-center">
-                                                            <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                            <div className="text-sm font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                                                 {person.firstName} {person.lastName}
                                                             </div>
                                                             {person.position && (
-                                                                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                                <div className="text-xs text-dark-600 dark:text-dark-500 truncate">
                                                                     {person.position}
                                                                 </div>
                                                             )}
@@ -659,7 +659,7 @@ export default function CreateNote() {
                                         person.email?.toLowerCase().includes(personSearch.toLowerCase()) ||
                                         person.position?.toLowerCase().includes(personSearch.toLowerCase())
                                     ).length === 0 && (
-                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                            <div className="text-center py-8 text-dark-600 dark:text-dark-500">
                                                 {personSearch ? 'No people found matching your search' : 'No people available'}
                                             </div>
                                         )}
@@ -668,19 +668,19 @@ export default function CreateNote() {
 
                             {/* Group Selector */}
                             {formData.noteAssociation === 'group' && (
-                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
+                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
                                     <div className="flex items-center justify-between mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400">
                                             Select Group *
                                         </label>
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
                                             <input
                                                 type="text"
                                                 placeholder="Search groups..."
                                                 value={groupSearch}
                                                 onChange={(e) => setGroupSearch(e.target.value)}
-                                                className="pl-10 pr-4 py-2 w-64 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                                                className="pl-10 pr-4 py-2 w-64 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                                             />
                                         </div>
                                     </div>
@@ -700,7 +700,7 @@ export default function CreateNote() {
                                                     onClick={() => handleChange({ target: { name: 'groupId', value: group.id } } as any)}
                                                     className={`group p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md text-left ${formData.groupId === group.id
                                                         ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
                                                         }`}
                                                 >
                                                     <div className="flex items-start gap-3">
@@ -708,20 +708,20 @@ export default function CreateNote() {
                                                             <Users className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                            <div className="font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                                                 {group.name}
                                                             </div>
                                                             {group.description && (
-                                                                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                                                <div className="text-sm text-dark-600 dark:text-dark-500 mt-1 line-clamp-2">
                                                                     {group.description}
                                                                 </div>
                                                             )}
                                                             <div className="flex items-center gap-2 mt-2">
-                                                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                                <div className="text-xs text-dark-600 dark:text-dark-500">
                                                                     {group.memberCount || 0} members
                                                                 </div>
                                                                 {group.type && (
-                                                                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                                                                    <span className="text-xs px-2 py-1 rounded-full bg-dark-200 dark:bg-dark-900 text-dark-700 dark:text-dark-400">
                                                                         {group.type}
                                                                     </span>
                                                                 )}
@@ -738,7 +738,7 @@ export default function CreateNote() {
                                         group.description?.toLowerCase().includes(groupSearch.toLowerCase()) ||
                                         group.tags?.some(tag => tag.toLowerCase().includes(groupSearch.toLowerCase()))
                                     ).length === 0 && (
-                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                            <div className="text-center py-8 text-dark-600 dark:text-dark-500">
                                                 {groupSearch ? 'No groups found matching your search' : 'No groups available'}
                                             </div>
                                         )}
@@ -756,8 +756,8 @@ export default function CreateNote() {
 
                             {/* Standalone Note Info */}
                             {formData.noteAssociation === 'standalone' && (
-                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 text-sm text-dark-700 dark:text-dark-500">
                                         <div className="text-lg">📝</div>
                                         <div>This note will be standalone and not associated with any person or group</div>
                                     </div>
@@ -768,7 +768,7 @@ export default function CreateNote() {
                 </div>
 
                 {/* Content Editor */}
-                <div className="flex-1 bg-white dark:bg-gray-800 p-6">
+                <div className="flex-1 bg-white dark:bg-dark-900 p-6">
                     <div className="h-full">
                         <RichTextEditor
                             ref={editorRef}
@@ -782,31 +782,31 @@ export default function CreateNote() {
                 </div>
 
                 {/* Enhanced Footer */}
-                <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 px-6 py-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-6 text-xs text-dark-600 dark:text-dark-500">
                             <div className="flex items-center gap-4">
                                 <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘S</kbd>
+                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘S</kbd>
                                     Save
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">Esc</kbd>
+                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">Esc</kbd>
                                     Cancel
                                 </span>
                             </div>
-                            <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="h-4 w-px bg-dark-400 dark:bg-dark-700"></div>
                             <div className="flex items-center gap-4">
                                 <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘B</kbd>
+                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘B</kbd>
                                     Bold
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘I</kbd>
+                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘I</kbd>
                                     Italic
                                 </span>
                                 <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">⌘⇧A</kbd>
+                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘⇧A</kbd>
                                     Action Item
                                 </span>
                             </div>

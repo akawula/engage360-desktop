@@ -220,40 +220,40 @@ export default function ActionItems() {
 
     if (isLoading) {
         return (
-            <div className="h-full bg-gray-50 dark:bg-gray-900">
+            <div className="h-full bg-dark-100 dark:bg-dark-950">
                 {/* Enhanced Loading State */}
-                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                     <div className="px-6 py-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                                <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                <div className="w-8 h-8 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
+                                <div className="w-32 h-8 bg-dark-300 dark:bg-dark-800 rounded animate-pulse"></div>
                             </div>
-                            <div className="w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                            <div className="w-32 h-10 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
                         </div>
                     </div>
                 </div>
 
                 <div className="p-6">
                     <div className="mb-6">
-                        <div className="w-full h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse mb-4"></div>
+                        <div className="w-full h-12 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse mb-4"></div>
                         <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+                                <div key={i} className="w-24 h-8 bg-dark-300 dark:bg-dark-800 rounded-lg animate-pulse"></div>
                             ))}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
-                                <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-                                <div className="w-3/4 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-                                <div className="w-1/2 h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-                                <div className="w-full h-20 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                            <div key={i} className="bg-white dark:bg-dark-900 rounded-xl border border-dark-300 dark:border-dark-800 p-6 animate-pulse">
+                                <div className="w-full h-4 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
+                                <div className="w-3/4 h-4 bg-dark-300 dark:bg-dark-800 rounded mb-2"></div>
+                                <div className="w-1/2 h-4 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
+                                <div className="w-full h-20 bg-dark-300 dark:bg-dark-800 rounded mb-4"></div>
                                 <div className="flex justify-between">
-                                    <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                                    <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    <div className="w-16 h-4 bg-dark-300 dark:bg-dark-800 rounded"></div>
+                                    <div className="w-20 h-4 bg-dark-300 dark:bg-dark-800 rounded"></div>
                                 </div>
                             </div>
                         ))}
@@ -269,7 +269,7 @@ export default function ActionItems() {
             case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-700';
             case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border border-green-200 dark:border-green-700';
             case 'cancelled': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200 border border-red-200 dark:border-red-700';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
+            default: return 'bg-dark-200 text-dark-900 dark:bg-dark-950/30 dark:text-dark-300 border border-dark-300 dark:border-dark-800';
         }
     };
 
@@ -279,7 +279,7 @@ export default function ActionItems() {
             case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200 border border-orange-200 dark:border-orange-700';
             case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700';
             case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border border-green-200 dark:border-green-700';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
+            default: return 'bg-dark-200 text-dark-900 dark:bg-dark-950/30 dark:text-dark-300 border border-dark-300 dark:border-dark-800';
         }
     };
 
@@ -398,9 +398,9 @@ export default function ActionItems() {
     };
 
     return (
-        <div className="h-full bg-gray-50 dark:bg-gray-900">
+        <div className="h-full bg-dark-100 dark:bg-dark-950">
             {/* Enhanced Header */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -408,8 +408,8 @@ export default function ActionItems() {
                                 <Target className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Action Items</h1>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Action Items</h1>
+                                <p className="text-sm text-dark-700 dark:text-dark-500">
                                     {displayedItems.length} of {(actionItems || []).length} items
                                 </p>
                             </div>
@@ -421,7 +421,7 @@ export default function ActionItems() {
                                     onClick={() => setViewMode('grid')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid'
                                         ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                         }`}
                                 >
                                     <Grid className="h-4 w-4" />
@@ -430,14 +430,14 @@ export default function ActionItems() {
                                     onClick={() => setViewMode('list')}
                                     className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list'
                                         ? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                         }`}
                                 >
                                     <List className="h-4 w-4" />
                                 </button>
                             </div>
 
-                            <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                            <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
 
                             <button
                                 onClick={() => setIsAddModalOpen(true)}
@@ -452,14 +452,14 @@ export default function ActionItems() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
                 <div className="px-6">
                     <nav className="flex space-x-8">
                         <button
                             onClick={() => setActiveTab('todo')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'todo'
                                 ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                : 'border-transparent text-dark-600 hover:text-dark-800 dark:text-dark-500 dark:hover:text-dark-400'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function ActionItems() {
                             onClick={() => setActiveTab('completed')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'completed'
                                 ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                : 'border-transparent text-dark-600 hover:text-dark-800 dark:text-dark-500 dark:hover:text-dark-400'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -493,7 +493,7 @@ export default function ActionItems() {
                             onClick={() => setActiveTab('archived')}
                             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'archived'
                                 ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                : 'border-transparent text-dark-600 hover:text-dark-800 dark:text-dark-500 dark:hover:text-dark-400'
                                 }`}
                         >
                             <span className="flex items-center gap-2">
@@ -511,17 +511,17 @@ export default function ActionItems() {
             </div>
 
             {/* Search and Filter Section */}
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
                 <div className="px-6 py-4">
                     {/* Search Bar */}
                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
                         <input
                             type="text"
                             placeholder="Search action items by title, description, or assignee..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
+                            className="w-full pl-10 pr-4 py-3 bg-dark-100 dark:bg-dark-950 border border-dark-300 dark:border-dark-800 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-dark-950 dark:text-white placeholder-dark-600 dark:placeholder-dark-500 transition-all duration-200"
                         />
                     </div>
 
@@ -535,14 +535,14 @@ export default function ActionItems() {
                                     onClick={() => setSelectedPriority(type.value)}
                                     className={`group flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${selectedPriority === type.value
                                         ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
                                         }`}
                                 >
                                     <IconComponent className="h-4 w-4 group-hover:scale-110 transition-transform" />
                                     <span className="font-medium">{type.label}</span>
                                     <span className={`text-xs px-2 py-1 rounded-full ${selectedPriority === type.value
                                         ? 'bg-primary-200 text-primary-800 dark:bg-primary-800 dark:text-primary-200'
-                                        : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                                        : 'bg-dark-300 text-dark-700 dark:bg-dark-800 dark:text-dark-500'
                                         }`}>
                                         {type.count}
                                     </span>
@@ -554,12 +554,12 @@ export default function ActionItems() {
                     {/* Sort Options */}
                     <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-2">
-                            <Filter className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Sort by:</span>
+                            <Filter className="h-4 w-4 text-dark-500" />
+                            <span className="text-sm text-dark-700 dark:text-dark-500">Sort by:</span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value as 'created' | 'updated' | 'priority' | 'dueDate')}
-                                className="text-sm bg-transparent border-0 text-gray-700 dark:text-gray-300 focus:ring-0 cursor-pointer"
+                                className="text-sm bg-transparent border-0 text-dark-800 dark:text-dark-400 focus:ring-0 cursor-pointer"
                             >
                                 <option value="updated">Last Updated</option>
                                 <option value="created">Date Created</option>
@@ -604,11 +604,11 @@ export default function ActionItems() {
                                 <div
                                     key={item.id}
                                     id={`action-item-${item.id}`}
-                                    className={`group bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-1000 hover:shadow-lg ${isHighlighted
+                                    className={`group bg-white dark:bg-dark-900 rounded-xl border-2 transition-all duration-1000 hover:shadow-lg ${isHighlighted
                                         ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-primary-200/50 dark:shadow-primary-900/30 shadow-lg ring-2 ring-primary-200 dark:ring-primary-800 hover:shadow-primary-300/60 dark:hover:shadow-primary-900/40'
                                         : isItemOverdue
                                             ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
-                                            : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
+                                            : 'border-dark-300 dark:border-dark-800 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
                                         } ${viewMode === 'grid' ? 'p-6' : 'p-4'}`}
                                 >
                                     {viewMode === 'grid' ? (
@@ -667,23 +667,23 @@ export default function ActionItems() {
                                                             )}
                                                         </div>
                                                     )}
-                                                    <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
+                                                    <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
                                                 </div>
                                             </div>
 
                                             <div className="flex-1 mb-4">
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+                                                <h3 className="font-semibold text-dark-950 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
                                                     {item.title}
                                                 </h3>
                                                 {item.description && (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                    <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-3">
                                                         {item.description}
                                                     </p>
                                                 )}
                                             </div>
 
                                             <div className="space-y-3 mt-auto">
-                                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
                                                     <div className="flex items-center gap-1">
                                                         <Clock className="h-3 w-3" />
                                                         <span>{getRelativeTime(item.updatedAt)}</span>
@@ -693,7 +693,7 @@ export default function ActionItems() {
                                                             ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 animate-pulse'
                                                             : item.dueDate && new Date(item.dueDate).getTime() - Date.now() < 24 * 60 * 60 * 1000
                                                                 ? 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700'
-                                                                : 'text-gray-600 dark:text-gray-400'
+                                                                : 'text-dark-700 dark:text-dark-500'
                                                             }`}>
                                                             <Calendar className="h-3 w-3" />
                                                             <span className="text-xs font-semibold">{dueDateText}</span>
@@ -702,7 +702,7 @@ export default function ActionItems() {
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
                                                     {assignee && (
                                                         <div className="flex items-center gap-1">
                                                             <UserCheck className="h-3 w-3" />
@@ -734,7 +734,7 @@ export default function ActionItems() {
                                                 </div>
 
                                                 {/* Action Buttons - Always at bottom */}
-                                                <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                                                <div className="flex items-center justify-between pt-3 border-t border-dark-200 dark:border-dark-800">
                                                     <div className="flex items-center gap-1">
                                                         {/* Status action buttons */}
                                                         {item.status === 'pending' && (
@@ -837,7 +837,7 @@ export default function ActionItems() {
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
+                                                    <h3 className="font-semibold text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors truncate">
                                                         {item.title}
                                                     </h3>
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
@@ -849,12 +849,12 @@ export default function ActionItems() {
                                                     </span>
                                                 </div>
                                                 {item.description && (
-                                                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">
+                                                    <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-1">
                                                         {item.description}
                                                     </p>
                                                 )}
                                                 <div className="flex items-center gap-4 mt-2">
-                                                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                    <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                         <Clock className="h-3 w-3" />
                                                         <span>{getRelativeTime(item.updatedAt)}</span>
                                                     </div>
@@ -863,7 +863,7 @@ export default function ActionItems() {
                                                             ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 animate-pulse'
                                                             : item.dueDate && new Date(item.dueDate).getTime() - Date.now() < 24 * 60 * 60 * 1000
                                                                 ? 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700'
-                                                                : 'text-gray-600 dark:text-gray-400'
+                                                                : 'text-dark-700 dark:text-dark-500'
                                                             }`}>
                                                             <Calendar className="h-3 w-3" />
                                                             <span className="text-xs font-semibold">{dueDateText}</span>
@@ -871,13 +871,13 @@ export default function ActionItems() {
                                                         </div>
                                                     )}
                                                     {assignee && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                             <UserCheck className="h-3 w-3" />
                                                             <span>{assignee.firstName} {assignee.lastName}</span>
                                                         </div>
                                                     )}
                                                     {associatedPerson && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500">
                                                             <User className="h-3 w-3" />
                                                             <span>{associatedPerson.firstName} {associatedPerson.lastName}</span>
                                                         </div>
@@ -980,11 +980,11 @@ export default function ActionItems() {
                             )}
                         </div>
 
-                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-xl font-semibold text-dark-950 dark:text-white mb-2">
                             {searchTerm || selectedPriority !== 'all' ? 'No action items found' : 'No action items yet'}
                         </h3>
 
-                        <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                        <p className="text-dark-700 dark:text-dark-500 mb-6 max-w-md mx-auto">
                             {searchTerm || selectedPriority !== 'all'
                                 ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
                                 : 'Create your first action item to start tracking your tasks and goals.'
@@ -1034,15 +1034,15 @@ export default function ActionItems() {
             {/* Custom Delete Confirmation Modal */}
             {itemToDelete && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                    <div className="bg-white dark:bg-dark-900 rounded-lg p-6 max-w-md w-full mx-4">
                         <div className="flex items-center mb-4">
                             <AlertCircle className="h-6 w-6 text-red-600 mr-3" />
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h3 className="text-lg font-semibold text-dark-950 dark:text-white">
                                 Confirm Deletion
                             </h3>
                         </div>
 
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                        <p className="text-dark-700 dark:text-dark-400 mb-6">
                             Are you sure you want to delete "{itemToDelete.title}"?
                             <br />
                             <span className="text-sm text-red-600 dark:text-red-400">
@@ -1053,7 +1053,7 @@ export default function ActionItems() {
                         <div className="flex justify-end space-x-3">
                             <button
                                 onClick={cancelDelete}
-                                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                                className="px-4 py-2 text-dark-700 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-800 rounded-md transition-colors"
                             >
                                 Cancel
                             </button>

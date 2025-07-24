@@ -129,17 +129,17 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <div className="p-6 border-b border-dark-300 dark:border-dark-800">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
                             <Key className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            <h2 className="text-xl font-semibold text-dark-950 dark:text-white">
                                 Recover Your Account
                             </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                            <p className="text-sm text-dark-700 dark:text-dark-500">
                                 Enter your recovery keys to regain access to your encrypted data
                             </p>
                         </div>
@@ -159,11 +159,11 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
 
                     <div className="mb-6">
                         <div className="flex items-center justify-between mb-3">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label className="block text-sm font-medium text-dark-800 dark:text-dark-400">
                                 Recovery Keys ({filledKeysCount}/12 filled, minimum 8 required)
                             </label>
                             <div className="flex items-center gap-2">
-                                <div className={`h-2 w-20 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
+                                <div className={`h-2 w-20 bg-dark-300 dark:bg-dark-800 rounded-full overflow-hidden`}>
                                     <div
                                         className={`h-full transition-all duration-300 ${filledKeysCount >= 8 ? 'bg-green-500' : 'bg-blue-500'
                                             }`}
@@ -177,7 +177,7 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                         <div className="grid grid-cols-2 gap-2 mb-2" onPaste={handlePaste}>
                             {recoveryKeys.map((key, index) => (
                                 <div key={index} className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 w-6">
+                                    <span className="text-xs text-dark-600 dark:text-dark-500 w-6">
                                         {index + 1}.
                                     </span>
                                     <input
@@ -187,8 +187,8 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                                         placeholder="word-word-word"
                                         className={`flex-1 px-2 py-1 text-sm border rounded font-mono ${errors[`key_${index}`]
                                                 ? 'border-red-300 dark:border-red-600'
-                                                : 'border-gray-300 dark:border-gray-600'
-                                            } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                                                : 'border-dark-400 dark:border-dark-700'
+                                            } bg-white dark:bg-dark-800 text-dark-950 dark:text-white`}
                                     />
                                 </div>
                             ))}
@@ -200,14 +200,14 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                             </p>
                         )}
 
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <p className="text-xs text-dark-600 dark:text-dark-500 mt-2">
                             💡 Tip: You can paste all your recovery keys at once from a text file
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                                 New Device Password
                             </label>
                             <input
@@ -217,8 +217,8 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                                 onChange={(e) => setPassword(e.target.value)}
                                 className={`w-full px-3 py-2 border rounded-lg ${errors.password
                                         ? 'border-red-300 dark:border-red-600'
-                                        : 'border-gray-300 dark:border-gray-600'
-                                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                                        : 'border-dark-400 dark:border-dark-700'
+                                    } bg-white dark:bg-dark-800 text-dark-950 dark:text-white`}
                                 placeholder="Secure password for this device"
                                 required
                             />
@@ -230,7 +230,7 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                         </div>
 
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                                 Confirm Password
                             </label>
                             <input
@@ -240,8 +240,8 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className={`w-full px-3 py-2 border rounded-lg ${errors.confirmPassword
                                         ? 'border-red-300 dark:border-red-600'
-                                        : 'border-gray-300 dark:border-gray-600'
-                                    } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                                        : 'border-dark-400 dark:border-dark-700'
+                                    } bg-white dark:bg-dark-800 text-dark-950 dark:text-white`}
                                 placeholder="Confirm your password"
                                 required
                             />
@@ -257,7 +257,7 @@ export default function DeviceRecoveryModal({ isOpen, onClose, onSuccess }: Devi
                         <button
                             type="button"
                             onClick={handleClose}
-                            className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                            className="flex-1 px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
                         >
                             Cancel
                         </button>

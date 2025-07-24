@@ -108,7 +108,7 @@ export default function Devices() {
             case 'laptop':
                 return <Laptop className="h-8 w-8 text-indigo-600" />;
             default:
-                return <Monitor className="h-8 w-8 text-gray-600 dark:text-gray-300" />;
+                return <Monitor className="h-8 w-8 text-dark-700 dark:text-dark-400" />;
         }
     };
 
@@ -118,7 +118,7 @@ export default function Devices() {
         }
         return isActive
             ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+            : 'bg-dark-200 text-dark-900 dark:bg-dark-950/20 dark:text-dark-500';
     };
 
     const formatLastSeen = (lastSeen?: string) => {
@@ -144,10 +144,10 @@ export default function Devices() {
         return (
             <div className="space-y-6">
                 <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-6"></div>
+                    <div className="h-8 bg-dark-300 dark:bg-dark-800 rounded w-32 mb-6"></div>
                     <div className="space-y-4">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div key={i} className="h-24 bg-dark-300 dark:bg-dark-800 rounded"></div>
                         ))}
                     </div>
                 </div>
@@ -158,7 +158,7 @@ export default function Devices() {
     if (error) {
         return (
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Devices</h1>
+                <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Devices</h1>
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                     <p className="text-red-600 dark:text-red-400">
                         Failed to load devices: {error instanceof Error ? error.message : 'Unknown error'}
@@ -171,7 +171,7 @@ export default function Devices() {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Devices</h1>
+                <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Devices</h1>
                 <button
                     onClick={() => setShowRegisterModal(true)}
                     className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
@@ -187,16 +187,16 @@ export default function Devices() {
                     return (
                         <div
                             key={device.id}
-                            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all"
+                            className="bg-white dark:bg-dark-900 rounded-lg shadow-sm border border-dark-300 dark:border-dark-800 p-6 hover:shadow-md transition-all"
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     {getDeviceIcon(device.type)}
                                     <div>
-                                        <h3 className="font-semibold text-gray-900 dark:text-white">{device.deviceName}</h3>
-                                        <p className="text-gray-600 dark:text-gray-300 text-sm">{device.platform}</p>
+                                        <h3 className="font-semibold text-dark-950 dark:text-white">{device.deviceName}</h3>
+                                        <p className="text-dark-700 dark:text-dark-400 text-sm">{device.platform}</p>
                                         {device.version && (
-                                            <p className="text-gray-500 dark:text-gray-400 text-xs">Version {device.version}</p>
+                                            <p className="text-dark-600 dark:text-dark-500 text-xs">Version {device.version}</p>
                                         )}
                                     </div>
                                 </div>
@@ -205,7 +205,7 @@ export default function Devices() {
                                         device.isActive ? (
                                             <Wifi className="h-4 w-4 text-green-500" />
                                         ) : (
-                                            <WifiOff className="h-4 w-4 text-gray-400" />
+                                            <WifiOff className="h-4 w-4 text-dark-500" />
                                         )
                                     ) : (
                                         <Shield className="h-4 w-4 text-yellow-500" />
@@ -213,17 +213,17 @@ export default function Devices() {
                                     <div className="relative" ref={menuRef}>
                                         <button
                                             onClick={() => setActionMenuOpen(actionMenuOpen === device.id ? null : device.id)}
-                                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                            className="p-1 hover:bg-dark-200 dark:hover:bg-dark-800 rounded"
                                         >
-                                            <MoreVertical className="h-4 w-4 text-gray-400" />
+                                            <MoreVertical className="h-4 w-4 text-dark-500" />
                                         </button>
                                         {actionMenuOpen === device.id && (
-                                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 z-10 min-w-[150px]">
+                                            <div className="absolute right-0 top-full mt-1 bg-white dark:bg-dark-800 border border-dark-300 dark:border-dark-700 rounded-lg shadow-lg py-1 z-10 min-w-[150px]">
                                                 {!device.trusted && (
                                                     <button
                                                         onClick={() => handleApproveDevice(device.id)}
                                                         disabled={approveMutation.isPending}
-                                                        className="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 disabled:opacity-50"
+                                                        className="w-full text-left px-3 py-2 text-sm text-green-600 hover:bg-dark-100 dark:hover:bg-dark-700 flex items-center gap-2 disabled:opacity-50"
                                                     >
                                                         <ShieldCheck className="h-4 w-4" />
                                                         {approveMutation.isPending ? 'Approving...' : 'Approve Device'}
@@ -232,7 +232,7 @@ export default function Devices() {
                                                 <button
                                                     onClick={() => handleRevokeDevice(device.id, device.deviceName)}
                                                     disabled={revokeMutation.isPending}
-                                                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 disabled:opacity-50"
+                                                    className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-dark-100 dark:hover:bg-dark-700 flex items-center gap-2 disabled:opacity-50"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                     {revokeMutation.isPending ? 'Revoking...' : 'Revoke Access'}
@@ -245,27 +245,27 @@ export default function Devices() {
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">Status</span>
+                                    <span className="text-sm text-dark-700 dark:text-dark-400">Status</span>
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${status.color}`}>
                                         {status.text}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">Last seen</span>
-                                    <span className="text-sm text-gray-900 dark:text-white">{formatLastSeen(device.lastUsed)}</span>
+                                    <span className="text-sm text-dark-700 dark:text-dark-400">Last seen</span>
+                                    <span className="text-sm text-dark-950 dark:text-white">{formatLastSeen(device.lastUsed)}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">Registered</span>
-                                    <div className="flex items-center gap-1 text-sm text-gray-900 dark:text-white">
+                                    <span className="text-sm text-dark-700 dark:text-dark-400">Registered</span>
+                                    <div className="flex items-center gap-1 text-sm text-dark-950 dark:text-white">
                                         <Calendar className="h-3 w-3" />
                                         <span>{new Date(device.createdAt).toLocaleDateString()}</span>
                                     </div>
                                 </div>
 
                                 {!device.trusted && (
-                                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                                    <div className="pt-2 border-t border-dark-200 dark:border-dark-800">
                                         <div className="flex items-center gap-2 text-xs text-yellow-600 dark:text-yellow-400">
                                             <Shield className="h-3 w-3" />
                                             <span>Pending approval from trusted device</span>
@@ -279,10 +279,10 @@ export default function Devices() {
             </div>
 
             {devices.length === 0 && (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                    <Monitor className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No devices registered</h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">Register your first device to get started</p>
+                <div className="text-center py-12 bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                    <Monitor className="h-12 w-12 text-dark-500 dark:text-dark-600 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-dark-950 dark:text-white mb-2">No devices registered</h3>
+                    <p className="text-dark-700 dark:text-dark-400 mb-4">Register your first device to get started</p>
                     <button
                         onClick={() => setShowRegisterModal(true)}
                         className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"

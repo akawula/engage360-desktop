@@ -137,7 +137,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                 {/* Basic Information */}
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Goal Title *
                         </label>
                         <input
@@ -147,12 +147,12 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             onChange={handleChange}
                             required
                             placeholder="e.g., Master React Advanced Patterns"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Description
                         </label>
                         <textarea
@@ -161,13 +161,13 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             onChange={handleChange}
                             rows={3}
                             placeholder="Describe what you want to achieve and why it's important..."
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                         />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                                 Category *
                             </label>
                             <select
@@ -175,7 +175,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 value={formData.category}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                             >
                                 <option value="technical">Technical</option>
                                 <option value="leadership">Leadership</option>
@@ -187,7 +187,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                                 Priority *
                             </label>
                             <select
@@ -195,7 +195,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 value={formData.priority}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                             >
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -206,7 +206,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Target Date
                         </label>
                         <input
@@ -214,14 +214,14 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             name="targetDate"
                             value={formData.targetDate}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                         />
                     </div>
                 </div>
 
                 {/* Skills */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-2">
                         Related Skills
                     </label>
 
@@ -232,7 +232,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             value={newSkill}
                             onChange={(e) => setNewSkill(e.target.value)}
                             placeholder="Add a skill..."
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            className="flex-1 px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                             onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -273,19 +273,19 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
 
                 {/* Milestones */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-2">
                         Milestones
                     </label>
 
                     {/* Add milestone form */}
-                    <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-3">
+                    <div className="space-y-3 p-4 bg-dark-100 dark:bg-dark-800 rounded-lg mb-3">
                         <div>
                             <input
                                 type="text"
                                 value={newMilestone.title}
                                 onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
                                 placeholder="Milestone title..."
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -294,14 +294,14 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Description (optional)..."
                                 rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                             />
                             <div className="space-y-2">
                                 <input
                                     type="date"
                                     value={newMilestone.targetDate}
                                     onChange={(e) => setNewMilestone(prev => ({ ...prev, targetDate: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
                                 />
                                 <button
                                     type="button"
@@ -319,21 +319,21 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                     {formData.milestones && formData.milestones.length > 0 && (
                         <div className="space-y-2">
                             {formData.milestones.map((milestone, index) => (
-                                <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg">
+                                <div key={index} className="flex items-center gap-3 p-3 bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-lg">
                                     <div className="flex-shrink-0">
-                                        <Target className="w-4 h-4 text-gray-400" />
+                                        <Target className="w-4 h-4 text-dark-500" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p className="text-sm font-medium text-dark-950 dark:text-white">
                                             {milestone.title}
                                         </p>
                                         {milestone.description && (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs text-dark-600 dark:text-dark-500">
                                                 {milestone.description}
                                             </p>
                                         )}
                                         {milestone.targetDate && (
-                                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            <div className="flex items-center gap-1 text-xs text-dark-600 dark:text-dark-500 mt-1">
                                                 <Calendar className="w-3 h-3" />
                                                 Due: {new Date(milestone.targetDate).toLocaleDateString()}
                                             </div>
@@ -353,11 +353,11 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                 </div>
 
                 {/* Submit Buttons */}
-                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-dark-300 dark:border-dark-800">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-800 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                     >
                         Cancel
                     </button>

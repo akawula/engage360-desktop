@@ -134,7 +134,7 @@ const NotificationItem: React.FC<{
             case 'info':
                 return 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800';
             default:
-                return 'bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800';
+                return 'bg-dark-100 border-dark-300 dark:bg-dark-950/20 dark:border-dark-900';
         }
     };
 
@@ -145,18 +145,18 @@ const NotificationItem: React.FC<{
                     {getIcon()}
                 </div>
                 <div className="ml-3 w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="text-sm font-medium text-dark-950 dark:text-dark-200">
                         {notification.title}
                     </p>
                     {notification.message && (
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        <p className="mt-1 text-sm text-dark-600 dark:text-dark-500">
                             {notification.message}
                         </p>
                     )}
                 </div>
                 <div className="ml-4 flex-shrink-0 flex">
                     <button
-                        className="inline-flex text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="inline-flex text-dark-500 hover:text-dark-700 dark:hover:text-dark-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         onClick={() => onRemove(notification.id)}
                     >
                         <span className="sr-only">Close</span>

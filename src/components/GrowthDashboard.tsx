@@ -34,10 +34,10 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
         return (
             <div className="space-y-6">
                 <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-6"></div>
+                    <div className="h-8 bg-dark-300 dark:bg-dark-800 rounded w-64 mb-6"></div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                            <div key={i} className="h-32 bg-dark-300 dark:bg-dark-800 rounded"></div>
                         ))}
                     </div>
                 </div>
@@ -50,10 +50,10 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h2 className="text-2xl font-bold text-dark-950 dark:text-white">
                         {personName}'s Growth Dashboard
                     </h2>
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">
+                    <p className="text-dark-700 dark:text-dark-400 mt-1">
                         Track progress, set goals, and develop skills
                     </p>
                 </div>
@@ -68,64 +68,64 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
 
             {/* Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
                     <div className="flex items-center">
                         <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                             <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p className="text-sm font-medium text-dark-700 dark:text-dark-500">
                                 Active Goals
                             </p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <p className="text-2xl font-bold text-dark-950 dark:text-white">
                                 {analytics?.inProgressGoals || 0}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
                     <div className="flex items-center">
                         <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
                             <Award className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p className="text-sm font-medium text-dark-700 dark:text-dark-500">
                                 Completed Goals
                             </p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <p className="text-2xl font-bold text-dark-950 dark:text-white">
                                 {analytics?.completedGoals || 0}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
                     <div className="flex items-center">
                         <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
                             <BookOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p className="text-sm font-medium text-dark-700 dark:text-dark-500">
                                 Skills Tracked
                             </p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <p className="text-2xl font-bold text-dark-950 dark:text-white">
                                 {analytics?.skillsCount || 0}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
                     <div className="flex items-center">
                         <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
                             <TrendingUp className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div className="ml-4">
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <p className="text-sm font-medium text-dark-700 dark:text-dark-500">
                                 Average Progress
                             </p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <p className="text-2xl font-bold text-dark-950 dark:text-white">
                                 {analytics?.averageProgress || 0}%
                             </p>
                         </div>
@@ -136,9 +136,9 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Active Goals */}
                 <div className="lg:col-span-2">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                        <div className="p-6 border-b border-dark-300 dark:border-dark-800">
+                            <h3 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                                 <Target className="h-5 w-5" />
                                 Active Goals
                             </h3>
@@ -152,11 +152,11 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                                 </div>
                             ) : (
                                 <div className="text-center py-8">
-                                    <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                    <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                    <Target className="h-12 w-12 text-dark-500 mx-auto mb-4" />
+                                    <h4 className="text-lg font-medium text-dark-950 dark:text-white mb-2">
                                         No active goals
                                     </h4>
-                                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                                    <p className="text-dark-600 dark:text-dark-500 mb-4">
                                         Start setting development goals to track progress
                                     </p>
                                     <button
@@ -175,9 +175,9 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                 {/* Sidebar */}
                 <div className="space-y-6">
                     {/* Upcoming Deadlines */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                        <div className="p-6 border-b border-dark-300 dark:border-dark-800">
+                            <h3 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                                 <Clock className="h-5 w-5" />
                                 Upcoming Deadlines
                             </h3>
@@ -186,15 +186,15 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                             {upcomingDeadlines.length > 0 ? (
                                 <div className="space-y-3">
                                     {upcomingDeadlines.map((goal) => (
-                                        <div key={goal.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div key={goal.id} className="flex items-center gap-3 p-3 bg-dark-100 dark:bg-dark-800 rounded-lg">
                                             <div className="flex-shrink-0">
-                                                <Calendar className="h-4 w-4 text-gray-400" />
+                                                <Calendar className="h-4 w-4 text-dark-500" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                <p className="text-sm font-medium text-dark-950 dark:text-white truncate">
                                                     {goal.title}
                                                 </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                <p className="text-xs text-dark-600 dark:text-dark-500">
                                                     Due {format(new Date(goal.targetDate!), 'MMM d, yyyy')}
                                                 </p>
                                             </div>
@@ -202,7 +202,7 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                <p className="text-dark-600 dark:text-dark-500 text-sm">
                                     No upcoming deadlines
                                 </p>
                             )}
@@ -211,9 +211,9 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
 
                     {/* Recent Assessment */}
                     {recentAssessment && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                            <div className="p-6 border-b border-dark-300 dark:border-dark-800">
+                                <h3 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                                     <TrendingUp className="h-5 w-5" />
                                     Latest Assessment
                                 </h3>
@@ -221,24 +221,24 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                             <div className="p-6">
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                                        <span className="text-sm text-dark-700 dark:text-dark-400">
                                             Overall Progress
                                         </span>
                                         <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
                                             {recentAssessment.overallProgress}%
                                         </span>
                                     </div>
-                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div className="w-full bg-dark-300 dark:bg-dark-800 rounded-full h-2">
                                         <div
                                             className="bg-primary-600 h-2 rounded-full transition-all duration-300"
                                             style={{ width: `${recentAssessment.overallProgress}%` }}
                                         ></div>
                                     </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    <p className="text-xs text-dark-600 dark:text-dark-500">
                                         Assessed on {format(new Date(recentAssessment.assessmentDate), 'MMM d, yyyy')}
                                     </p>
                                     {recentAssessment.feedback && (
-                                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
+                                        <p className="text-sm text-dark-800 dark:text-dark-400 mt-2">
                                             "{recentAssessment.feedback}"
                                         </p>
                                     )}
@@ -248,9 +248,9 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                     )}
 
                     {/* Skills Summary */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                        <div className="p-6 border-b border-dark-300 dark:border-dark-800">
+                            <h3 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                                 <BookOpen className="h-5 w-5" />
                                 Skills Overview
                             </h3>
@@ -262,13 +262,13 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                                         <SkillProgressCard key={skill.id} skill={skill} compact />
                                     ))}
                                     {skills.length > 3 && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center pt-2">
+                                        <p className="text-sm text-dark-600 dark:text-dark-500 text-center pt-2">
                                             And {skills.length - 3} more skills...
                                         </p>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                <p className="text-dark-600 dark:text-dark-500 text-sm">
                                     No skills tracked yet
                                 </p>
                             )}
@@ -279,9 +279,9 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
 
             {/* Completed Goals Section */}
             {completedGoals.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                    <div className="p-6 border-b border-dark-300 dark:border-dark-800">
+                        <h3 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                             <Award className="h-5 w-5" />
                             Recent Achievements
                         </h3>
@@ -295,7 +295,7 @@ export default function GrowthDashboard({ personId, personName }: GrowthDashboar
                                             <Award className="h-5 w-5 text-green-600 dark:text-green-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                            <h4 className="text-sm font-medium text-dark-950 dark:text-white">
                                                 {goal.title}
                                             </h4>
                                             {goal.completedDate && (

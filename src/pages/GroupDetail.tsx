@@ -30,8 +30,8 @@ export default function GroupDetail() {
         return (
             <div className="space-y-6">
                 <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-32 mb-6"></div>
-                    <div className="h-64 bg-gray-200 rounded"></div>
+                    <div className="h-8 bg-dark-300 rounded w-32 mb-6"></div>
+                    <div className="h-64 bg-dark-300 rounded"></div>
                 </div>
             </div>
         );
@@ -40,7 +40,7 @@ export default function GroupDetail() {
     if (error || (groupResponse && !groupResponse.success)) {
         return (
             <div className="space-y-6">
-                <Link to="/groups" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Link to="/groups" className="flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Groups
                 </Link>
@@ -56,12 +56,12 @@ export default function GroupDetail() {
     if (!group) {
         return (
             <div className="space-y-6">
-                <Link to="/groups" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Link to="/groups" className="flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Groups
                 </Link>
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
-                    <p className="text-gray-600 dark:text-gray-300">Group not found</p>
+                <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
+                    <p className="text-dark-700 dark:text-dark-400">Group not found</p>
                 </div>
             </div>
         );
@@ -73,7 +73,7 @@ export default function GroupDetail() {
             case 'project': return 'bg-green-100 text-green-800';
             case 'customer': return 'bg-purple-100 text-purple-800';
             case 'interest': return 'bg-orange-100 text-orange-800';
-            default: return 'bg-gray-100 text-gray-800';
+            default: return 'bg-dark-200 text-dark-900';
         }
     };
 
@@ -81,7 +81,7 @@ export default function GroupDetail() {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <Link to="/groups" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Link to="/groups" className="flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Groups
                 </Link>
@@ -95,17 +95,17 @@ export default function GroupDetail() {
             </div>
 
             {/* Group Info Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-colors">
+            <div className="bg-white dark:bg-dark-900 rounded-lg shadow p-6 transition-colors">
                 <div className="flex items-start justify-between mb-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{group.name}</h1>
+                        <h1 className="text-2xl font-bold text-dark-950 dark:text-white mb-2">{group.name}</h1>
                         <div className="flex items-center gap-3">
                             {group.type && (
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(group.type)}`}>
                                     {group.type}
                                 </span>
                             )}
-                            <span className="text-gray-500 dark:text-gray-400 text-sm">
+                            <span className="text-dark-600 dark:text-dark-500 text-sm">
                                 {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
                             </span>
                         </div>
@@ -114,21 +114,21 @@ export default function GroupDetail() {
 
                 {group.description && (
                     <div className="mb-4">
-                        <h3 className="text-sm font-medium text-gray-700 mb-2">Description</h3>
-                        <p className="text-gray-600 dark:text-gray-300">{group.description}</p>
+                        <h3 className="text-sm font-medium text-dark-800 mb-2">Description</h3>
+                        <p className="text-dark-700 dark:text-dark-400">{group.description}</p>
                     </div>
                 )}
 
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-dark-600 dark:text-dark-500">
                     Created: {new Date(group.createdAt).toLocaleDateString()}
                 </div>
             </div>
 
             {/* Members Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow transition-colors">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
+                <div className="p-6 border-b border-dark-300 dark:border-dark-800">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
                             <Users className="h-5 w-5" />
                             Members ({members.length})
                         </h2>
@@ -157,7 +157,7 @@ export default function GroupDetail() {
                                     <Link
                                         key={member.id || person.id}
                                         to={`/people/${person.id}`}
-                                        className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                                        className="p-4 border border-dark-300 rounded-lg hover:shadow-md transition-shadow"
                                     >
                                         <div className="flex items-center gap-3">
                                             {avatar ? (
@@ -175,10 +175,10 @@ export default function GroupDetail() {
                                                 </div>
                                             )}
                                             <div>
-                                                <h3 className="font-medium text-gray-900 dark:text-white">
+                                                <h3 className="font-medium text-dark-950 dark:text-white">
                                                     {firstName} {lastName}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{position}</p>
+                                                <p className="text-sm text-dark-600 dark:text-dark-500">{position}</p>
                                             </div>
                                         </div>
                                     </Link>
@@ -186,7 +186,7 @@ export default function GroupDetail() {
                             })}
                         </div>
                     ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No members yet</p>
+                        <p className="text-dark-600 dark:text-dark-500 text-center py-8">No members yet</p>
                     )}
                 </div>
             </div>

@@ -137,7 +137,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             title={title}
             className={`p-2 rounded-lg transition-colors ${isActive
                 ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                : 'text-dark-700 dark:text-dark-400 hover:bg-dark-200 dark:hover:bg-dark-800 hover:text-dark-950 dark:hover:text-white'
                 } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
             {children}
@@ -145,11 +145,11 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
     );
 
     return (
-        <div className={`border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden ${className}`}>
+        <div className={`border border-dark-400 dark:border-dark-700 rounded-lg overflow-hidden ${className}`}>
             {/* Toolbar */}
-            <div className="border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-2 flex flex-wrap gap-1 transition-colors">
+            <div className="border-b border-dark-300 dark:border-dark-700 bg-dark-100 dark:bg-dark-800 p-2 flex flex-wrap gap-1 transition-colors">
                 {/* Text Formatting */}
-                <div className="flex items-center gap-1 pr-2 border-r border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-1 pr-2 border-r border-dark-400 dark:border-dark-700">
                     <ToolbarButton
                         onClick={() => editor.chain().focus().toggleBold().run()}
                         isActive={editor.isActive('bold')}
@@ -174,7 +174,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                 </div>
 
                 {/* Headings */}
-                <div className="flex items-center gap-1 pr-2 border-r border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-1 pr-2 border-r border-dark-400 dark:border-dark-700">
                     <ToolbarButton
                         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                         isActive={editor.isActive('heading', { level: 1 })}
@@ -199,7 +199,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                 </div>
 
                 {/* Lists */}
-                <div className="flex items-center gap-1 pr-2 border-r border-gray-300 dark:border-gray-600">
+                <div className="flex items-center gap-1 pr-2 border-r border-dark-400 dark:border-dark-700">
                     <ToolbarButton
                         onClick={() => editor.chain().focus().toggleBulletList().run()}
                         isActive={editor.isActive('bulletList')}
@@ -243,7 +243,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
 
                 {/* Action Item Creation - Only show when text is selected */}
                 {hasSelection && onCreateActionItem && (
-                    <div className="flex items-center gap-1 pl-2 border-l border-gray-300 dark:border-gray-600">
+                    <div className="flex items-center gap-1 pl-2 border-l border-dark-400 dark:border-dark-700">
                         <button
                             type="button"
                             onClick={() => onCreateActionItem(selectedText)}
@@ -259,13 +259,13 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
 
             {/* Helpful hint for action item creation */}
             {onCreateActionItem && (
-                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                    💡 Tip: Select text and press <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 rounded">Cmd+Shift+A</kbd> or use the button above to create an action item
+                <div className="px-3 py-2 text-xs text-dark-600 dark:text-dark-500 bg-dark-100 dark:bg-dark-800 border-b border-dark-300 dark:border-dark-700">
+                    💡 Tip: Select text and press <kbd className="px-1 py-0.5 text-xs bg-dark-300 dark:bg-dark-700 rounded">Cmd+Shift+A</kbd> or use the button above to create an action item
                 </div>
             )}
 
             {/* Editor */}
-            <div className="bg-white dark:bg-gray-800 transition-colors">
+            <div className="bg-white dark:bg-dark-900 transition-colors">
                 <EditorContent
                     editor={editor}
                     className="min-h-[400px] max-h-[600px] overflow-y-auto focus-within:ring-2 focus-within:ring-primary-500 dark:focus-within:ring-primary-400"
