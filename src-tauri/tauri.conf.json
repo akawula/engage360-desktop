@@ -20,7 +20,11 @@
         "resizable": true,
         "center": true,
         "hiddenTitle": true,
-        "titleBarStyle": "Overlay"
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": {
+          "x": 20,
+          "y": 23
+        }
       }
     ],
     "security": {
