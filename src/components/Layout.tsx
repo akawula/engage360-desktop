@@ -9,8 +9,7 @@ import {
     Monitor,
     LogOut,
     ChevronDown,
-    Home,
-    BookOpen
+    Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { clsx } from 'clsx';
@@ -25,7 +24,6 @@ const navItems = [
     { path: '/groups', label: 'Groups', icon: UsersRound },
     { path: '/notes', label: 'Notes', icon: FileText },
     { path: '/action-items', label: 'Action Items', icon: CheckSquare },
-    { path: '/guides', label: 'Career Guides', icon: BookOpen },
     { path: '/devices', label: 'Devices', icon: Monitor },
 ];
 
@@ -121,7 +119,6 @@ export default function Layout({ children }: LayoutProps) {
                                     if (location.pathname.startsWith('/groups/')) return 'Groups';
                                     if (location.pathname.startsWith('/notes/')) return 'Notes';
                                     if (location.pathname.startsWith('/action-items/')) return 'Action Items';
-                                    if (location.pathname.startsWith('/guides/')) return 'Career Guides';
                                     if (location.pathname.startsWith('/growth/')) return 'Personal Growth';
                                     return location.pathname.slice(1).replace('-', ' ');
                                 })()}

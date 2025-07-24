@@ -19,9 +19,6 @@ import ActionItems from './pages/ActionItems';
 import ActionItemDetail from './pages/ActionItemDetail';
 import Profile from './pages/Profile';
 import Devices from './pages/Devices';
-import Guides from './pages/Guides';
-import CareerGuides from './pages/CareerGuides';
-import SkillDevelopmentGuide from './pages/SkillDevelopmentGuide';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -71,9 +68,6 @@ function App() {
                       <Route path="/notes/:noteId" element={<NoteDetail />} />
                       <Route path="/action-items" element={<ActionItems />} />
                       <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />
-                      <Route path="/guides" element={<Guides />} />
-                      <Route path="/guides/career-levels" element={<CareerGuides />} />
-                      <Route path="/guides/skill-development" element={<SkillDevelopmentGuide />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/devices" element={<Devices />} />
                     </Routes>
