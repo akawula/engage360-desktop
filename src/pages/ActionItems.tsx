@@ -398,7 +398,7 @@ export default function ActionItems() {
     };
 
     return (
-        <div className="h-full bg-dark-100 dark:bg-dark-950">
+        <div className="min-h-full bg-dark-100 dark:bg-dark-950">
             {/* Enhanced Header */}
             <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                 <div className="px-6 py-4">

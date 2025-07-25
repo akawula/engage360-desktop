@@ -257,12 +257,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                 )}
             </div>
 
-            {/* Helpful hint for action item creation */}
-            {onCreateActionItem && (
-                <div className="px-3 py-2 text-xs text-dark-600 dark:text-dark-500 bg-dark-100 dark:bg-dark-800 border-b border-dark-300 dark:border-dark-700">
-                    💡 Tip: Select text and press <kbd className="px-1 py-0.5 text-xs bg-dark-300 dark:bg-dark-700 rounded">Cmd+Shift+A</kbd> or use the button above to create an action item
-                </div>
-            )}
 
             {/* Editor */}
             <div className="flex-1 bg-white dark:bg-dark-900 transition-colors overflow-hidden">
