@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Timer, Zap, Flame } from 'lucide-react';
+import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -122,6 +122,10 @@ export default function NoteDetail() {
     const [showActionItemModal, setShowActionItemModal] = useState(false);
     const [actionItemTitle, setActionItemTitle] = useState('');
 
+    // UI state for maximizing editor
+    const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
+    const [isActionItemsPanelOpen, setIsActionItemsPanelOpen] = useState(false);
+
     const { data: note, isLoading } = useQuery({
         queryKey: ['note', noteId],
         queryFn: async () => {
@@ -231,14 +235,13 @@ export default function NoteDetail() {
         },
         onSuccess: async () => {
             setHasChanges(false);
-            // Invalidate and refetch cache before navigation to ensure fresh data
+            // Invalidate and refetch cache to ensure fresh data
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['notes'] }),
                 queryClient.invalidateQueries({ queryKey: ['note', noteId] }),
                 queryClient.refetchQueries({ queryKey: ['notes'] })
             ]);
-            // Navigate back to notes list after successful save
-            navigate('/notes');
+            // Stay on the current note after saving
         },
     });
 
@@ -401,379 +404,248 @@ export default function NoteDetail() {
     }
 
     return (
-        <div className="h-full flex flex-col bg-dark-100 dark:bg-dark-950">
-            {/* Enhanced Header */}
-            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
-                <div className="px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={handleCancel}
-                                disabled={updateMutation.isPending}
-                                className="group flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-800"
-                            >
-                                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-                                <span className="font-medium">Notes</span>
-                            </button>
-
-                            <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
-
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-2 text-dark-600 dark:text-dark-500">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>Created {new Date(note.createdAt).toLocaleDateString()}</span>
-                                </div>
-                                {note.updatedAt !== note.createdAt && (
-                                    <div className="flex items-center gap-2 text-dark-600 dark:text-dark-500">
-                                        <Clock className="h-4 w-4" />
-                                        <span>Updated {new Date(note.updatedAt).toLocaleDateString()}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {hasChanges && (
-                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
-                                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                                    <span className="text-sm font-medium">Unsaved changes</span>
-                                </div>
-                            )}
-                            <button
-                                onClick={handleCancel}
-                                className="px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-2"
-                            >
-                                <X className="h-4 w-4" />
-                                <span>Cancel</span>
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={!hasChanges || updateMutation.isPending}
-                                className="px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg disabled:shadow-none"
-                            >
-                                <Save className="h-4 w-4" />
-                                <span className="font-medium">
-                                    {updateMutation.isPending ? 'Saving...' : 'Save'}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div className="h-full flex bg-dark-100 dark:bg-dark-950 relative">
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Title and Metadata Section */}
-                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
-                    <div className="px-6 py-6">
-                        {/* Title Input */}
-                        <div className="mb-6">
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="w-full px-0 py-2 border-0 bg-transparent text-dark-950 dark:text-white text-2xl font-semibold placeholder-dark-500 dark:placeholder-dark-600 focus:ring-0 focus:outline-none resize-none"
-                                placeholder="Untitled note..."
-                                style={{ lineHeight: '1.2' }}
-                            />
-                            <div className="h-0.5 bg-gradient-to-r from-primary-500 via-primary-400 to-transparent mt-2"></div>
-                        </div>
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Compact Header */}
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm flex-shrink-0">
+                    <div className="px-4 py-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleCancel}
+                                    disabled={updateMutation.isPending}
+                                    className="group flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-800"
+                                >
+                                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                                    <span className="font-medium">Notes</span>
+                                </button>
 
-                        {/* Note Type Selection */}
-                        <div className="mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Note Type</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {[
-                                    { value: 'personal', emoji: '📝', label: 'Personal' },
-                                    { value: 'meeting', emoji: '🤝', label: 'Meeting' },
-                                    { value: 'call', emoji: '📞', label: 'Call' },
-                                    { value: 'email', emoji: '✉️', label: 'Email' },
-                                    { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
-                                ].map((type) => (
-                                    <button
-                                        key={type.value}
-                                        type="button"
-                                        onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
-                                        className={`group px-4 py-2 rounded-full border-2 transition-all duration-200 hover:shadow-md ${formData.type === type.value
-                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
-                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg group-hover:scale-110 transition-transform">{type.emoji}</span>
-                                            <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
-                                                {type.label}
-                                            </span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                                <div className="h-5 w-px bg-dark-400 dark:bg-dark-700"></div>
 
-                        {/* Tags Section */}
-                        <div className="mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Tag className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Tags</span>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {formData.tags && formData.tags.length > 0 && (
-                                    formData.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="group inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-all duration-200"
-                                        >
-                                            <span className="mr-1">#</span>
-                                            {tag}
-                                            <button
-                                                type="button"
-                                                onClick={() => removeTag(tag)}
-                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Remove tag"
+                                {/* Related items - always visible */}
+                                {(note.personId || note.groupId) && (
+                                    <div className="flex items-center gap-2">
+                                        {note.personId && relatedPerson && (
+                                            <Link
+                                                to={`/people/${note.personId}`}
+                                                className="group flex items-center gap-2 p-1.5 rounded-lg border border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:shadow-sm transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600"
                                             >
-                                                <X className="h-3 w-3" />
-                                            </button>
-                                        </span>
-                                    ))
-                                )}
-
-                                <input
-                                    type="text"
-                                    value={tagInput}
-                                    onChange={handleTagInputChange}
-                                    onKeyPress={handleTagKeyPress}
-                                    onBlur={handleTagBlur}
-                                    placeholder="Add tags..."
-                                    className="px-3 py-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-32"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Related Items */}
-                        {(note.personId || note.groupId) && (
-                            <div className="pt-6 border-t border-dark-300 dark:border-dark-700">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <User className="h-4 w-4 text-primary-500" />
-                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
-                                        Related To
-                                    </span>
-                                </div>
-                                <div className="flex flex-wrap gap-3">
-                                    {note.personId && relatedPerson && (
-                                        <Link
-                                            to={`/people/${note.personId}`}
-                                            className="group flex items-center gap-3 p-4 rounded-xl border border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-0.5"
-                                        >
-                                            <div className="flex items-center gap-3">
                                                 {formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar) ? (
                                                     <img
                                                         src={formatAvatarSrc(relatedPerson.avatarUrl || relatedPerson.avatar)!}
                                                         alt={`${relatedPerson.firstName} ${relatedPerson.lastName}`}
-                                                        className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
+                                                        className="w-6 h-6 rounded-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
-                                                        <span className="text-lg font-semibold text-primary-700 dark:text-primary-300">
+                                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center">
+                                                        <span className="text-xs font-semibold text-primary-700 dark:text-primary-300">
                                                             {relatedPerson.firstName[0]}{relatedPerson.lastName[0]}
                                                         </span>
                                                     </div>
                                                 )}
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                                        {relatedPerson.firstName} {relatedPerson.lastName}
-                                                    </span>
-                                                    {relatedPerson.position && (
-                                                        <span className="text-sm text-dark-600 dark:text-dark-500">
-                                                            {relatedPerson.position}
-                                                        </span>
-                                                    )}
+                                                <span className="text-sm font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                    {relatedPerson.firstName} {relatedPerson.lastName}
+                                                </span>
+                                            </Link>
+                                        )}
+                                        {note.groupId && relatedGroup && (
+                                            <Link
+                                                to={`/groups/${note.groupId}`}
+                                                className="group flex items-center gap-2 p-1.5 rounded-lg border border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:shadow-sm transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600"
+                                            >
+                                                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center">
+                                                    <Building className="h-3 w-3 text-primary-600 dark:text-primary-400" />
                                                 </div>
-                                            </div>
-                                        </Link>
-                                    )}
-                                    {note.groupId && relatedGroup && (
-                                        <Link
-                                            to={`/groups/${note.groupId}`}
-                                            className="group flex items-center gap-3 p-4 rounded-xl border border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:shadow-lg transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-600 hover:-translate-y-0.5"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
-                                                    <Building className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                                        {relatedGroup.name}
-                                                    </span>
-                                                    <span className="text-sm text-dark-600 dark:text-dark-500">
-                                                        {relatedGroup.memberCount || 0} members
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    )}
-                                </div>
+                                                <span className="text-sm font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                                                    {relatedGroup.name}
+                                                </span>
+                                            </Link>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Metadata toggle button */}
+                                <button
+                                    onClick={() => setIsMetadataCollapsed(!isMetadataCollapsed)}
+                                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-dark-600 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white hover:bg-dark-200 dark:hover:bg-dark-800 transition-all duration-200"
+                                    title={isMetadataCollapsed ? 'Show metadata' : 'Hide metadata'}
+                                >
+                                    {isMetadataCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                                    <span className="text-sm">Metadata</span>
+                                </button>
+
+                                {actionItems && actionItems.length > 0 && (
+                                    <button
+                                        onClick={() => setIsActionItemsPanelOpen(!isActionItemsPanelOpen)}
+                                        className="flex items-center gap-2 px-3 py-1 rounded-lg text-dark-600 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white hover:bg-dark-200 dark:hover:bg-dark-800 transition-all duration-200"
+                                        title={isActionItemsPanelOpen ? 'Hide action items' : 'Show action items'}
+                                    >
+                                        {isActionItemsPanelOpen ? <SidebarClose className="h-4 w-4" /> : <SidebarOpen className="h-4 w-4" />}
+                                        <span className="text-sm">Actions ({actionItems.length})</span>
+                                    </button>
+                                )}
                             </div>
-                        )}
+
+                            <div className="flex items-center gap-3">
+                                {hasChanges && (
+                                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                                        <span className="text-sm font-medium">Unsaved</span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={handleCancel}
+                                    className="px-3 py-1.5 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-1.5"
+                                >
+                                    <X className="h-4 w-4" />
+                                    <span>Cancel</span>
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={!hasChanges || updateMutation.isPending}
+                                    className="px-4 py-1.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-md hover:shadow-lg disabled:shadow-none"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    <span className="font-medium">
+                                        {updateMutation.isPending ? 'Saving...' : 'Save'}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Content Editor */}
-                <div className="flex-1 bg-white dark:bg-dark-900 p-6">
-                    <div className="h-full">
+                {/* Title Section - Always Visible */}
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 flex-shrink-0">
+                    <div className="px-6 py-4">
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            className="w-full px-0 py-2 border-0 bg-transparent text-dark-950 dark:text-white text-2xl font-semibold placeholder-dark-500 dark:placeholder-dark-600 focus:ring-0 focus:outline-none resize-none"
+                            placeholder="Untitled note..."
+                            style={{ lineHeight: '1.2' }}
+                        />
+                        <div className="h-0.5 bg-gradient-to-r from-primary-500 via-primary-400 to-transparent mt-2"></div>
+                    </div>
+                </div>
+
+
+                {/* Maximized Content Editor */}
+                <div className="flex-1 bg-white dark:bg-dark-900 overflow-hidden">
+                    <div className="h-full p-6">
                         <RichTextEditor
                             ref={editorRef}
                             content={formData.content}
                             onChange={handleContentChange}
                             placeholder="Start writing your note here..."
-                            className="h-full min-h-[400px] prose prose-lg max-w-none dark:prose-invert prose-primary"
+                            className="h-full prose prose-lg max-w-none dark:prose-invert prose-primary"
                             onCreateActionItem={handleCreateActionItem}
                         />
                     </div>
                 </div>
 
-                {/* Action Items Section */}
-                {actionItems && actionItems.length > 0 && (
-                    <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800">
-                        <div className="px-6 py-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-semibold text-dark-950 dark:text-white">
-                                    Related Action Items ({actionItems.length})
-                                </h3>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {actionItems.map((item) => {
-                                    const StatusIcon = getStatusIcon(item.status);
-                                    const PriorityIcon = getPriorityIcon(item.priority);
-                                    const dueDateText = getDueDateText(item.dueDate);
-                                    const isItemOverdue = isOverdue(item.dueDate);
-
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            className={`group bg-white dark:bg-dark-900 rounded-xl border-2 transition-all duration-200 hover:shadow-lg ${isItemOverdue
-                                                ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
-                                                : 'border-dark-300 dark:border-dark-800 hover:border-primary-200 dark:hover:border-primary-700 hover:shadow-primary-500/10'
-                                                } p-4`}
+                {/* Note Type and Tags Section - Hidden by default */}
+                {!isMetadataCollapsed && (
+                    <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 flex-shrink-0">
+                        <div className="px-6 py-4 space-y-4">
+                            {/* Note Type Selection */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Sparkles className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Note Type</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { value: 'personal', emoji: '👥', label: '1on1' },
+                                        { value: 'meeting', emoji: '🤝', label: 'Meeting' },
+                                        { value: 'call', emoji: '📞', label: 'Call' },
+                                        { value: 'email', emoji: '✉️', label: 'Email' },
+                                        { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
+                                    ].map((type) => (
+                                        <button
+                                            key={type.value}
+                                            type="button"
+                                            onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
+                                            className={`group px-3 py-1.5 rounded-full border transition-all duration-200 hover:shadow-sm ${formData.type === type.value
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500/20'
+                                                : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
+                                                }`}
                                         >
-                                            <div className="h-full flex flex-col">
-                                                <div className="flex items-start justify-between mb-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center">
-                                                            <StatusIcon className="h-4 w-4 text-primary-600 dark:text-primary-400" />
-                                                        </div>
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                                                                {item.status.replace('_', ' ')}
-                                                            </span>
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
-                                                                <PriorityIcon className="h-3 w-3 mr-1" />
-                                                                {item.priority}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex-1 mb-3">
-                                                    <h4 className="font-semibold text-dark-950 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
-                                                        {item.title}
-                                                    </h4>
-                                                    {item.description && (
-                                                        <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-2">
-                                                            {item.description}
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                <div className="space-y-2 mt-auto">
-                                                    <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
-                                                        <div className="flex items-center gap-1">
-                                                            <Clock className="h-3 w-3" />
-                                                            <span>{getRelativeTime(item.updatedAt)}</span>
-                                                        </div>
-                                                        {dueDateText && (
-                                                            <div className={`flex items-center gap-1 px-2 py-1 rounded-full font-medium ${isItemOverdue
-                                                                ? 'text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 border border-red-300 dark:border-red-700 animate-pulse'
-                                                                : item.dueDate && new Date(item.dueDate).getTime() - Date.now() < 24 * 60 * 60 * 1000
-                                                                    ? 'text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/40 border border-orange-300 dark:border-orange-700'
-                                                                    : 'text-dark-700 dark:text-dark-500'
-                                                                }`}>
-                                                                <Calendar className="h-3 w-3" />
-                                                                <span className="text-xs font-semibold">{dueDateText}</span>
-                                                                {isItemOverdue && <span className="text-xs">⚠️</span>}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
-                                                        {item.assigneeName && (
-                                                            <div className="flex items-center gap-1">
-                                                                <UserCheck className="h-3 w-3" />
-                                                                <span>{item.assigneeName}</span>
-                                                            </div>
-                                                        )}
-                                                        {item.noteId && (
-                                                            <Link
-                                                                to={`/notes/${item.noteId}`}
-                                                                className="flex items-center gap-1 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/40"
-                                                                title="View related note"
-                                                            >
-                                                                <FileText className="h-3 w-3" />
-                                                                <span>Note</span>
-                                                            </Link>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-sm">{type.emoji}</span>
+                                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
+                                                    {type.label}
+                                                </span>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tags Section */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Tag className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Tags</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.tags && formData.tags.length > 0 && (
+                                        formData.tags.map((tag, index) => (
+                                            <span
+                                                key={index}
+                                                className="group inline-flex items-center px-2.5 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-all duration-200"
+                                            >
+                                                <span className="mr-1">#</span>
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeTag(tag)}
+                                                    className="ml-1.5 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors opacity-0 group-hover:opacity-100"
+                                                    title="Remove tag"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        ))
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={tagInput}
+                                        onChange={handleTagInputChange}
+                                        onKeyPress={handleTagKeyPress}
+                                        onBlur={handleTagBlur}
+                                        placeholder="Add tags..."
+                                        className="px-3 py-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-24"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Enhanced Footer */}
-                <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-xs text-dark-600 dark:text-dark-500">
-                            <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘S</kbd>
-                                    Save
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">Esc</kbd>
-                                    Cancel
-                                </span>
-                            </div>
-                            <div className="h-4 w-px bg-dark-400 dark:bg-dark-700"></div>
-                            <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘B</kbd>
-                                    Bold
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘I</kbd>
-                                    Italic
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘⇧A</kbd>
-                                    Action Item
-                                </span>
-                            </div>
+                {/* Compact Footer */}
+                <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 px-4 py-2 flex-shrink-0">
+                    <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
+                        <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘S</kbd>
+                                Save
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">Esc</kbd>
+                                Cancel
+                            </span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
                                 {formData.type.replace('_', ' ')}
                             </span>
                             {formData.tags && formData.tags.length > 0 && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700">
                                     {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
                                 </span>
                             )}
@@ -781,6 +653,93 @@ export default function NoteDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Action Items Sidebar */}
+            {isActionItemsPanelOpen && actionItems && actionItems.length > 0 && (
+                <div className="w-80 bg-white dark:bg-dark-900 border-l border-dark-300 dark:border-dark-800 flex-shrink-0 flex flex-col">
+                    <div className="px-4 py-3 border-b border-dark-300 dark:border-dark-800">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-dark-950 dark:text-white">
+                                Action Items ({actionItems.length})
+                            </h3>
+                            <button
+                                onClick={() => setIsActionItemsPanelOpen(false)}
+                                className="p-1 rounded text-dark-500 hover:text-dark-700 dark:hover:text-dark-300"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {actionItems.map((item) => {
+                            const StatusIcon = getStatusIcon(item.status);
+                            const PriorityIcon = getPriorityIcon(item.priority);
+                            const dueDateText = getDueDateText(item.dueDate);
+                            const isItemOverdue = isOverdue(item.dueDate);
+
+                            return (
+                                <div
+                                    key={item.id}
+                                    className={`p-3 rounded-lg border transition-all duration-200 ${isItemOverdue
+                                        ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20'
+                                        : 'border-dark-300 dark:border-dark-800 hover:border-primary-200 dark:hover:border-primary-700'
+                                        }`}
+                                >
+                                    <div className="flex items-start gap-2 mb-2">
+                                        <div className="w-6 h-6 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded flex items-center justify-center flex-shrink-0">
+                                            <StatusIcon className="h-3 w-3 text-primary-600 dark:text-primary-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="text-sm font-semibold text-dark-950 dark:text-white line-clamp-2 mb-1">
+                                                {item.title}
+                                            </h4>
+                                            {item.description && (
+                                                <p className="text-xs text-dark-700 dark:text-dark-400 line-clamp-2">
+                                                    {item.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
+                                            {item.status.replace('_', ' ')}
+                                        </span>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getPriorityColor(item.priority)}`}>
+                                            <PriorityIcon className="h-2.5 w-2.5 mr-0.5" />
+                                            {item.priority}
+                                        </span>
+                                    </div>
+
+                                    {dueDateText && (
+                                        <div className={`text-xs font-medium mb-1 ${isItemOverdue
+                                            ? 'text-red-700 dark:text-red-300'
+                                            : item.dueDate && new Date(item.dueDate).getTime() - Date.now() < 24 * 60 * 60 * 1000
+                                                ? 'text-orange-700 dark:text-orange-300'
+                                                : 'text-dark-700 dark:text-dark-500'
+                                            }`}>
+                                            {dueDateText} {isItemOverdue && '⚠️'}
+                                        </div>
+                                    )}
+
+                                    <div className="text-xs text-dark-600 dark:text-dark-500">
+                                        {item.assigneeName && (
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <UserCheck className="h-3 w-3" />
+                                                <span>{item.assigneeName}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="h-3 w-3" />
+                                            <span>{getRelativeTime(item.updatedAt)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Action Item Modal */}
             <AddActionItemModal

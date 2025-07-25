@@ -68,7 +68,7 @@ export default function Notes() {
 
     const noteTypes = [
         { value: 'all', label: 'All Notes', icon: '📝', count: notes.length },
-        { value: 'personal', label: 'Personal', icon: '👤', count: notes.filter(n => n.type === 'personal').length },
+        { value: 'personal', label: '1on1', icon: '👥', count: notes.filter(n => n.type === 'personal').length },
         { value: 'meeting', label: 'Meeting', icon: '🤝', count: notes.filter(n => n.type === 'meeting').length },
         { value: 'call', label: 'Call', icon: '📞', count: notes.filter(n => n.type === 'call').length },
         { value: 'email', label: 'Email', icon: '✉️', count: notes.filter(n => n.type === 'email').length },
@@ -77,7 +77,7 @@ export default function Notes() {
 
     if (isLoading) {
         return (
-            <div className="h-full bg-dark-100 dark:bg-dark-950">
+            <div className="min-h-full bg-dark-100 dark:bg-dark-950">
                 {/* Enhanced Loading State */}
                 <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                     <div className="px-6 py-4">
@@ -162,7 +162,7 @@ export default function Notes() {
     };
 
     return (
-        <div className="h-full bg-dark-100 dark:bg-dark-950">
+        <div className="min-h-full bg-dark-100 dark:bg-dark-950">
             {/* Enhanced Header */}
             <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
                 <div className="px-6 py-4">
@@ -287,7 +287,7 @@ export default function Notes() {
             </div>
 
             {/* Notes Grid/List */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 p-6">
                 {filteredAndSortedNotes.length > 0 ? (
                     <div className={
                         viewMode === 'grid'
@@ -310,34 +310,34 @@ export default function Notes() {
                                         <div className="space-y-4">
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center">
-                                                        <IconComponent className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                                                    </div>
+                                                    {/* Show person avatar if associated with person, otherwise show note type icon */}
+                                                    {associatedPerson ? (
+                                                        formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
+                                                            <img
+                                                                src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
+                                                                alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                                className="w-10 h-10 rounded-lg object-cover ring-2 ring-primary-100 dark:ring-primary-900"
+                                                                title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
+                                                                <span className="text-sm font-semibold text-primary-700 dark:text-primary-300">
+                                                                    {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    ) : (
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center">
+                                                            <IconComponent className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getNoteTypeColor(note.type)}`}>
-                                                            {note.type.replace('_', ' ')}
+                                                            {note.type === 'personal' ? '1on1' : note.type.replace('_', ' ')}
                                                         </span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    {associatedPerson && (
-                                                        <div className="flex items-center gap-1">
-                                                            {formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
-                                                                <img
-                                                                    src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
-                                                                    alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
-                                                                    className="w-6 h-6 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
-                                                                    title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
-                                                                />
-                                                            ) : (
-                                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
-                                                                    <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                                                                        {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                     <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
                                                 </div>
                                             </div>
@@ -386,25 +386,25 @@ export default function Notes() {
                                         // List View
                                         <div className="flex items-center gap-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                    <IconComponent className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-                                                </div>
-                                                {associatedPerson && (
-                                                    <div className="flex items-center gap-2">
-                                                        {formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
-                                                            <img
-                                                                src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
-                                                                alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
-                                                                className="w-8 h-8 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
-                                                                title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900">
-                                                                <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                                                                    {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
-                                                                </span>
-                                                            </div>
-                                                        )}
+                                                {/* Show person avatar if associated with person, otherwise show note type icon */}
+                                                {associatedPerson ? (
+                                                    formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar) ? (
+                                                        <img
+                                                            src={formatAvatarSrc(associatedPerson.avatarUrl || associatedPerson.avatar)!}
+                                                            alt={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                            className="w-12 h-12 rounded-lg object-cover ring-2 ring-primary-100 dark:ring-primary-900 flex-shrink-0"
+                                                            title={`${associatedPerson.firstName} ${associatedPerson.lastName}`}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center ring-2 ring-primary-100 dark:ring-primary-900 flex-shrink-0">
+                                                            <span className="text-sm font-semibold text-primary-700 dark:text-primary-300">
+                                                                {associatedPerson.firstName[0]}{associatedPerson.lastName[0]}
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                ) : (
+                                                    <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                        <IconComponent className="h-6 w-6 text-primary-600 dark:text-primary-400" />
                                                     </div>
                                                 )}
                                             </div>
@@ -415,7 +415,7 @@ export default function Notes() {
                                                         {note.title}
                                                     </h3>
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getNoteTypeColor(note.type)}`}>
-                                                        {note.type.replace('_', ' ')}
+                                                        {note.type === 'personal' ? '1on1' : note.type.replace('_', ' ')}
                                                     </span>
                                                 </div>
                                                 <p className="text-sm text-dark-700 dark:text-dark-400 line-clamp-1">

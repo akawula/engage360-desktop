@@ -140,9 +140,6 @@ export default function Layout({ children }: LayoutProps) {
                     className="flex items-center justify-between p-3 bg-white dark:bg-dark-900 shadow-sm border-b border-gray-200 dark:border-dark-700 h-12 flex-shrink-0"
                 >
                     {/* This would be dynamic based on context, e.g., current page or chat */}
-                    <div className="flex items-center">
-                        <p className="font-semibold text-lg text-gray-900 dark:text-dark-100">Dashboard</p>
-                    </div>
                     <div className="flex items-center space-x-4">
                         {/* Search bar could go here */}
                     </div>

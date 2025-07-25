@@ -63,7 +63,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
         },
         editorProps: {
             attributes: {
-                class: 'focus:outline-none min-h-[300px]',
+                class: 'focus:outline-none h-full',
             },
             handleKeyDown: (view, event) => {
                 // Handle Cmd+Shift+A
@@ -145,7 +145,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
     );
 
     return (
-        <div className={`border border-dark-400 dark:border-dark-700 rounded-lg overflow-hidden ${className}`}>
+        <div className={`border border-dark-400 dark:border-dark-700 rounded-lg overflow-hidden flex flex-col ${className}`}>
             {/* Toolbar */}
             <div className="border-b border-dark-300 dark:border-dark-700 bg-dark-100 dark:bg-dark-800 p-2 flex flex-wrap gap-1 transition-colors">
                 {/* Text Formatting */}
@@ -265,10 +265,10 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             )}
 
             {/* Editor */}
-            <div className="bg-white dark:bg-dark-900 transition-colors">
+            <div className="flex-1 bg-white dark:bg-dark-900 transition-colors overflow-hidden">
                 <EditorContent
                     editor={editor}
-                    className="min-h-[400px] max-h-[600px] overflow-y-auto focus-within:ring-2 focus-within:ring-primary-500 dark:focus-within:ring-primary-400"
+                    className="h-full overflow-y-auto focus-within:ring-2 focus-within:ring-primary-500 dark:focus-within:ring-primary-400"
                 />
             </div>
         </div>

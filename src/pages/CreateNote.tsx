@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, X, Search, Users, Tag, Sparkles, Plus } from 'lucide-react';
+import { ArrowLeft, Save, X, Search, Users, Tag, Sparkles, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -70,6 +70,9 @@ export default function CreateNote() {
     // Action item modal state
     const [showActionItemModal, setShowActionItemModal] = useState(false);
     const [actionItemTitle, setActionItemTitle] = useState('');
+
+    // UI state for maximizing editor
+    const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
 
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
@@ -178,10 +181,7 @@ export default function CreateNote() {
         },
         onSuccess: (note) => {
             queryClient.invalidateQueries({ queryKey: ['notes'] });
-            // Navigate to the created note
-            if (note) {
-                navigate(`/notes/${note.id}`);
-            }
+            // Stay on the current page after saving
         },
     });
 
@@ -365,462 +365,376 @@ export default function CreateNote() {
     };
 
     return (
-        <div className="h-full flex flex-col bg-dark-100 dark:bg-dark-950">
-            {/* Enhanced Header */}
-            <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm">
-                <div className="px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleCancel();
-                                }}
-                                className="group flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-all duration-200 px-3 py-2 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-800"
-                            >
-                                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-                                <span className="font-medium">Notes</span>
-                            </button>
+        <div className="h-full flex bg-dark-100 dark:bg-dark-950 relative">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Compact Header */}
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 shadow-sm flex-shrink-0">
+                    <div className="px-4 py-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCancel();
+                                    }}
+                                    className="group flex items-center gap-2 text-dark-700 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white transition-all duration-200 px-2 py-1 rounded-lg hover:bg-dark-200 dark:hover:bg-dark-800"
+                                >
+                                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                                    <span className="font-medium">Notes</span>
+                                </button>
 
-                            <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
+                                <div className="h-5 w-px bg-dark-400 dark:bg-dark-700"></div>
 
-                            <div className="flex items-center gap-2">
-                                <Plus className="h-5 w-5 text-primary-500" />
-                                <h1 className="text-lg font-semibold text-dark-950 dark:text-white">
-                                    Create New Note
-                                </h1>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {hasChanges && (
-                                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
-                                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                                    <span className="text-sm font-medium">Unsaved changes</span>
+                                <div className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4 text-primary-500" />
+                                    <h1 className="text-base font-semibold text-dark-950 dark:text-white">
+                                        Create New Note
+                                    </h1>
                                 </div>
-                            )}
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleCancel();
-                                }}
-                                className="px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-2"
-                            >
-                                <X className="h-4 w-4" />
-                                <span>Cancel</span>
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleSave();
-                                }}
-                                disabled={!formData.title.trim() || createMutation.isPending}
-                                className="px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg disabled:shadow-none"
-                            >
-                                <Save className="h-4 w-4" />
-                                <span className="font-medium">
-                                    {createMutation.isPending ? 'Creating...' : 'Create Note'}
-                                </span>
-                            </button>
+
+                                {/* Metadata toggle button */}
+                                <button
+                                    onClick={() => setIsMetadataCollapsed(!isMetadataCollapsed)}
+                                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-dark-600 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white hover:bg-dark-200 dark:hover:bg-dark-800 transition-all duration-200"
+                                    title={isMetadataCollapsed ? 'Show metadata' : 'Hide metadata'}
+                                >
+                                    {isMetadataCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                                    <span className="text-sm">Settings</span>
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                {hasChanges && (
+                                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                                        <span className="text-sm font-medium">Unsaved</span>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCancel();
+                                    }}
+                                    className="px-3 py-1.5 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-1.5"
+                                >
+                                    <X className="h-4 w-4" />
+                                    <span>Cancel</span>
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleSave();
+                                    }}
+                                    disabled={!formData.title.trim() || createMutation.isPending}
+                                    className="px-4 py-1.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-md hover:shadow-lg disabled:shadow-none"
+                                >
+                                    <Save className="h-4 w-4" />
+                                    <span className="font-medium">
+                                        {createMutation.isPending ? 'Creating...' : 'Create'}
+                                    </span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Title and Metadata Section */}
-                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800">
-                    <div className="px-6 py-6">
-                        {/* Title Input */}
-                        <div className="mb-6">
-                            <input
-                                type="text"
-                                id="title"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                    }
-                                }}
-                                className="w-full px-0 py-2 border-0 bg-transparent text-dark-950 dark:text-white text-2xl font-semibold placeholder-dark-500 dark:placeholder-dark-600 focus:ring-0 focus:outline-none resize-none"
-                                placeholder="Untitled note..."
-                                style={{ lineHeight: '1.2' }}
-                            />
-                            <div className="h-0.5 bg-gradient-to-r from-primary-500 via-primary-400 to-transparent mt-2"></div>
-                        </div>
+                {/* Title Section - Always Visible */}
+                <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 flex-shrink-0">
+                    <div className="px-6 py-4">
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                }
+                            }}
+                            className="w-full px-0 py-2 border-0 bg-transparent text-dark-950 dark:text-white text-2xl font-semibold placeholder-dark-500 dark:placeholder-dark-600 focus:ring-0 focus:outline-none resize-none"
+                            placeholder="Untitled note..."
+                            style={{ lineHeight: '1.2' }}
+                        />
+                        <div className="h-0.5 bg-gradient-to-r from-primary-500 via-primary-400 to-transparent mt-2"></div>
+                    </div>
+                </div>
 
-                        {/* Note Type Selection */}
-                        <div className="mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Note Type</span>
+                {/* Collapsible Settings Section */}
+                {!isMetadataCollapsed && (
+                    <div className="bg-white dark:bg-dark-900 border-b border-dark-300 dark:border-dark-800 flex-shrink-0">
+                        <div className="px-6 py-4 space-y-6">
+                            {/* Note Type Selection - Compact */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Sparkles className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Note Type</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        { value: 'personal', emoji: '👥', label: '1on1' },
+                                        { value: 'meeting', emoji: '🤝', label: 'Meeting' },
+                                        { value: 'call', emoji: '📞', label: 'Call' },
+                                        { value: 'email', emoji: '✉️', label: 'Email' },
+                                        { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
+                                    ].map((type) => (
+                                        <button
+                                            key={type.value}
+                                            type="button"
+                                            onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
+                                            className={`group px-3 py-1.5 rounded-full border transition-all duration-200 hover:shadow-sm ${formData.type === type.value
+                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500/20'
+                                                : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-sm">{type.emoji}</span>
+                                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
+                                                    {type.label}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                                {[
-                                    { value: 'personal', emoji: '📝', label: 'Personal' },
-                                    { value: 'meeting', emoji: '🤝', label: 'Meeting' },
-                                    { value: 'call', emoji: '📞', label: 'Call' },
-                                    { value: 'email', emoji: '✉️', label: 'Email' },
-                                    { value: 'follow_up', emoji: '🔄', label: 'Follow Up' }
-                                ].map((type) => (
+
+                            {/* Tags Section - Compact */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Tag className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Tags</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.tags && formData.tags.length > 0 && (
+                                        formData.tags.map((tag, index) => (
+                                            <span
+                                                key={index}
+                                                className="group inline-flex items-center px-2.5 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-all duration-200"
+                                            >
+                                                <span className="mr-1">#</span>
+                                                {tag}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeTag(tag)}
+                                                    className="ml-1.5 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors opacity-0 group-hover:opacity-100"
+                                                    title="Remove tag"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </span>
+                                        ))
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={tagInput}
+                                        onChange={handleTagInputChange}
+                                        onKeyPress={handleTagKeyPress}
+                                        onBlur={handleTagBlur}
+                                        placeholder="Add tags..."
+                                        className="px-3 py-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-24"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Association Section - Compact */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Users className="h-4 w-4 text-primary-500" />
+                                    <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Association</span>
+                                </div>
+
+                                {/* Association Type Selector - Compact */}
+                                <div className="grid grid-cols-3 gap-2 mb-4">
                                     <button
-                                        key={type.value}
                                         type="button"
-                                        onClick={() => handleChange({ target: { name: 'type', value: type.value } } as any)}
-                                        className={`group px-4 py-2 rounded-full border-2 transition-all duration-200 hover:shadow-md ${formData.type === type.value
-                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-500/20'
-                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
+                                        onClick={() => handleAssociationChange('standalone')}
+                                        className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-sm ${formData.noteAssociation === 'standalone'
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
                                             }`}
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-lg group-hover:scale-110 transition-transform">{type.emoji}</span>
-                                            <span className="text-sm font-medium text-dark-800 dark:text-dark-400">
-                                                {type.label}
-                                            </span>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="text-lg">📝</div>
+                                            <div className="text-xs font-medium">Standalone</div>
                                         </div>
                                     </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* Tags Section */}
-                        <div className="mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Tag className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Tags</span>
-                            </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAssociationChange('person')}
+                                        className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-sm ${formData.noteAssociation === 'person'
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
+                                            }`}
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="text-lg">👤</div>
+                                            <div className="text-xs font-medium">Person</div>
+                                        </div>
+                                    </button>
 
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {formData.tags && formData.tags.length > 0 && (
-                                    formData.tags.map((tag, index) => (
-                                        <span
-                                            key={index}
-                                            className="group inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700 hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-all duration-200"
-                                        >
-                                            <span className="mr-1">#</span>
-                                            {tag}
-                                            <button
-                                                type="button"
-                                                onClick={() => removeTag(tag)}
-                                                className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Remove tag"
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </button>
-                                        </span>
-                                    ))
+                                    <button
+                                        type="button"
+                                        onClick={() => handleAssociationChange('group')}
+                                        className={`p-3 rounded-lg border transition-all duration-200 hover:shadow-sm ${formData.noteAssociation === 'group'
+                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
+                                            }`}
+                                    >
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="text-lg">👥</div>
+                                            <div className="text-xs font-medium">Group</div>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                {/* Compact Person/Group Selectors */}
+                                {formData.noteAssociation === 'person' && (
+                                    <div className="bg-dark-50 dark:bg-dark-800 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Select Person *</span>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-dark-500" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search..."
+                                                    value={personSearch}
+                                                    onChange={(e) => setPersonSearch(e.target.value)}
+                                                    className="pl-8 pr-3 py-1.5 w-48 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-900 text-dark-950 dark:text-white rounded-md focus:ring-1 focus:ring-primary-500 focus:border-transparent text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {people
+                                                .filter(person =>
+                                                    personSearch === '' ||
+                                                    `${person.firstName} ${person.lastName}`.toLowerCase().includes(personSearch.toLowerCase())
+                                                )
+                                                .map((person) => (
+                                                    <button
+                                                        key={person.id}
+                                                        type="button"
+                                                        onClick={() => handleChange({ target: { name: 'personId', value: person.id } } as any)}
+                                                        className={`group p-2 rounded-lg border transition-all duration-200 hover:shadow-sm ${formData.personId === person.id
+                                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-900 hover:border-dark-400 dark:hover:border-dark-600'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            {formatAvatarSrc(person.avatarUrl || person.avatar) ? (
+                                                                <img
+                                                                    src={formatAvatarSrc(person.avatarUrl || person.avatar)!}
+                                                                    alt={`${person.firstName} ${person.lastName}`}
+                                                                    className="w-6 h-6 rounded-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center">
+                                                                    <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                                                                        {person.firstName[0]}{person.lastName[0]}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            <div className="text-left min-w-0 flex-1">
+                                                                <div className="text-xs font-medium text-dark-950 dark:text-white truncate">
+                                                                    {person.firstName} {person.lastName}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    </div>
                                 )}
 
-                                <input
-                                    type="text"
-                                    value={tagInput}
-                                    onChange={handleTagInputChange}
-                                    onKeyPress={handleTagKeyPress}
-                                    onBlur={handleTagBlur}
-                                    placeholder="Add tags..."
-                                    className="px-3 py-1 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-full focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm min-w-32"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Association Section */}
-                        <div className="mb-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Users className="h-4 w-4 text-primary-500" />
-                                <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Association</span>
-                            </div>
-
-                            {/* Association Type Selector */}
-                            <div className="grid grid-cols-3 gap-3 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => handleAssociationChange('standalone')}
-                                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'standalone'
-                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
-                                        }`}
-                                >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-2xl">📝</div>
-                                        <div className="text-sm font-medium">Standalone</div>
-                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
-                                            Independent note
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleAssociationChange('person')}
-                                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'person'
-                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
-                                        }`}
-                                >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-2xl">👤</div>
-                                        <div className="text-sm font-medium">Person</div>
-                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
-                                            Linked to a person
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleAssociationChange('group')}
-                                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.noteAssociation === 'group'
-                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 shadow-md'
-                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-800 dark:text-dark-400 hover:border-dark-400 dark:hover:border-dark-600'
-                                        }`}
-                                >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <div className="text-2xl">👥</div>
-                                        <div className="text-sm font-medium">Group</div>
-                                        <div className="text-xs text-dark-600 dark:text-dark-500 text-center">
-                                            Linked to a group
-                                        </div>
-                                    </div>
-                                </button>
-                            </div>
-
-                            {/* Person Selector */}
-                            {formData.noteAssociation === 'person' && (
-                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400">
-                                            Select Person *
-                                        </label>
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search people..."
-                                                value={personSearch}
-                                                onChange={(e) => setPersonSearch(e.target.value)}
-                                                className="pl-10 pr-4 py-2 w-64 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-60 overflow-y-auto">
-                                        {people
-                                            .filter(person =>
-                                                personSearch === '' ||
-                                                `${person.firstName} ${person.lastName}`.toLowerCase().includes(personSearch.toLowerCase()) ||
-                                                person.email?.toLowerCase().includes(personSearch.toLowerCase()) ||
-                                                person.position?.toLowerCase().includes(personSearch.toLowerCase())
-                                            )
-                                            .map((person) => (
-                                                <button
-                                                    key={person.id}
-                                                    type="button"
-                                                    onClick={() => handleChange({ target: { name: 'personId', value: person.id } } as any)}
-                                                    className={`group p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${formData.personId === person.id
-                                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
-                                                        }`}
-                                                >
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        {formatAvatarSrc(person.avatarUrl || person.avatar) ? (
-                                                            <img
-                                                                src={formatAvatarSrc(person.avatarUrl || person.avatar)!}
-                                                                alt={`${person.firstName} ${person.lastName}`}
-                                                                className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-100 dark:ring-primary-900"
-                                                            />
-                                                        ) : (
-                                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center">
-                                                                <span className="text-sm font-medium text-primary-700 dark:text-primary-300">
-                                                                    {person.firstName[0]}{person.lastName[0]}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        <div className="text-center">
-                                                            <div className="text-sm font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                                                {person.firstName} {person.lastName}
-                                                            </div>
-                                                            {person.position && (
-                                                                <div className="text-xs text-dark-600 dark:text-dark-500 truncate">
-                                                                    {person.position}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                    </div>
-
-                                    {people.filter(person =>
-                                        personSearch === '' ||
-                                        `${person.firstName} ${person.lastName}`.toLowerCase().includes(personSearch.toLowerCase()) ||
-                                        person.email?.toLowerCase().includes(personSearch.toLowerCase()) ||
-                                        person.position?.toLowerCase().includes(personSearch.toLowerCase())
-                                    ).length === 0 && (
-                                            <div className="text-center py-8 text-dark-600 dark:text-dark-500">
-                                                {personSearch ? 'No people found matching your search' : 'No people available'}
-                                            </div>
-                                        )}
-                                </div>
-                            )}
-
-                            {/* Group Selector */}
-                            {formData.noteAssociation === 'group' && (
-                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <label className="block text-sm font-medium text-dark-800 dark:text-dark-400">
-                                            Select Group *
-                                        </label>
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-dark-500" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search groups..."
-                                                value={groupSearch}
-                                                onChange={(e) => setGroupSearch(e.target.value)}
-                                                className="pl-10 pr-4 py-2 w-64 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-                                        {groups
-                                            .filter(group =>
-                                                groupSearch === '' ||
-                                                group.name.toLowerCase().includes(groupSearch.toLowerCase()) ||
-                                                group.description?.toLowerCase().includes(groupSearch.toLowerCase()) ||
-                                                group.tags?.some(tag => tag.toLowerCase().includes(groupSearch.toLowerCase()))
-                                            )
-                                            .map((group) => (
-                                                <button
-                                                    key={group.id}
-                                                    type="button"
-                                                    onClick={() => handleChange({ target: { name: 'groupId', value: group.id } } as any)}
-                                                    className={`group p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md text-left ${formData.groupId === group.id
-                                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
-                                                        : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-800 hover:border-dark-400 dark:hover:border-dark-600'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center flex-shrink-0">
-                                                            <Users className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-dark-950 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                                                {group.name}
-                                                            </div>
-                                                            {group.description && (
-                                                                <div className="text-sm text-dark-600 dark:text-dark-500 mt-1 line-clamp-2">
-                                                                    {group.description}
-                                                                </div>
-                                                            )}
-                                                            <div className="flex items-center gap-2 mt-2">
-                                                                <div className="text-xs text-dark-600 dark:text-dark-500">
-                                                                    {group.memberCount || 0} members
-                                                                </div>
-                                                                {group.type && (
-                                                                    <span className="text-xs px-2 py-1 rounded-full bg-dark-200 dark:bg-dark-900 text-dark-700 dark:text-dark-400">
-                                                                        {group.type}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                    </div>
-
-                                    {groups.filter(group =>
-                                        groupSearch === '' ||
-                                        group.name.toLowerCase().includes(groupSearch.toLowerCase()) ||
-                                        group.description?.toLowerCase().includes(groupSearch.toLowerCase()) ||
-                                        group.tags?.some(tag => tag.toLowerCase().includes(groupSearch.toLowerCase()))
-                                    ).length === 0 && (
-                                            <div className="text-center py-8 text-dark-600 dark:text-dark-500">
-                                                {groupSearch ? 'No groups found matching your search' : 'No groups available'}
-                                            </div>
-                                        )}
-
-                                    {formData.groupId && (
-                                        <div className="mt-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                                            <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-300">
-                                                <span>✓</span>
-                                                <span>Selected: {groups.find(g => g.id === formData.groupId)?.name}</span>
+                                {formData.noteAssociation === 'group' && (
+                                    <div className="bg-dark-50 dark:bg-dark-800 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="text-sm font-medium text-dark-800 dark:text-dark-400">Select Group *</span>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-dark-500" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search..."
+                                                    value={groupSearch}
+                                                    onChange={(e) => setGroupSearch(e.target.value)}
+                                                    className="pl-8 pr-3 py-1.5 w-48 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-900 text-dark-950 dark:text-white rounded-md focus:ring-1 focus:ring-primary-500 focus:border-transparent text-xs"
+                                                />
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Standalone Note Info */}
-                            {formData.noteAssociation === 'standalone' && (
-                                <div className="bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-700 rounded-xl p-4">
-                                    <div className="flex items-center gap-2 text-sm text-dark-700 dark:text-dark-500">
-                                        <div className="text-lg">📝</div>
-                                        <div>This note will be standalone and not associated with any person or group</div>
+                                        <div className="space-y-2">
+                                            {groups
+                                                .filter(group =>
+                                                    groupSearch === '' ||
+                                                    group.name.toLowerCase().includes(groupSearch.toLowerCase())
+                                                )
+                                                .map((group) => (
+                                                    <button
+                                                        key={group.id}
+                                                        type="button"
+                                                        onClick={() => handleChange({ target: { name: 'groupId', value: group.id } } as any)}
+                                                        className={`group p-2 rounded-lg border transition-all duration-200 hover:shadow-sm text-left w-full ${formData.groupId === group.id
+                                                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                                                            : 'border-dark-300 dark:border-dark-700 bg-white dark:bg-dark-900 hover:border-dark-400 dark:hover:border-dark-600'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center flex-shrink-0">
+                                                                <Users className="h-3 w-3 text-primary-600 dark:text-primary-400" />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-xs font-medium text-dark-950 dark:text-white truncate">
+                                                                    {group.name}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Content Editor */}
-                <div className="flex-1 bg-white dark:bg-dark-900 p-6">
-                    <div className="h-full">
+                {/* Maximized Content Editor */}
+                <div className="flex-1 bg-white dark:bg-dark-900 overflow-hidden">
+                    <div className="h-full p-6">
                         <RichTextEditor
                             ref={editorRef}
                             content={formData.content}
                             onChange={handleContentChange}
                             placeholder="Start writing your note here..."
-                            className="h-full min-h-[400px] prose prose-lg max-w-none dark:prose-invert prose-primary"
+                            className="h-full prose prose-lg max-w-none dark:prose-invert prose-primary"
                             onCreateActionItem={handleCreateActionItem}
                         />
                     </div>
                 </div>
 
-                {/* Enhanced Footer */}
-                <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-xs text-dark-600 dark:text-dark-500">
-                            <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘S</kbd>
-                                    Save
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">Esc</kbd>
-                                    Cancel
-                                </span>
-                            </div>
-                            <div className="h-4 w-px bg-dark-400 dark:bg-dark-700"></div>
-                            <div className="flex items-center gap-4">
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘B</kbd>
-                                    Bold
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘I</kbd>
-                                    Italic
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <kbd className="px-2 py-1 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘⇧A</kbd>
-                                    Action Item
-                                </span>
-                            </div>
+                {/* Compact Footer */}
+                <div className="bg-white dark:bg-dark-900 border-t border-dark-300 dark:border-dark-800 px-4 py-2 flex-shrink-0">
+                    <div className="flex items-center justify-between text-xs text-dark-600 dark:text-dark-500">
+                        <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">⌘S</kbd>
+                                Save
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <kbd className="px-1.5 py-0.5 bg-dark-200 dark:bg-dark-800 rounded text-xs font-mono">Esc</kbd>
+                                Cancel
+                            </span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTypeColor(formData.type)}`}>
                                 {formData.type.replace('_', ' ')}
                             </span>
-                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
-                                {formData.noteAssociation === 'person' ? '👤 Person' :
-                                    formData.noteAssociation === 'group' ? '👥 Group' : '📝 Standalone'}
+                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
+                                {formData.noteAssociation === 'person' ? '👤' :
+                                    formData.noteAssociation === 'group' ? '👥' : '📝'}
                             </span>
                             {formData.tags && formData.tags.length > 0 && (
-                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200 border border-primary-200 dark:border-primary-700">
                                     {formData.tags.length} tag{formData.tags.length !== 1 ? 's' : ''}
                                 </span>
                             )}
