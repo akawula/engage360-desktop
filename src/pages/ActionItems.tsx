@@ -32,13 +32,6 @@ export default function ActionItems() {
     const updateActionStatus = useUpdateActionStatus();
     const deleteActionItem = useDeleteActionItem();
 
-    // Debug logging for action items
-    useEffect(() => {
-        if (actionItems && actionItems.length > 0) {
-            console.log('ActionItems component - actionItems:', actionItems);
-            console.log('ActionItems component - first item with noteId:', actionItems.find(item => item.noteId));
-        }
-    }, [actionItems]);
 
     // Fetch people data to get avatars for assignees and associated people
     const { data: peopleResponse } = useQuery({
@@ -122,14 +115,10 @@ export default function ActionItems() {
         const title = searchParams.get('title');
         const noteId = searchParams.get('noteId');
 
-        console.log('URL params:', { title, noteId, highlight: highlightItemId });
-
         if (title || noteId) {
             setPrefilledTitle(title || '');
             setPrefilledNoteId(noteId || '');
             setIsAddModalOpen(true);
-
-            console.log('Setting prefilled values:', { title, noteId });
 
             // Clear the URL parameters after a small delay to allow modal to initialize
             setTimeout(() => {
@@ -201,14 +190,6 @@ export default function ActionItems() {
 
     const displayedItems = activeTab === 'todo' ? todoItems : activeTab === 'completed' ? completedItems : archivedItems;
 
-    // Debug logging for filtered items
-    useEffect(() => {
-        console.log('ActionItems - activeTab:', activeTab);
-        console.log('ActionItems - displayedItems:', displayedItems);
-        console.log('ActionItems - displayedItems with noteId:', displayedItems.filter(item => item.noteId));
-        console.log('ActionItems - todoItems with noteId:', todoItems.filter(item => item.noteId));
-        console.log('ActionItems - completedItems with noteId:', completedItems.filter(item => item.noteId));
-    }, [activeTab, displayedItems, todoItems, completedItems]);
 
     const priorityTypes = [
         { value: 'all', label: 'All Priorities', icon: Target, count: filteredAndSortedItems.length },

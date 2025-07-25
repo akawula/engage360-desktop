@@ -61,12 +61,12 @@ function transformPersonFromAPI(apiPerson: any): Person {
         firstName: apiPerson.first_name,
         lastName: apiPerson.last_name,
         email: apiPerson.email,
-        phone: apiPerson.phone,
+        phone: apiPerson.phone === null ? undefined : apiPerson.phone,
         avatar: apiPerson.avatar_url,
         avatarUrl: apiPerson.avatar_url, // Add this for consistency
-        position: apiPerson.job_description,
-        jobDescription: apiPerson.job_description, // Add this for consistency
-        githubUsername: apiPerson.github_username,
+        position: apiPerson.job_description === null ? undefined : apiPerson.job_description,
+        jobDescription: apiPerson.job_description === null ? undefined : apiPerson.job_description, // Add this for consistency
+        githubUsername: apiPerson.github_username === null ? undefined : apiPerson.github_username,
         tags: tags,
         lastInteraction: apiPerson.last_interaction,
         engagementScore: engagementScore,
@@ -162,11 +162,11 @@ export class PeopleService {
         if (updates.firstName !== undefined) apiData.first_name = updates.firstName;
         if (updates.lastName !== undefined) apiData.last_name = updates.lastName;
         if (updates.email !== undefined) apiData.email = updates.email;
-        if (updates.phone !== undefined) apiData.phone = updates.phone;
-        if (updates.position !== undefined) apiData.job_description = updates.position;
-        if (updates.githubUsername !== undefined) apiData.github_username = updates.githubUsername;
+        if (updates.phone !== undefined) apiData.phone = updates.phone || null; // Explicitly send null for empty strings
+        if (updates.position !== undefined) apiData.job_description = updates.position || null;
+        if (updates.githubUsername !== undefined) apiData.github_username = updates.githubUsername || null;
         if (updates.tags !== undefined) apiData.tags = updates.tags;
-        if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl;
+        if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl || null;
 
         const response = await apiService.put<any>(`/people/${id}`, apiData);
 

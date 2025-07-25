@@ -105,7 +105,6 @@ export default function EditPersonModal({ isOpen, onClose, person }: EditPersonM
         }, {
             onSuccess: (response) => {
                 if (response.success) {
-                    console.log('Person updated successfully:', response.data);
                     onClose();
                 } else {
                     console.error('Failed to update person:', response.error);
