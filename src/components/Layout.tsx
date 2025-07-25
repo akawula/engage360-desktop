@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
     Users,
-    UsersRound,
+    Building2,
     FileText,
     CheckSquare,
     Monitor,
@@ -22,7 +22,7 @@ const navSections = [
         items: [
             { path: '/', label: 'Home', icon: Home },
             { path: '/people', label: 'People', icon: Users },
-            { path: '/groups', label: 'Groups', icon: UsersRound },
+            { path: '/groups', label: 'Groups', icon: Building2 },
         ]
     },
     {

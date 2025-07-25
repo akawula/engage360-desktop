@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, User, Users, FileText } from 'lucide-react';
+import { Calendar, User, Building2, FileText } from 'lucide-react';
 import Modal from './Modal';
 import { useCreateActionItem } from '../hooks/useActionItems';
 import { usePeople } from '../hooks/usePeople';
@@ -298,7 +298,7 @@ export default function AddActionItemModal({
                 {/* Associated Group */}
                 <div>
                     <label htmlFor="groupId" className="flex items-center text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
-                        <Users className="h-4 w-4 mr-1" />
+                        <Building2 className="h-4 w-4 mr-1" />
                         Associated Group
                     </label>
                     <select

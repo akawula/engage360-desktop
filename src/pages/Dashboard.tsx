@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, UsersRound, FileText, CheckSquare, TrendingUp, Calendar } from 'lucide-react';
+import { Users, Building2, FileText, CheckSquare, TrendingUp, Calendar } from 'lucide-react';
 
 export default function Dashboard() {
     return (
@@ -33,7 +33,7 @@ export default function Dashboard() {
                 >
                     <div className="flex items-center space-x-3">
                         <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
-                            <UsersRound className="w-6 h-6 text-green-600 dark:text-green-400" />
+                            <Building2 className="w-6 h-6 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
                             <h3 className="font-semibold text-dark-900 dark:text-white">Groups</h3>
@@ -99,7 +99,7 @@ export default function Dashboard() {
                                 to="/groups"
                                 className="inline-flex items-center px-4 py-2 border border-dark-400 dark:border-dark-700 text-dark-800 dark:text-dark-400 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
                             >
-                                <UsersRound className="w-4 h-4 mr-2" />
+                                <Building2 className="w-4 h-4 mr-2" />
                                 Create a Group
                             </Link>
                         </div>

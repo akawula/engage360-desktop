@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, X, Search, Users, Tag, Sparkles, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Save, X, Search, Users, Building2, Tag, Sparkles, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -680,7 +680,7 @@ export default function CreateNote() {
                                                     >
                                                         <div className="flex items-center gap-2">
                                                             <div className="w-6 h-6 rounded bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center flex-shrink-0">
-                                                                <Users className="h-3 w-3 text-primary-600 dark:text-primary-400" />
+                                                                <Building2 className="h-3 w-3 text-primary-600 dark:text-primary-400" />
                                                             </div>
                                                             <div className="min-w-0 flex-1">
                                                                 <div className="text-xs font-medium text-dark-950 dark:text-white truncate">

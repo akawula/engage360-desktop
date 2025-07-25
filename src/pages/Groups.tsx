@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Users, Calendar } from 'lucide-react';
+import { Plus, Building2, Calendar } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
 import { useAuth } from '../contexts/AuthContext';
 import CreateGroupModal from '../components/CreateGroupModal';
@@ -99,7 +99,7 @@ export default function Groups() {
                         <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="bg-primary-100 dark:bg-primary-900 p-2 rounded-lg">
-                                    <Users className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                                    <Building2 className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                                 </div>
                                 <div>
                                     <h3 className="font-semibold text-dark-950 dark:text-white">{group.name}</h3>
@@ -118,7 +118,7 @@ export default function Groups() {
 
                         <div className="flex items-center justify-between text-sm text-dark-600 dark:text-dark-500">
                             <div className="flex items-center gap-1">
-                                <Users className="h-4 w-4" />
+                                <Building2 className="h-4 w-4" />
                                 <span>{group.memberCount} members</span>
                             </div>
                             <div className="flex items-center gap-1">
@@ -132,7 +132,7 @@ export default function Groups() {
 
             {groups.length === 0 && (
                 <div className="text-center py-12 bg-white dark:bg-dark-900 rounded-lg shadow transition-colors">
-                    <Users className="h-12 w-12 text-dark-400 mx-auto mb-4" />
+                    <Building2 className="h-12 w-12 text-dark-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-dark-900 dark:text-white mb-2">No groups yet</h3>
                     <p className="text-dark-600 dark:text-dark-300 mb-4">Create your first group to get started</p>
                     <button

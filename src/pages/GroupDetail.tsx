@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Users, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Building2, Plus } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
 import EditGroupModal from '../components/EditGroupModal';
 import AddMemberModal from '../components/AddMemberModal';
@@ -129,7 +129,7 @@ export default function GroupDetail() {
                 <div className="p-6 border-b border-dark-300 dark:border-dark-800">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-dark-950 dark:text-white flex items-center gap-2">
-                            <Users className="h-5 w-5" />
+                            <Building2 className="h-5 w-5" />
                             Members ({members.length})
                         </h2>
                         <button
