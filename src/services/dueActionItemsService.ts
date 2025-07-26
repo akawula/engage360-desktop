@@ -26,10 +26,8 @@ export class DueActionItemsService {
             if (stored) {
                 const notifiedArray = JSON.parse(stored);
                 this.notifiedItems = new Set(notifiedArray);
-                console.log(`Loaded ${this.notifiedItems.size} previously notified action items`);
             }
         } catch (error) {
-            console.error('Error loading notified items from localStorage:', error);
             this.notifiedItems = new Set();
         }
     }
@@ -42,7 +40,6 @@ export class DueActionItemsService {
             const notifiedArray = Array.from(this.notifiedItems);
             localStorage.setItem('notified-due-action-items', JSON.stringify(notifiedArray));
         } catch (error) {
-            console.error('Error saving notified items to localStorage:', error);
         }
     }
 
@@ -81,7 +78,6 @@ export class DueActionItemsService {
         }
 
         if (itemsToRemove.length > 0) {
-            console.log(`Cleaned up ${itemsToRemove.length} notifications for completed/cancelled items`);
             this.saveNotifiedItems();
         }
     }
@@ -135,7 +131,6 @@ export class DueActionItemsService {
      */
     async checkAndNotifyDueItems(): Promise<void> {
         try {
-            console.log('Checking for due action items...');
 
             // Fetch all pending and in-progress action items
             const response = await actionItemsService.getActionItems({
@@ -149,7 +144,6 @@ export class DueActionItemsService {
             });
 
             if (!response.success || !inProgressResponse.success) {
-                console.error('Failed to fetch action items for due date check');
                 return;
             }
 
@@ -167,7 +161,6 @@ export class DueActionItemsService {
                 return this.isDueTodayOrOverdue(item.dueDate);
             });
 
-            console.log(`Found ${dueItems.length} due action items`);
 
             // Send notifications for each due item (only once per item)
             let newNotifications = 0;
@@ -183,24 +176,18 @@ export class DueActionItemsService {
 
                         this.markAsNotified(item.id);
                         newNotifications++;
-                        console.log(`Sent notification for due action item: ${item.title}`);
                     } catch (error) {
-                        console.error(`Failed to send notification for item ${item.id}:`, error);
                     }
                 }
             }
 
             // Log summary
             if (newNotifications > 0) {
-                console.log(`Sent ${newNotifications} new notifications for due action items`);
             } else if (dueItems.length > 0) {
-                console.log(`${dueItems.length} due items found, but all have already been notified`);
             } else {
-                console.log('No due action items found');
             }
 
         } catch (error) {
-            console.error('Error checking for due action items:', error);
         }
     }
 
@@ -210,7 +197,6 @@ export class DueActionItemsService {
     clearAllNotifications(): void {
         this.notifiedItems.clear();
         this.saveNotifiedItems();
-        console.log('Cleared all due action item notifications');
     }
 
     /**
@@ -219,7 +205,6 @@ export class DueActionItemsService {
     clearNotification(itemId: string): void {
         if (this.notifiedItems.delete(itemId)) {
             this.saveNotifiedItems();
-            console.log(`Cleared notification for action item: ${itemId}`);
         }
     }
 

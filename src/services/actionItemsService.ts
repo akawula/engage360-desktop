@@ -106,7 +106,6 @@ class ActionItemsService {    /**
 
             return defaultContent;
         } catch (error) {
-            console.error('Failed to decode action item content:', error);
             return defaultContent;
         }
     }
@@ -153,7 +152,6 @@ class ActionItemsService {    /**
                 description: description || 'Content corrupted - please edit to fix'
             };
         } catch (error) {
-            console.error('Failed to parse legacy concatenated content:', error);
             return {
                 title: 'Corrupted Data',
                 description: 'Unable to parse corrupted content'
@@ -185,8 +183,6 @@ class ActionItemsService {    /**
             if (filters?.dueDateFrom) params.append('due_date_from', filters.dueDateFrom);
             if (filters?.dueDateTo) params.append('due_date_to', filters.dueDateTo);
 
-            console.log('ActionItemsService - filters:', filters);
-            console.log('ActionItemsService - params:', params.toString());
 
             const response = await apiService.get<any>(`/actions?${params}`);
 
@@ -228,7 +224,6 @@ class ActionItemsService {    /**
                     // Decode the encrypted content - this should be our primary source of title/description
                     const decodedContent = this.decodeActionItemContent(item.encrypted_content);
 
-                    console.log('ActionItemsService - mapping item:', item.id, 'note_id:', item.note_id);
 
                     return {
                         id: item.id,
@@ -247,8 +242,6 @@ class ActionItemsService {    /**
                     };
                 });
 
-                console.log('ActionItemsService - processed actionItems:', actionItems);
-                console.log('ActionItemsService - filtered for noteId:', filters?.noteId);
 
                 return {
                     success: true,
@@ -261,7 +254,6 @@ class ActionItemsService {    /**
                 error: response.error || { message: 'Failed to fetch action items', code: 500 }
             };
         } catch (error) {
-            console.error('Failed to fetch action items:', error);
             return {
                 success: false,
                 error: {
@@ -310,7 +302,6 @@ class ActionItemsService {    /**
                 error: response.error || { message: 'Action item not found', code: 404 }
             };
         } catch (error) {
-            console.error('Failed to fetch action item:', error);
             return {
                 success: false,
                 error: {
@@ -369,7 +360,6 @@ class ActionItemsService {    /**
                 error: response.error || { message: 'Failed to create action item', code: 500 }
             };
         } catch (error) {
-            console.error('Failed to create action item:', error);
             return {
                 success: false,
                 error: {
@@ -430,7 +420,6 @@ class ActionItemsService {    /**
                 error: response.error || { message: 'Failed to update action item', code: 500 }
             };
         } catch (error) {
-            console.error('Failed to update action item:', error);
             return {
                 success: false,
                 error: {
@@ -480,7 +469,6 @@ class ActionItemsService {    /**
                 error: response.error || { message: 'Failed to update action status', code: 500 }
             };
         } catch (error) {
-            console.error('Failed to update action status:', error);
             return {
                 success: false,
                 error: {
@@ -500,7 +488,6 @@ class ActionItemsService {    /**
                 error: response.error
             };
         } catch (error) {
-            console.error('Failed to delete action item:', error);
             return {
                 success: false,
                 error: {

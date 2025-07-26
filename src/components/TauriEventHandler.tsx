@@ -11,12 +11,10 @@ export function TauriEventHandler() {
         const setupListener = async () => {
             try {
                 unlistenCheckDueItems = await listen('check-due-action-items', async () => {
-                    console.log('Received request to check due action items from backend');
                     await dueActionItemsService.checkAndNotifyDueItems();
                 });
 
                 unlistenClearNotifications = await listen('clear-due-item-notifications', async () => {
-                    console.log('Received request to clear due item notifications from backend');
                     dueActionItemsService.clearAllNotifications();
                 });
             } catch (error) {
