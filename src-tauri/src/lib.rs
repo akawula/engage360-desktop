@@ -4,6 +4,7 @@ use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent}
 use tauri::{Manager, WindowEvent, Emitter};
 use tauri_plugin_notification::NotificationExt;
 use std::time::Duration;
+use std::process::Command;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -58,6 +59,23 @@ fn clear_due_item_notifications(app: tauri::AppHandle) -> Result<String, String>
     Ok("Notification clear request sent to frontend".to_string())
 }
 
+#[tauri::command]
+fn run_command(command: String, args: Vec<String>) -> Result<serde_json::Value, String> {
+    let output = Command::new(&command)
+        .args(&args)
+        .output()
+        .map_err(|e| format!("Failed to execute command '{}': {}", command, e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+    Ok(serde_json::json!({
+        "success": output.status.success(),
+        "stdout": stdout,
+        "stderr": stderr
+    }))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -65,7 +83,7 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_http::init())
-        .invoke_handler(tauri::generate_handler![greet, get_background_task_status, trigger_background_task, send_notification, notify_due_action_item, clear_due_item_notifications])
+        .invoke_handler(tauri::generate_handler![greet, get_background_task_status, trigger_background_task, send_notification, notify_due_action_item, clear_due_item_notifications, run_command])
         .setup(|app| {
             // Disable default menu to prevent keyboard shortcut interception
             #[cfg(target_os = "macos")]
@@ -77,13 +95,10 @@ pub fn run() {
             // Create tray menu items
             let show_item = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let hide_item = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
-            let status_item = MenuItem::with_id(app, "status", "Background Task Status", true, None::<&str>)?;
-            let trigger_item = MenuItem::with_id(app, "trigger", "Trigger Background Task", true, None::<&str>)?;
-            let clear_notifications_item = MenuItem::with_id(app, "clear-notifications", "Clear Due Item Notifications", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
             // Create tray menu
-            let tray_menu = Menu::with_items(app, &[&show_item, &hide_item, &status_item, &trigger_item, &clear_notifications_item, &quit_item])?;            // Create tray icon
+            let tray_menu = Menu::with_items(app, &[&show_item, &hide_item, &quit_item])?;            // Create tray icon
             let _tray = TrayIconBuilder::new()
                 .menu(&tray_menu)
                 .icon(app.default_window_icon().unwrap().clone())
@@ -115,55 +130,6 @@ pub fn run() {
                         "hide" => {
                             if let Some(window) = app.get_webview_window("main") {
                                 let _ = window.hide();
-                            }
-                        }
-                        "status" => {
-                            println!("Background task status: Running");
-                            // Show notification with status
-                            if let Err(e) = app.notification()
-                                .builder()
-                                .title("Background Task Status")
-                                .body("Background task is running and healthy!")
-                                .show() {
-                                eprintln!("Failed to send notification: {}", e);
-                            }
-                        }
-                        "trigger" => {
-                            println!("Manual background task triggered from tray menu");
-                            // Trigger an immediate background task
-                            let app_handle = app.clone();
-                            tauri::async_runtime::spawn(async move {
-                                println!("Executing manual background task...");
-
-                                // Send a notification about the manual task
-                                if let Err(e) = app_handle.notification()
-                                    .builder()
-                                    .title("Manual Task")
-                                    .body("Manual background task executed from tray menu!")
-                                    .show() {
-                                    eprintln!("Failed to send notification: {}", e);
-                                }
-
-                                // Add your task logic here
-                                if let Err(e) = app_handle.emit("manual-task-completed", "Manual task completed") {
-                                    eprintln!("Failed to emit event: {}", e);
-                                }
-                            });
-                        }
-                        "clear-notifications" => {
-                            println!("Clearing due item notifications from tray menu");
-                            // Clear due item notifications
-                            if let Err(e) = app.emit("clear-due-item-notifications", ()) {
-                                eprintln!("Failed to emit clear notifications event: {}", e);
-                            } else {
-                                // Show confirmation notification
-                                if let Err(e) = app.notification()
-                                    .builder()
-                                    .title("Notifications Cleared")
-                                    .body("Due action item notifications have been cleared")
-                                    .show() {
-                                    eprintln!("Failed to send confirmation notification: {}", e);
-                                }
                             }
                         }
                         "quit" => {
