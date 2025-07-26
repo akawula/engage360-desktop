@@ -14,7 +14,8 @@ import {
     Heading1,
     Heading2,
     Heading3,
-    CheckSquare
+    Search,
+    Loader
 } from 'lucide-react';
 
 export interface RichTextEditorRef {
@@ -27,12 +28,14 @@ interface RichTextEditorProps {
     onChange: (content: string) => void;
     placeholder?: string;
     className?: string;
-    onCreateActionItem?: (selectedText: string) => void;
+    onFindTasks?: (selectedText: string) => void;
 }
 
-const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "", onCreateActionItem }, ref) => {
+const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "", onFindTasks }, ref) => {
     const [hasSelection, setHasSelection] = useState(false);
     const [selectedText, setSelectedText] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchDuration, setSearchDuration] = useState(0);
 
     const editor = useEditor({
         extensions: [
@@ -66,17 +69,6 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                 class: 'focus:outline-none h-full',
             },
             handleKeyDown: (view, event) => {
-                // Handle Cmd+Shift+A
-                if (event.metaKey && event.shiftKey && event.key === 'A') {
-                    event.preventDefault();
-
-                    if (onCreateActionItem) {
-                        const { from, to } = view.state.selection;
-                        const selectedText = view.state.doc.textBetween(from, to, ' ').trim();
-                        onCreateActionItem(selectedText);
-                    }
-                    return true;
-                }
                 return false;
             },
         },
@@ -105,6 +97,40 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             return selectedText.trim();
         }
     }));
+
+    // Timer effect for search duration
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isSearching) {
+            interval = setInterval(() => {
+                setSearchDuration(prev => prev + 1);
+            }, 1000);
+        } else {
+            setSearchDuration(0);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isSearching]);
+
+    // Handle task finding with loading state
+    const handleTaskSearch = () => {
+        if (!onFindTasks || isSearching) return;
+        
+        const textToAnalyze = hasSelection ? selectedText : editor.getText();
+        setIsSearching(true);
+        
+        // Use requestAnimationFrame + setTimeout to ensure UI updates before heavy computation
+        requestAnimationFrame(() => {
+            setTimeout(async () => {
+                try {
+                    await onFindTasks(textToAnalyze);
+                } finally {
+                    setIsSearching(false);
+                }
+            }, 10); // Small delay to ensure UI renders
+        });
+    };
 
     // Update editor content when the content prop changes
     useEffect(() => {
@@ -241,18 +267,30 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                     </ToolbarButton>
                 </div>
 
-                {/* Action Item Creation - Only show when text is selected */}
-                {hasSelection && onCreateActionItem && (
+                {/* Task Finding - Native toolbar button */}
+                {onFindTasks && (
                     <div className="flex items-center gap-1 pl-2 border-l border-dark-400 dark:border-dark-700">
-                        <button
-                            type="button"
-                            onClick={() => onCreateActionItem(selectedText)}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 rounded-lg transition-colors"
-                            title="Create Action Item from Selection (Cmd+Shift+A)"
+                        <ToolbarButton
+                            onClick={handleTaskSearch}
+                            disabled={isSearching}
+                            title={isSearching 
+                                ? `Searching... ${searchDuration}s` 
+                                : hasSelection 
+                                    ? "Find Tasks in Selection" 
+                                    : "Find Tasks in Entire Note"
+                            }
                         >
-                            <CheckSquare className="w-4 h-4" />
-                            Create Action Item
-                        </button>
+                            {isSearching ? (
+                                <Loader className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Search className="w-4 h-4" />
+                            )}
+                        </ToolbarButton>
+                        {isSearching && (
+                            <span className="text-xs text-dark-600 dark:text-dark-400 ml-1 tabular-nums">
+                                {searchDuration}s
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

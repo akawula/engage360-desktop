@@ -79,16 +79,6 @@ export default function Profile() {
         });
     };
 
-    const handleAutoSummarizeToggle = async (autoSummarize: boolean) => {
-        if (!profile) return;
-        
-        await updatePreferencesMutation.mutateAsync({
-            ollama: {
-                ...profile.preferences.ollama,
-                autoSummarize
-            }
-        });
-    };
 
     const recheckOllama = async () => {
         setCheckingOllama(true);
@@ -359,18 +349,6 @@ export default function Profile() {
                                                 </p>
                                             </div>
 
-                                            <label className="flex items-center justify-between">
-                                                <div>
-                                                    <span className="text-dark-800 dark:text-dark-300">Auto-summarize long notes</span>
-                                                    <p className="text-xs text-dark-600 dark:text-dark-500">Automatically generate summaries for notes longer than 500 words</p>
-                                                </div>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={profile.preferences.ollama.autoSummarize}
-                                                    onChange={(e) => handleAutoSummarizeToggle(e.target.checked)}
-                                                    className="rounded border-dark-400 dark:border-dark-700 dark:bg-dark-800"
-                                                />
-                                            </label>
                                         </>
                                     )}
                                 </>

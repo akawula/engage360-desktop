@@ -11,6 +11,8 @@ import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 import AddActionItemModal from '../components/AddActionItemModal';
 import type { CreateNoteRequest } from '../types';
+import { ollamaService } from '../services/ollamaService';
+import { userProfileService } from '../services/userProfileService';
 
 export default function CreateNote() {
     const navigate = useNavigate();
@@ -321,6 +323,222 @@ export default function CreateNote() {
         // Open the modal with the selected text
         setActionItemTitle(selectedText);
         setShowActionItemModal(true);
+    };
+
+    const handleFindTasks = async (selectedText: string) => {
+        console.log('=== AI-POWERED TASK ANALYSIS ===');
+        console.log(`Analyzing ${selectedText.length} characters of text...`);
+        console.log('');
+
+        let usingAI = false;
+        let aiModel = '';
+
+        try {
+            // Get user's Ollama preferences
+            const profileResponse = await userProfileService.getUserProfile();
+            const isOllamaEnabled = profileResponse.success && profileResponse.data?.preferences?.ollama?.enabled;
+            const modelName = profileResponse.data?.preferences?.ollama?.model || 'llama3.2:1b';
+
+            if (isOllamaEnabled) {
+                // Check if Ollama is available
+                const ollamaStatus = await ollamaService.checkOllamaStatus();
+                
+                if (ollamaStatus.isInstalled && ollamaStatus.isRunning) {
+                    usingAI = true;
+                    aiModel = modelName;
+                    console.log(`🤖 Using AI model: ${modelName}`);
+                    console.log('🌍 Multi-language task detection enabled');
+                    console.log('');
+
+                    try {
+                        const aiResult = await ollamaService.detectTasks(modelName, selectedText);
+                        
+                        console.log(`🔍 Detected language: ${aiResult.detectedLanguage}`);
+                        console.log(`📋 Found ${aiResult.totalTasks} tasks`);
+                        console.log('');
+
+                        if (aiResult.totalTasks === 0) {
+                            console.log('❌ No tasks found by AI. The text may not contain actionable items.');
+                            console.log('💡 AI can detect tasks in any language including:');
+                            console.log('  • English: TODO, need to, should, implement, fix');
+                            console.log('  • Spanish: necesito, debo, implementar, arreglar');
+                            console.log('  • French: faire, implémenter, corriger, rappel');
+                            console.log('  • German: machen, implementieren, beheben, erinnerung');
+                            console.log('  • Chinese: 需要, 应该, 实现, 修复, 提醒');
+                            console.log('  • Japanese: する必要がある, 実装, 修正, リマインダー');
+                            console.log('  • And many more languages...');
+                        } else {
+                            // Display AI-detected tasks
+                            aiResult.tasks.forEach((task, index) => {
+                                const priorityEmoji = task.priority === 'urgent' ? '🟣' : 
+                                                    task.priority === 'high' ? '🔴' : 
+                                                    task.priority === 'medium' ? '🟡' : '🟢';
+                                const typeEmoji = task.type === 'todo' ? '📝' : 
+                                                 task.type === 'deadline' ? '⏰' : 
+                                                 task.type === 'development' ? '💻' : 
+                                                 task.type === 'follow_up' ? '🔄' : 
+                                                 task.type === 'reminder' ? '🔔' : 
+                                                 task.type === 'action' ? '⚡' : '✅';
+                                
+                                const confidenceBar = '█'.repeat(Math.round(task.confidence * 10));
+                                console.log(`${index + 1}. ${typeEmoji} ${priorityEmoji} [${task.type.toUpperCase()}] ${task.content}`);
+                                console.log(`   📊 Confidence: ${(task.confidence * 100).toFixed(0)}% ${confidenceBar}`);
+                            });
+                            
+                            console.log('');
+                            console.log('📊 AI Analysis Summary:');
+                            console.log('Priority Distribution:');
+                            Object.entries(aiResult.summary.byPriority).forEach(([priority, count]) => {
+                                const emoji = priority === 'urgent' ? '🟣' : 
+                                            priority === 'high' ? '🔴' : 
+                                            priority === 'medium' ? '🟡' : '🟢';
+                                console.log(`  ${emoji} ${priority.toUpperCase()}: ${count} tasks`);
+                            });
+
+                            console.log('');
+                            console.log('Type Distribution:');
+                            Object.entries(aiResult.summary.byType).forEach(([type, count]) => {
+                                console.log(`  • ${type.replace('_', ' ').toUpperCase()}: ${count} tasks`);
+                            });
+                        }
+
+                        console.log('=== END AI TASK ANALYSIS ===');
+                        return; // Successfully used AI, exit early
+                        
+                    } catch (aiError) {
+                        console.log(`⚠️ AI analysis failed: ${aiError}`);
+                        console.log('📝 Falling back to regex-based detection...');
+                        console.log('');
+                        usingAI = false;
+                    }
+                } else {
+                    console.log('⚠️ Ollama not available (not installed or not running)');
+                    console.log('📝 Using regex-based detection...');
+                    console.log('');
+                }
+            } else {
+                console.log('📝 AI task detection disabled in settings');
+                console.log('💡 Enable in Profile > AI Summaries (Ollama) to use multi-language detection');
+                console.log('📝 Using regex-based detection...');
+                console.log('');
+            }
+        } catch (error) {
+            console.log(`⚠️ Error checking AI availability: ${error}`);
+            console.log('📝 Using regex-based detection...');
+            console.log('');
+        }
+
+        // Fallback to regex-based detection
+        const taskPatterns = [
+            /\b(?:todo|TODO|to do|to-do):\s*(.+)/gi,
+            /\b(?:task|TASK):\s*(.+)/gi,
+            /\b(?:action|ACTION):\s*(.+)/gi,
+            /\b(?:need to|needs to|should|must|have to)\s+(.+)/gi,
+            /\b(?:implement|fix|create|add|remove|update|refactor|test)\s+(.+)/gi,
+            /^\s*[-*]\s*(?:\[[\s\-x]\])?\s*(.+)$/gm, // Bullet points with optional checkboxes
+            /^\s*\d+\.\s*(.+)$/gm, // Numbered lists
+            /\b(?:deadline|due|by)\s+(?:on\s+)?(.+)/gi,
+            /\b(?:remember to|don't forget to)\s+(.+)/gi,
+            /\b(?:follow up|followup)\s+(?:on\s+)?(.+)/gi
+        ];
+
+        const foundTasks: string[] = [];
+        const taskDetails: { type: string; content: string; priority?: string }[] = [];
+
+        taskPatterns.forEach((pattern, index) => {
+            const matches = [...selectedText.matchAll(pattern)];
+            matches.forEach(match => {
+                const taskContent = match[1]?.trim();
+                if (taskContent && taskContent.length > 3) {
+                    foundTasks.push(taskContent);
+                    
+                    // Determine task type and priority
+                    let taskType = 'general';
+                    let priority = 'medium';
+                    
+                    if (index === 0) taskType = 'todo';
+                    else if (index === 1) taskType = 'task';
+                    else if (index === 2) taskType = 'action';
+                    else if (index === 3) taskType = 'requirement';
+                    else if (index === 4) taskType = 'development';
+                    else if (index === 5 || index === 6) taskType = 'list_item';
+                    else if (index === 7) taskType = 'deadline';
+                    else if (index === 8) taskType = 'reminder';
+                    else if (index === 9) taskType = 'follow_up';
+
+                    // Detect priority keywords
+                    const lowPriorityWords = /\b(later|sometime|eventually|nice to have|optional)\b/i;
+                    const highPriorityWords = /\b(urgent|asap|immediately|critical|important|priority)\b/i;
+                    const mediumPriorityWords = /\b(soon|next week|this week|by friday|by monday)\b/i;
+
+                    if (highPriorityWords.test(taskContent)) priority = 'high';
+                    else if (lowPriorityWords.test(taskContent)) priority = 'low';
+                    else if (mediumPriorityWords.test(taskContent)) priority = 'medium';
+
+                    taskDetails.push({
+                        type: taskType,
+                        content: taskContent,
+                        priority
+                    });
+                }
+            });
+        });
+
+        // Remove duplicates
+        const uniqueTasks = [...new Set(foundTasks)];
+        const uniqueTaskDetails = taskDetails.filter((task, index, self) => 
+            index === self.findIndex(t => t.content === task.content)
+        );
+
+        console.log('📋 REGEX-BASED ANALYSIS RESULTS:');
+        console.log(`Found ${uniqueTasks.length} potential tasks in selected text`);
+        console.log('⚠️ Note: Regex detection only works with English patterns');
+        console.log('');
+        
+        if (uniqueTasks.length === 0) {
+            console.log('❌ No tasks found. Try selecting text that contains:');
+            console.log('  • TODO/Task items');
+            console.log('  • Action items (need to, should, must)');
+            console.log('  • Development tasks (implement, fix, create, etc.)');
+            console.log('  • Bullet points or numbered lists');
+            console.log('  • Deadlines or reminders');
+        } else {
+            uniqueTaskDetails.forEach((task, index) => {
+                const priorityEmoji = task.priority === 'high' ? '🔴' : task.priority === 'low' ? '🟢' : '🟡';
+                const typeEmoji = task.type === 'todo' ? '📝' : 
+                                 task.type === 'deadline' ? '⏰' : 
+                                 task.type === 'development' ? '💻' : 
+                                 task.type === 'follow_up' ? '🔄' : 
+                                 task.type === 'reminder' ? '🔔' : '✅';
+                
+                console.log(`${index + 1}. ${typeEmoji} ${priorityEmoji} [${task.type.toUpperCase()}] ${task.content}`);
+            });
+            
+            console.log('');
+            console.log('📊 Summary by Priority:');
+            const priorityCount = uniqueTaskDetails.reduce((acc, task) => {
+                acc[task.priority!] = (acc[task.priority!] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
+            
+            Object.entries(priorityCount).forEach(([priority, count]) => {
+                const emoji = priority === 'high' ? '🔴' : priority === 'low' ? '🟢' : '🟡';
+                console.log(`  ${emoji} ${priority.toUpperCase()}: ${count} tasks`);
+            });
+
+            console.log('');
+            console.log('📋 Summary by Type:');
+            const typeCount = uniqueTaskDetails.reduce((acc, task) => {
+                acc[task.type] = (acc[task.type] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
+            
+            Object.entries(typeCount).forEach(([type, count]) => {
+                console.log(`  • ${type.replace('_', ' ').toUpperCase()}: ${count} tasks`);
+            });
+        }
+        
+        console.log('=== END REGEX TASK ANALYSIS ===');
     };
 
     const handleCancel = useCallback(() => {
@@ -712,7 +930,7 @@ export default function CreateNote() {
                             onChange={handleContentChange}
                             placeholder="Start writing your note here..."
                             className="h-full prose prose-lg max-w-none dark:prose-invert prose-primary"
-                            onCreateActionItem={handleCreateActionItem}
+                            onFindTasks={handleFindTasks}
                         />
                     </div>
                 </div>

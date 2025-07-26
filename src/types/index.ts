@@ -140,7 +140,6 @@ export interface UserProfile {
         ollama: {
             enabled: boolean;
             model: string;
-            autoSummarize: boolean;
         };
     };
     createdAt: string;

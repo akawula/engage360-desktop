@@ -34,8 +34,7 @@ class UserProfileService {
                 // Ensure Ollama preferences exist with defaults
                 const defaultOllamaPrefs = {
                     enabled: false,
-                    model: 'llama3.2:1b',
-                    autoSummarize: false
+                    model: 'llama3.2:1b'
                 };
 
                 // Transform AuthUser to UserProfile format, filling in missing data from stored profile
@@ -123,8 +122,7 @@ class UserProfileService {
                 // Ensure Ollama preferences exist with defaults
                 const defaultOllamaPrefs = {
                     enabled: false,
-                    model: 'llama3.2:1b',
-                    autoSummarize: false
+                    model: 'llama3.2:1b'
                 };
 
                 const userProfile: UserProfile = {
