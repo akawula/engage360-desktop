@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, User, Tag, Search, Filter, Grid, List, StickyNote, ArrowRight, Clock, MessageCircle, Phone, Mail, UserCheck, RotateCcw } from 'lucide-react';
+import { Plus, User, Tag, Search, Filter, Grid, List, StickyNote, ArrowRight, Clock, MessageCircle, Phone, Mail, UserCheck, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { stripHtmlAndTruncate, formatAvatarSrc } from '../lib/utils';
@@ -11,16 +11,24 @@ export default function Notes() {
     const [selectedType, setSelectedType] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'created' | 'updated' | 'title'>('updated');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize] = useState(20); // Fixed page size
 
-    const { data: notes = [], isLoading } = useQuery({
-        queryKey: ['notes'],
+    const { data: notesResponse, isLoading } = useQuery({
+        queryKey: ['notes', currentPage, pageSize],
         queryFn: async () => {
-            const response = await notesService.getNotes();
-            return response.success && response.data ? response.data : [];
+            const response = await notesService.getNotes(undefined, currentPage, pageSize);
+            if (response.success && response.data) {
+                return response.data;
+            }
+            return { notes: [], pagination: { total: 0, page: 1, limit: pageSize, totalPages: 0 } };
         },
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 15 * 60 * 1000, // 15 minutes cache
     });
+
+    const notes = notesResponse?.notes || [];
+    const pagination = notesResponse?.pagination || { total: 0, page: 1, limit: pageSize, totalPages: 0 };
 
     // Fetch people data to get avatars for note associations
     const { data: peopleResponse } = useQuery({
@@ -37,7 +45,7 @@ export default function Notes() {
         return people.find(person => person.id === personId) || null;
     };
 
-    // Filter and sort notes
+    // Filter and sort notes (client-side filtering on current page)
     const filteredAndSortedNotes = useMemo(() => {
         let filtered = notes.filter(note => {
             const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,6 +73,31 @@ export default function Notes() {
 
         return filtered;
     }, [notes, searchTerm, selectedType, sortBy]);
+
+    // Reset to first page when filters change
+    const handleFilterChange = (newSearchTerm: string, newType: string) => {
+        setSearchTerm(newSearchTerm);
+        setSelectedType(newType);
+        setCurrentPage(1);
+    };
+
+    // Pagination handlers
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            handlePageChange(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < pagination.totalPages) {
+            handlePageChange(currentPage + 1);
+        }
+    };
 
     const noteTypes = [
         { value: 'all', label: 'All Notes', icon: '📝', count: notes.length },
@@ -174,7 +207,8 @@ export default function Notes() {
                             <div>
                                 <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Notes</h1>
                                 <p className="text-sm text-dark-700 dark:text-dark-500">
-                                    {filteredAndSortedNotes.length} of {notes.length} notes
+                                    {filteredAndSortedNotes.length} notes on page {pagination.page} of {pagination.totalPages}
+                                    {pagination.total > 0 && ` (${pagination.total} total)`}
                                 </p>
                             </div>
                         </div>
@@ -225,7 +259,7 @@ export default function Notes() {
                             type="text"
                             placeholder="Search notes by title, content, or tags..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => handleFilterChange(e.target.value, selectedType)}
                             className="w-full pl-10 pr-4 py-3 bg-dark-100 dark:bg-dark-950 border border-dark-300 dark:border-dark-800 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-dark-950 dark:text-white placeholder-dark-600 dark:placeholder-dark-500 transition-all duration-200"
                         />
                     </div>
@@ -235,7 +269,7 @@ export default function Notes() {
                         {noteTypes.map((type) => (
                             <button
                                 key={type.value}
-                                onClick={() => setSelectedType(type.value)}
+                                onClick={() => handleFilterChange(searchTerm, type.value)}
                                 className={`group flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all duration-200 ${selectedType === type.value
                                     ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300 shadow-sm'
                                     : 'text-dark-700 dark:text-dark-500 hover:bg-dark-200 dark:hover:bg-dark-800'
@@ -273,10 +307,7 @@ export default function Notes() {
 
                         {(searchTerm || selectedType !== 'all') && (
                             <button
-                                onClick={() => {
-                                    setSearchTerm('');
-                                    setSelectedType('all');
-                                }}
+                                onClick={() => handleFilterChange('', 'all')}
                                 className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
                             >
                                 Clear filters
@@ -289,11 +320,12 @@ export default function Notes() {
             {/* Notes Grid/List */}
             <div className="flex-1 p-6">
                 {filteredAndSortedNotes.length > 0 ? (
-                    <div className={
-                        viewMode === 'grid'
-                            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                            : 'space-y-4'
-                    }>
+                    <>
+                        <div className={
+                            viewMode === 'grid'
+                                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                                : 'space-y-4'
+                        }>
                         {filteredAndSortedNotes.map((note) => {
                             const IconComponent = getNoteTypeIcon(note.type);
                             const associatedPerson = getPersonById(note.personId);
@@ -448,6 +480,71 @@ export default function Notes() {
                             );
                         })}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-8 px-4 py-3 bg-white dark:bg-dark-900 border border-dark-300 dark:border-dark-800 rounded-lg">
+                            <div className="flex items-center gap-2 text-sm text-dark-700 dark:text-dark-400">
+                                <span>Showing</span>
+                                <span className="font-medium text-dark-950 dark:text-white">
+                                    {((pagination.page - 1) * pagination.limit) + 1}-{Math.min(pagination.page * pagination.limit, pagination.total)}
+                                </span>
+                                <span>of</span>
+                                <span className="font-medium text-dark-950 dark:text-white">{pagination.total}</span>
+                                <span>notes</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handlePreviousPage}
+                                    disabled={pagination.page <= 1}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-dark-300 dark:border-dark-700 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    Previous
+                                </button>
+                                
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                        let pageNumber;
+                                        if (pagination.totalPages <= 5) {
+                                            pageNumber = i + 1;
+                                        } else if (pagination.page <= 3) {
+                                            pageNumber = i + 1;
+                                        } else if (pagination.page >= pagination.totalPages - 2) {
+                                            pageNumber = pagination.totalPages - 4 + i;
+                                        } else {
+                                            pageNumber = pagination.page - 2 + i;
+                                        }
+                                        
+                                        return (
+                                            <button
+                                                key={pageNumber}
+                                                onClick={() => handlePageChange(pageNumber)}
+                                                className={`w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                                                    pageNumber === pagination.page
+                                                        ? 'bg-primary-600 text-white'
+                                                        : 'text-dark-700 dark:text-dark-400 hover:bg-dark-100 dark:hover:bg-dark-800'
+                                                }`}
+                                            >
+                                                {pageNumber}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                
+                                <button
+                                    onClick={handleNextPage}
+                                    disabled={pagination.page >= pagination.totalPages}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm border border-dark-300 dark:border-dark-700 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    </>
                 ) : (
                     // Empty State
                     <div className="text-center py-16">
@@ -473,10 +570,7 @@ export default function Notes() {
                         <div className="flex items-center justify-center gap-3">
                             {(searchTerm || selectedType !== 'all') && (
                                 <button
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setSelectedType('all');
-                                    }}
+                                    onClick={() => handleFilterChange('', 'all')}
                                     className="px-4 py-2 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-primary-700 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                                 >
                                     Clear filters
