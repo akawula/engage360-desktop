@@ -137,6 +137,11 @@ export interface UserProfile {
             push: boolean;
             actionItems: boolean;
         };
+        ollama: {
+            enabled: boolean;
+            model: string;
+            autoSummarize: boolean;
+        };
     };
     createdAt: string;
     updatedAt: string;

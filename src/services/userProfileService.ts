@@ -31,6 +31,13 @@ class UserProfileService {
                 // Get stored user profile data to fill in missing fields (like firstName/lastName)
                 const storedUserData = this.getStoredUserProfile();
 
+                // Ensure Ollama preferences exist with defaults
+                const defaultOllamaPrefs = {
+                    enabled: false,
+                    model: 'llama3.2:1b',
+                    autoSummarize: false
+                };
+
                 // Transform AuthUser to UserProfile format, filling in missing data from stored profile
                 const userProfile: UserProfile = {
                     id: user.id || '',
@@ -38,13 +45,14 @@ class UserProfileService {
                     lastName: user.lastName || storedUserData?.lastName || '',
                     email: user.email || '',
                     avatar: user.avatarUrl || storedUserData?.avatar,
-                    preferences: storedUserData?.preferences || {
-                        theme: 'auto',
-                        notifications: {
+                    preferences: {
+                        theme: storedUserData?.preferences?.theme || 'auto',
+                        notifications: storedUserData?.preferences?.notifications || {
                             email: true,
                             push: true,
                             actionItems: true
-                        }
+                        },
+                        ollama: storedUserData?.preferences?.ollama || defaultOllamaPrefs
                     },
                     createdAt: user.createdAt || new Date().toISOString(),
                     updatedAt: user.updatedAt || new Date().toISOString()
@@ -112,19 +120,27 @@ class UserProfileService {
                 // Get existing stored profile to preserve fields not returned by API
                 const existingProfile = this.getStoredUserProfile();
 
+                // Ensure Ollama preferences exist with defaults
+                const defaultOllamaPrefs = {
+                    enabled: false,
+                    model: 'llama3.2:1b',
+                    autoSummarize: false
+                };
+
                 const userProfile: UserProfile = {
                     id: user.id || '',
                     firstName: user.firstName || profileData.firstName || '',
                     lastName: user.lastName || profileData.lastName || '',
                     email: user.email || profileData.email || '',
                     avatar: user.avatarUrl || profileData.avatar,
-                    preferences: existingProfile?.preferences || {
-                        theme: 'auto',
-                        notifications: {
+                    preferences: {
+                        theme: existingProfile?.preferences?.theme || 'auto',
+                        notifications: existingProfile?.preferences?.notifications || {
                             email: true,
                             push: true,
                             actionItems: true
-                        }
+                        },
+                        ollama: existingProfile?.preferences?.ollama || defaultOllamaPrefs
                     },
                     createdAt: user.createdAt || existingProfile?.createdAt || '',
                     updatedAt: user.updatedAt || new Date().toISOString()
@@ -149,6 +165,48 @@ class UserProfileService {
                 success: false,
                 error: {
                     message: 'Failed to update user profile',
+                    code: 500,
+                    details: error instanceof Error ? error.message : 'Unknown error'
+                }
+            };
+        }
+    }
+
+    async updateUserPreferences(preferences: Partial<UserProfile['preferences']>): Promise<ApiResponse<UserProfile>> {
+        try {
+            // Get current profile to merge preferences
+            const currentProfile = this.getStoredUserProfile();
+            if (!currentProfile) {
+                return {
+                    success: false,
+                    error: { message: 'No profile found to update', code: 404 }
+                };
+            }
+
+            // Merge new preferences with existing ones
+            const updatedPreferences = {
+                ...currentProfile.preferences,
+                ...preferences
+            };
+
+            // Update the stored profile
+            const updatedProfile = {
+                ...currentProfile,
+                preferences: updatedPreferences,
+                updatedAt: new Date().toISOString()
+            };
+
+            this.storeUserProfile(updatedProfile as UserProfile);
+
+            return {
+                success: true,
+                data: updatedProfile as UserProfile
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    message: 'Failed to update preferences',
                     code: 500,
                     details: error instanceof Error ? error.message : 'Unknown error'
                 }
