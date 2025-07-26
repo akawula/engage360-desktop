@@ -113,11 +113,9 @@ export default function Layout({ children }: LayoutProps) {
                                     alt="User Avatar"
                                     className="w-10 h-10 rounded-full object-cover border-2 border-gray-300 dark:border-dark-600"
                                 />
-                                <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 border-2 border-white dark:border-dark-900"></span>
                             </div>
                             <div>
                                 <p className="font-semibold text-sm text-gray-900 dark:text-dark-100">{user ? `${user.firstName} ${user.lastName}` : ''}</p>
-                                <p className="text-xs text-gray-500 dark:text-dark-400">Online</p>
                             </div>
                         </NavLink>
                         <div className="flex items-center space-x-1">
