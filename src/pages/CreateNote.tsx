@@ -179,9 +179,14 @@ export default function CreateNote() {
 
             return response.data;
         },
-        onSuccess: (note) => {
-            queryClient.invalidateQueries({ queryKey: ['notes'] });
-            // Stay on the current page after saving
+        onSuccess: async (note) => {
+            // Invalidate and refetch notes immediately
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['notes'] }),
+                queryClient.refetchQueries({ queryKey: ['notes'] })
+            ]);
+            // Navigate to notes list to show the created note
+            navigate('/notes');
         },
     });
 
