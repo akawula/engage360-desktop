@@ -1,14 +1,18 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { User, Mail, Calendar, Settings, Bell, Shield } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { User, Mail, Calendar, Settings, Bell, Shield, Cpu, Download, CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { userProfileService } from '../services/userProfileService';
+import { ollamaService, type OllamaStatus } from '../services/ollamaService';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatAvatarSrc } from '../lib/utils';
 import EditProfileModal from '../components/EditProfileModal';
 
 export default function Profile() {
     const { theme, setTheme } = useTheme();
+    const queryClient = useQueryClient();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
+    const [checkingOllama, setCheckingOllama] = useState(false);
     const { data: profile, isLoading } = useQuery({
         queryKey: ['profile'],
         queryFn: async () => {
@@ -22,6 +26,86 @@ export default function Profile() {
         staleTime: 15 * 60 * 1000, // 15 minutes - profile changes less frequently
         gcTime: 20 * 60 * 1000, // 20 minutes cache
     });
+
+    // Mutation for updating preferences
+    const updatePreferencesMutation = useMutation({
+        mutationFn: (preferences: Partial<typeof profile.preferences>) => 
+            userProfileService.updateUserPreferences(preferences),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
+        }
+    });
+
+    // Check Ollama status when component mounts
+    useEffect(() => {
+        const checkOllama = async () => {
+            setCheckingOllama(true);
+            try {
+                const status = await ollamaService.checkOllamaStatus();
+                setOllamaStatus(status);
+            } catch (error) {
+                setOllamaStatus({
+                    isInstalled: false,
+                    isRunning: false,
+                    error: 'Failed to check Ollama status'
+                });
+            } finally {
+                setCheckingOllama(false);
+            }
+        };
+
+        checkOllama();
+    }, []);
+
+    const handleOllamaToggle = async (enabled: boolean) => {
+        if (!profile) return;
+        
+        await updatePreferencesMutation.mutateAsync({
+            ollama: {
+                ...profile.preferences.ollama,
+                enabled
+            }
+        });
+    };
+
+    const handleOllamaModelChange = async (model: string) => {
+        if (!profile) return;
+        
+        await updatePreferencesMutation.mutateAsync({
+            ollama: {
+                ...profile.preferences.ollama,
+                model
+            }
+        });
+    };
+
+    const handleAutoSummarizeToggle = async (autoSummarize: boolean) => {
+        if (!profile) return;
+        
+        await updatePreferencesMutation.mutateAsync({
+            ollama: {
+                ...profile.preferences.ollama,
+                autoSummarize
+            }
+        });
+    };
+
+    const recheckOllama = async () => {
+        setCheckingOllama(true);
+        ollamaService.clearCache();
+        try {
+            const status = await ollamaService.checkOllamaStatus();
+            setOllamaStatus(status);
+        } catch (error) {
+            setOllamaStatus({
+                isInstalled: false,
+                isRunning: false,
+                error: 'Failed to check Ollama status'
+            });
+        } finally {
+            setCheckingOllama(false);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -160,6 +244,137 @@ export default function Profile() {
                                 />
                                 <span className="text-dark-800 dark:text-dark-300">Action item reminders</span>
                             </label>
+                        </div>
+                    </div>
+
+                    {/* Ollama Settings */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-dark-200 dark:bg-dark-800 p-2 rounded-lg">
+                                    <Cpu className="h-5 w-5 text-dark-700 dark:text-dark-400" />
+                                </div>
+                                <div>
+                                    <h4 className="font-medium text-dark-950 dark:text-white">AI Summaries (Ollama)</h4>
+                                    <p className="text-dark-700 dark:text-dark-400 text-sm">Local AI-powered note and meeting summaries</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {checkingOllama && <Loader className="h-4 w-4 animate-spin text-dark-500" />}
+                                {ollamaStatus && (
+                                    <div className="flex items-center gap-2">
+                                        {ollamaStatus.isInstalled && ollamaStatus.isRunning ? (
+                                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                                <CheckCircle className="h-4 w-4" />
+                                                <span className="text-xs">Ready</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                                                <AlertCircle className="h-4 w-4" />
+                                                <span className="text-xs">
+                                                    {!ollamaStatus.isInstalled ? 'Not Installed' : 'Not Running'}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <button
+                                            onClick={recheckOllama}
+                                            className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                                        >
+                                            Recheck
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="ml-11 space-y-4">
+                            {/* Installation Status */}
+                            {ollamaStatus && !ollamaStatus.isInstalled && (
+                                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                        <Download className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+                                        <div>
+                                            <h5 className="font-medium text-orange-800 dark:text-orange-200">Ollama Not Installed</h5>
+                                            <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                                                To enable AI summaries, please install Ollama from{' '}
+                                                <a 
+                                                    href="https://ollama.com" 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="underline hover:text-orange-800 dark:hover:text-orange-200"
+                                                >
+                                                    ollama.com
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Not Running Status */}
+                            {ollamaStatus && ollamaStatus.isInstalled && !ollamaStatus.isRunning && (
+                                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                    <div className="flex items-start gap-3">
+                                        <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+                                        <div>
+                                            <h5 className="font-medium text-orange-800 dark:text-orange-200">Ollama Not Running</h5>
+                                            <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
+                                                Please start the Ollama service by running <code className="bg-orange-100 dark:bg-orange-800 px-1 rounded">ollama serve</code> in your terminal.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Ollama Settings - Only show if installed and running */}
+                            {ollamaStatus?.isInstalled && ollamaStatus?.isRunning && profile && (
+                                <>
+                                    <label className="flex items-center justify-between">
+                                        <span className="text-dark-800 dark:text-dark-300">Enable AI summaries</span>
+                                        <input
+                                            type="checkbox"
+                                            checked={profile.preferences?.ollama?.enabled || false}
+                                            onChange={(e) => handleOllamaToggle(e.target.checked)}
+                                            className="rounded border-dark-400 dark:border-dark-700 dark:bg-dark-800"
+                                        />
+                                    </label>
+
+                                    {profile.preferences?.ollama?.enabled && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-medium text-dark-800 dark:text-dark-300 mb-2">
+                                                    AI Model
+                                                </label>
+                                                <select
+                                                    value={profile.preferences.ollama.model}
+                                                    onChange={(e) => handleOllamaModelChange(e.target.value)}
+                                                    className="w-full border border-dark-400 dark:border-dark-700 rounded-lg px-3 py-2 bg-white dark:bg-dark-800 text-dark-950 dark:text-white text-sm"
+                                                >
+                                                    {ollamaService.getRecommendedModels().map(model => (
+                                                        <option key={model} value={model}>{model}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-xs text-dark-600 dark:text-dark-500 mt-1">
+                                                    Smaller models are faster but less accurate. If model is not available, it will be downloaded automatically.
+                                                </p>
+                                            </div>
+
+                                            <label className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-dark-800 dark:text-dark-300">Auto-summarize long notes</span>
+                                                    <p className="text-xs text-dark-600 dark:text-dark-500">Automatically generate summaries for notes longer than 500 words</p>
+                                                </div>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={profile.preferences.ollama.autoSummarize}
+                                                    onChange={(e) => handleAutoSummarizeToggle(e.target.checked)}
+                                                    className="rounded border-dark-400 dark:border-dark-700 dark:bg-dark-800"
+                                                />
+                                            </label>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
