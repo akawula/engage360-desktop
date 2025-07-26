@@ -17,6 +17,9 @@
     },
     {
       "identifier": "notification:default"
+    },
+    {
+      "identifier": "sql:default"
     }
   ]
 }

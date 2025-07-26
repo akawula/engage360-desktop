@@ -1,5 +1,5 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use tauri::menu::{Menu, MenuItem};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, WindowEvent, Emitter};
 use tauri_plugin_notification::NotificationExt;
@@ -83,12 +83,41 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_sql::Builder::default().build())
         .invoke_handler(tauri::generate_handler![greet, get_background_task_status, trigger_background_task, send_notification, notify_due_action_item, clear_due_item_notifications, run_command])
         .setup(|app| {
-            // Disable default menu to prevent keyboard shortcut interception
+            // Create proper menu with standard shortcuts for macOS
             #[cfg(target_os = "macos")]
             {
-                let menu = Menu::new(app)?;
+                let app_submenu = Submenu::with_items(app, "Engage360", true, &[
+                    &PredefinedMenuItem::about(app, Some("About Engage360"), None)?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::services(app, Some("Services"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::hide(app, Some("Hide Engage360"))?,
+                    &PredefinedMenuItem::hide_others(app, Some("Hide Others"))?,
+                    &PredefinedMenuItem::show_all(app, Some("Show All"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::quit(app, Some("Quit Engage360"))?,
+                ])?;
+
+                let edit_submenu = Submenu::with_items(app, "Edit", true, &[
+                    &PredefinedMenuItem::undo(app, Some("Undo"))?,
+                    &PredefinedMenuItem::redo(app, Some("Redo"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::cut(app, Some("Cut"))?,
+                    &PredefinedMenuItem::copy(app, Some("Copy"))?,
+                    &PredefinedMenuItem::paste(app, Some("Paste"))?,
+                    &PredefinedMenuItem::select_all(app, Some("Select All"))?,
+                ])?;
+
+                let window_submenu = Submenu::with_items(app, "Window", true, &[
+                    &PredefinedMenuItem::minimize(app, Some("Minimize"))?,
+                    &PredefinedMenuItem::maximize(app, Some("Maximize"))?,
+                    &PredefinedMenuItem::close_window(app, Some("Close Window"))?,
+                ])?;
+
+                let menu = Menu::with_items(app, &[&app_submenu, &edit_submenu, &window_submenu])?;
                 app.set_menu(menu)?;
             }
 

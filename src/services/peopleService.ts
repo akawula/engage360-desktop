@@ -1,4 +1,6 @@
 import { apiService } from './apiService';
+import { databaseService } from './databaseService';
+import { syncService } from './syncService';
 import type { Person, CreatePersonRequest, ApiResponse } from '../types';
 
 export interface PeopleListResponse {
@@ -81,107 +83,327 @@ function transformPersonFromAPI(apiPerson: any): Person {
 
 export class PeopleService {
     async getPeople(params?: GetPeopleParams): Promise<ApiResponse<PeopleListResponse>> {
-        const queryParams = new URLSearchParams();
-
-        if (params?.limit) queryParams.append('limit', params.limit.toString());
-        if (params?.offset) queryParams.append('offset', params.offset.toString());
-        if (params?.search) queryParams.append('search', params.search);
-
-        const queryString = queryParams.toString();
-        const endpoint = `/people${queryString ? `?${queryString}` : ''}`;
-
-        const response = await apiService.get<any>(endpoint);
-
-        if (response.success && response.data) {
-            // The API returns people directly as an array, not wrapped in an object
-            let peopleArray = response.data;
-
-            // If the response is wrapped in an object with a people property, use that
-            if (response.data.people && Array.isArray(response.data.people)) {
-                peopleArray = response.data.people;
+        // Try to get from local database first
+        try {
+            let whereClause = '';
+            let queryParams: any[] = [];
+            
+            if (params?.search) {
+                whereClause = 'first_name LIKE ? OR last_name LIKE ? OR email LIKE ?';
+                const searchTerm = `%${params.search}%`;
+                queryParams = [searchTerm, searchTerm, searchTerm];
             }
-
-            // Transform the API response to match our frontend types
-            const transformedData: PeopleListResponse = {
-                people: Array.isArray(peopleArray) ? peopleArray.map(transformPersonFromAPI) : [],
-                total: Array.isArray(peopleArray) ? peopleArray.length : (response.data.total || 0)
-            };
-
-            return {
-                success: true,
-                data: transformedData
-            };
+            
+            const localPeople = await databaseService.findAll<any>('people', whereClause, queryParams);
+            
+            if (localPeople.length > 0) {
+                // Apply offset and limit
+                const offset = params?.offset || 0;
+                const limit = params?.limit || localPeople.length;
+                const paginatedPeople = localPeople.slice(offset, offset + limit);
+                
+                const transformedData: PeopleListResponse = {
+                    people: paginatedPeople.map(this.transformPersonFromDB),
+                    total: localPeople.length
+                };
+                
+                return {
+                    success: true,
+                    data: transformedData
+                };
+            }
+        } catch (error) {
+            console.warn('Failed to get people from local database, falling back to API:', error);
         }
 
-        return response as ApiResponse<PeopleListResponse>;
+        // Fallback to API if local database is empty or fails
+        if (syncService.isConnected()) {
+            const queryParams = new URLSearchParams();
+
+            if (params?.limit) queryParams.append('limit', params.limit.toString());
+            if (params?.offset) queryParams.append('offset', params.offset.toString());
+            if (params?.search) queryParams.append('search', params.search);
+
+            const queryString = queryParams.toString();
+            const endpoint = `/people${queryString ? `?${queryString}` : ''}`;
+
+            const response = await apiService.get<any>(endpoint);
+
+            if (response.success && response.data) {
+                let peopleArray = response.data;
+
+                if (response.data.people && Array.isArray(response.data.people)) {
+                    peopleArray = response.data.people;
+                }
+
+                // Store in local database for offline access
+                try {
+                    for (const person of peopleArray) {
+                        const dbPerson = this.transformPersonForDB(person);
+                        await databaseService.insert('people', dbPerson);
+                    }
+                } catch (error) {
+                    console.warn('Failed to cache people in local database:', error);
+                }
+
+                const transformedData: PeopleListResponse = {
+                    people: Array.isArray(peopleArray) ? peopleArray.map(transformPersonFromAPI) : [],
+                    total: Array.isArray(peopleArray) ? peopleArray.length : (response.data.total || 0)
+                };
+
+                return {
+                    success: true,
+                    data: transformedData
+                };
+            }
+
+            return response as ApiResponse<PeopleListResponse>;
+        }
+
+        // Offline mode - return empty result
+        return {
+            success: false,
+            error: { message: 'Offline and no local data available', code: 503, details: 'No network connection' }
+        };
     }
 
     async getPersonById(id: string): Promise<ApiResponse<Person>> {
-        const response = await apiService.get<any>(`/people/${id}`);
-
-        if (response.success && response.data) {
-            return {
-                success: true,
-                data: transformPersonFromAPI(response.data)
-            };
+        // Try local database first
+        try {
+            const localPerson = await databaseService.findById('people', id);
+            if (localPerson) {
+                return {
+                    success: true,
+                    data: this.transformPersonFromDB(localPerson)
+                };
+            }
+        } catch (error) {
+            console.warn('Failed to get person from local database:', error);
         }
 
-        return response as ApiResponse<Person>;
-    } async createPerson(personData: CreatePersonRequest): Promise<ApiResponse<Person>> {
-        // Transform camelCase to snake_case for API
-        const apiData: any = {
-            first_name: personData.firstName,
-            last_name: personData.lastName,
+        // Fallback to API
+        if (syncService.isConnected()) {
+            const response = await apiService.get<any>(`/people/${id}`);
+
+            if (response.success && response.data) {
+                // Cache in local database
+                try {
+                    const dbPerson = this.transformPersonForDB(response.data);
+                    await databaseService.insert('people', dbPerson);
+                } catch (error) {
+                    console.warn('Failed to cache person in local database:', error);
+                }
+
+                return {
+                    success: true,
+                    data: transformPersonFromAPI(response.data)
+                };
+            }
+
+            return response as ApiResponse<Person>;
+        }
+
+        return {
+            success: false,
+            error: { message: 'Person not found offline', code: 404, details: 'No network connection' }
+        };
+    }
+
+    async createPerson(personData: CreatePersonRequest): Promise<ApiResponse<Person>> {
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        
+        const newPerson: Person = {
+            id,
+            firstName: personData.firstName,
+            lastName: personData.lastName,
             email: personData.email,
             phone: personData.phone,
-            job_description: personData.position,
-            github_username: personData.githubUsername,
-            tags: personData.tags,
+            jobDescription: personData.position,
+            githubUsername: personData.githubUsername,
+            avatarUrl: personData.avatarUrl,
+            tags: personData.tags || [],
+            counts: { notes: 0, achievements: 0, actions: 0 },
+            createdAt: now,
+            updatedAt: now
         };
 
-        if (personData.avatarUrl) {
-            apiData.avatar_url = personData.avatarUrl;
-        }
-
-        const response = await apiService.post<any>('/people', apiData);
-
-        if (response.success && response.data) {
+        // Store in local database immediately
+        try {
+            const dbPerson = this.transformPersonForDB(newPerson);
+            await databaseService.insert('people', dbPerson);
+        } catch (error) {
+            console.error('Failed to store person in local database:', error);
             return {
-                success: true,
-                data: transformPersonFromAPI(response.data)
+                success: false,
+                error: { message: 'Failed to create person locally', code: 500, details: error.toString() }
             };
         }
 
-        return response as ApiResponse<Person>;
+        // Sync with server if online
+        if (syncService.isConnected()) {
+            try {
+                const apiData: any = {
+                    id,
+                    first_name: personData.firstName,
+                    last_name: personData.lastName,
+                    email: personData.email,
+                    phone: personData.phone,
+                    job_description: personData.position,
+                    github_username: personData.githubUsername,
+                    tags: personData.tags,
+                    created_at: now,
+                    updated_at: now
+                };
+
+                if (personData.avatarUrl) {
+                    apiData.avatar_url = personData.avatarUrl;
+                }
+
+                const response = await apiService.post<any>('/people', apiData);
+                
+                if (response.success) {
+                    // Update local record with server response if needed
+                    await databaseService.markSynced('people', id);
+                }
+            } catch (error) {
+                console.warn('Failed to sync person to server, will retry later:', error);
+                // Person is already stored locally, so we can return success
+            }
+        }
+
+        return {
+            success: true,
+            data: newPerson
+        };
     }
 
     async updatePerson(id: string, updates: Partial<CreatePersonRequest & { avatarUrl?: string }>): Promise<ApiResponse<Person>> {
-        // Transform camelCase to snake_case for API
-        const apiData: any = {};
-
-        if (updates.firstName !== undefined) apiData.first_name = updates.firstName;
-        if (updates.lastName !== undefined) apiData.last_name = updates.lastName;
-        if (updates.email !== undefined) apiData.email = updates.email;
-        if (updates.phone !== undefined) apiData.phone = updates.phone || null; // Explicitly send null for empty strings
-        if (updates.position !== undefined) apiData.job_description = updates.position || null;
-        if (updates.githubUsername !== undefined) apiData.github_username = updates.githubUsername || null;
-        if (updates.tags !== undefined) apiData.tags = updates.tags;
-        if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl || null;
-
-        const response = await apiService.put<any>(`/people/${id}`, apiData);
-
-        if (response.success && response.data) {
+        // Get current person from local database
+        const currentPerson = await databaseService.findById<any>('people', id);
+        if (!currentPerson) {
             return {
-                success: true,
-                data: transformPersonFromAPI(response.data)
+                success: false,
+                error: { message: 'Person not found', code: 404, details: 'Person does not exist' }
             };
         }
 
-        return response as ApiResponse<Person>;
+        // Apply updates
+        const dbUpdates: any = {
+            updated_at: new Date().toISOString()
+        };
+
+        if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
+        if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
+        if (updates.email !== undefined) dbUpdates.email = updates.email;
+        if (updates.phone !== undefined) dbUpdates.phone = updates.phone || null;
+        if (updates.position !== undefined) dbUpdates.job_description = updates.position || null;
+        if (updates.githubUsername !== undefined) dbUpdates.github_username = updates.githubUsername || null;
+        if (updates.tags !== undefined) dbUpdates.tags = JSON.stringify(updates.tags);
+        if (updates.avatarUrl !== undefined) dbUpdates.avatar_url = updates.avatarUrl || null;
+
+        // Update in local database
+        try {
+            await databaseService.update('people', id, dbUpdates);
+        } catch (error) {
+            console.error('Failed to update person in local database:', error);
+            return {
+                success: false,
+                error: { message: 'Failed to update person locally', code: 500, details: error.toString() }
+            };
+        }
+
+        // Sync with server if online
+        if (syncService.isConnected()) {
+            try {
+                const apiData: any = {};
+                if (updates.firstName !== undefined) apiData.first_name = updates.firstName;
+                if (updates.lastName !== undefined) apiData.last_name = updates.lastName;
+                if (updates.email !== undefined) apiData.email = updates.email;
+                if (updates.phone !== undefined) apiData.phone = updates.phone || null;
+                if (updates.position !== undefined) apiData.job_description = updates.position || null;
+                if (updates.githubUsername !== undefined) apiData.github_username = updates.githubUsername || null;
+                if (updates.tags !== undefined) apiData.tags = updates.tags;
+                if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl || null;
+
+                const response = await apiService.put<any>(`/people/${id}`, apiData);
+                
+                if (response.success) {
+                    await databaseService.markSynced('people', id);
+                }
+            } catch (error) {
+                console.warn('Failed to sync person update to server, will retry later:', error);
+            }
+        }
+
+        // Return updated person
+        const updatedPerson = await databaseService.findById<any>('people', id);
+        return {
+            success: true,
+            data: this.transformPersonFromDB(updatedPerson!)
+        };
     }
 
     async deletePerson(id: string): Promise<ApiResponse<void>> {
-        return apiService.delete<void>(`/people/${id}`);
+        // Delete from local database
+        try {
+            await databaseService.delete('people', id);
+        } catch (error) {
+            console.error('Failed to delete person from local database:', error);
+            return {
+                success: false,
+                error: { message: 'Failed to delete person locally', code: 500, details: error.toString() }
+            };
+        }
+
+        // Delete from server if online
+        if (syncService.isConnected()) {
+            try {
+                await apiService.delete<void>(`/people/${id}`);
+            } catch (error) {
+                console.warn('Failed to delete person from server, will retry later:', error);
+            }
+        }
+
+        return { success: true };
+    }
+
+    private transformPersonFromDB(dbPerson: any): Person {
+        return {
+            id: dbPerson.id,
+            firstName: dbPerson.first_name,
+            lastName: dbPerson.last_name,
+            email: dbPerson.email,
+            phone: dbPerson.phone,
+            avatarUrl: dbPerson.avatar_url,
+            avatar: dbPerson.avatar_url,
+            jobDescription: dbPerson.job_description,
+            position: dbPerson.job_description,
+            githubUsername: dbPerson.github_username,
+            tags: dbPerson.tags ? JSON.parse(dbPerson.tags) : [],
+            group: dbPerson.group,
+            counts: dbPerson.counts ? JSON.parse(dbPerson.counts) : { notes: 0, achievements: 0, actions: 0 },
+            engagementScore: calculateEngagementScore(dbPerson.counts ? JSON.parse(dbPerson.counts) : { notes: 0, achievements: 0, actions: 0 }),
+            createdAt: dbPerson.created_at,
+            updatedAt: dbPerson.updated_at
+        };
+    }
+
+    private transformPersonForDB(person: any): any {
+        return {
+            id: person.id,
+            first_name: person.first_name || person.firstName,
+            last_name: person.last_name || person.lastName,
+            email: person.email,
+            phone: person.phone,
+            avatar_url: person.avatar_url || person.avatarUrl,
+            job_description: person.job_description || person.jobDescription || person.position,
+            github_username: person.github_username || person.githubUsername,
+            tags: typeof person.tags === 'string' ? person.tags : JSON.stringify(person.tags || []),
+            group_id: person.group_id || person.group?.id,
+            created_at: person.created_at || person.createdAt,
+            updated_at: person.updated_at || person.updatedAt
+        };
     }
 }
 
