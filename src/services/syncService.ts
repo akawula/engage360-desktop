@@ -369,12 +369,31 @@ class SyncService {
 
   private decryptContent(encryptedContent: string): any {
     try {
-      // For now, we're using base64 encoded content (as per the current implementation)
-      // In a real app, this would use proper decryption with the user's key
-      const decodedContent = atob(encryptedContent);
+      // Handle different possible formats of encrypted content
+      
+      // First, try to parse as direct JSON (unencrypted)
+      try {
+        return JSON.parse(encryptedContent);
+      } catch (jsonError) {
+        // Not direct JSON, continue with base64 decoding
+      }
+      
+      // Clean the base64 string of any whitespace or invalid characters
+      const cleanedContent = encryptedContent.replace(/[^A-Za-z0-9+/=]/g, '');
+      
+      // Validate base64 format
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanedContent)) {
+        console.warn('Invalid base64 format in encrypted content');
+        return null;
+      }
+      
+      // Try base64 decoding
+      const decodedContent = atob(cleanedContent);
       return JSON.parse(decodedContent);
+      
     } catch (error) {
       console.error('Failed to decrypt content:', error);
+      console.error('Encrypted content:', encryptedContent?.substring(0, 100) + '...');
       return null;
     }
   }
