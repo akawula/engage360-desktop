@@ -30,6 +30,10 @@ class DatabaseService {
       
       this.db = await Database.load('sqlite:engage360.db');
       console.log('SQLite database loaded successfully');
+      
+      // Configure SQLite for proper UTF-8 handling (including emojis)
+      await this.configureDatabase();
+      
       await this.createTables();
       await this.runMigrations();
       this.isInitialized = true;
@@ -38,6 +42,33 @@ class DatabaseService {
       console.error('Failed to initialize database:', error);
       throw error;
     }
+  }
+
+  private async configureDatabase(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    console.log('Configuring database for UTF-8 and emoji support...');
+
+    // Set UTF-8 encoding for proper emoji support
+    const pragmas = [
+      'PRAGMA encoding = "UTF-8"',
+      'PRAGMA synchronous = NORMAL',
+      'PRAGMA journal_mode = WAL',
+      'PRAGMA foreign_keys = ON',
+      'PRAGMA temp_store = MEMORY',
+      'PRAGMA mmap_size = 268435456' // 256MB
+    ];
+
+    for (const pragma of pragmas) {
+      try {
+        await this.db.execute(pragma);
+        console.log(`Executed: ${pragma}`);
+      } catch (error) {
+        console.warn(`Failed to execute pragma: ${pragma}`, error);
+      }
+    }
+
+    console.log('Database configuration completed');
   }
 
   private async createTables(): Promise<void> {
@@ -479,9 +510,33 @@ class DatabaseService {
       
       for (const note of encryptedNotes) {
         try {
-          // Decrypt the content using the same method as sync service
-          const decodedContent = atob(note.encrypted_content);
-          const decryptedData = JSON.parse(decodedContent);
+          // Decrypt the content using improved method matching sync service
+          let decryptedData: any = null;
+          
+          // First, try to parse as direct JSON (unencrypted)
+          try {
+            decryptedData = JSON.parse(note.encrypted_content);
+          } catch (jsonError) {
+            // Not direct JSON, try base64 decoding
+            try {
+              // Clean the base64 string of any whitespace or invalid characters
+              const cleanedContent = note.encrypted_content.replace(/[^A-Za-z0-9+/=]/g, '');
+              
+              // Validate base64 format
+              if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanedContent)) {
+                console.warn(`Invalid base64 format for note ${note.id}`);
+                continue;
+              }
+              
+              const decodedContent = atob(cleanedContent);
+              decryptedData = JSON.parse(decodedContent);
+            } catch (base64Error) {
+              console.warn(`Failed to decode base64 for note ${note.id}:`, base64Error);
+              continue;
+            }
+          }
+          
+          if (!decryptedData) continue;
           
           const updateData: any = {};
           if (decryptedData.content !== undefined) updateData.content = decryptedData.content;
@@ -516,7 +571,7 @@ class DatabaseService {
 
     try {
       const keys = Object.keys(data);
-      const values = Object.values(data);
+      const values = Object.values(data).map(value => this.sanitizeUnicodeValue(value));
       const placeholders = keys.map(() => '?').join(', ');
 
       const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
@@ -538,7 +593,7 @@ class DatabaseService {
     if (!this.db) throw new Error('Database not initialized');
 
     const keys = Object.keys(data);
-    const values = Object.values(data);
+    const values = Object.values(data).map(value => this.sanitizeUnicodeValue(value));
     const setClause = keys.map(key => `${key} = ?`).join(', ');
 
     const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
@@ -652,6 +707,18 @@ class DatabaseService {
       this.db = null;
       this.isInitialized = false;
     }
+  }
+
+  /**
+   * Sanitize Unicode values for proper SQLite storage
+   * Ensures emojis and other 4-byte UTF-8 characters are handled correctly
+   */
+  private sanitizeUnicodeValue(value: any): any {
+    if (typeof value === 'string') {
+      // Ensure proper Unicode normalization for consistent storage
+      return value.normalize('NFC');
+    }
+    return value;
   }
 
   async getDatabasePath(): Promise<string> {
