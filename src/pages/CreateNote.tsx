@@ -18,7 +18,7 @@ export default function CreateNote() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [searchParams] = useSearchParams();
-    const { user } = useAuth();
+    const { user, isAuthenticated, isLoading } = useAuth();
 
     // Fetch people and groups for association dropdowns
     const { data: peopleResponse } = useQuery({
@@ -79,13 +79,19 @@ export default function CreateNote() {
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
 
-    // Don't render until we have user data (if no personId is provided in URL)
-    if (!personId && !user) {
+    // Show loading while authentication is being checked
+    if (isLoading) {
         return (
             <div className="h-full flex items-center justify-center">
-                <div className="animate-pulse text-dark-600 dark:text-dark-500">Loading user information...</div>
+                <div className="animate-pulse text-dark-600 dark:text-dark-500">Loading...</div>
             </div>
         );
+    }
+
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+        navigate('/login');
+        return null;
     }
 
     const createMutation = useMutation({
