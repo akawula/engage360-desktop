@@ -49,7 +49,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <NotificationProvider>
+        <NotificationProvider defaultConfig={{ position: 'top-right', maxNotifications: 5 }}>
           <StoreErrorHandler />
           <TauriEventHandler />
           <AuthProvider>

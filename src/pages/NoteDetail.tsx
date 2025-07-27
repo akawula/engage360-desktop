@@ -99,6 +99,11 @@ const getDueDateText = (dueDate?: string) => {
     return `Due ${date.toLocaleDateString()}`;
 };
 
+// Helper function for Unicode-safe base64 encoding
+const encodeUnicodeBase64 = (str: string): string => {
+    return btoa(Array.from(new TextEncoder().encode(str), byte => String.fromCharCode(byte)).join(''));
+};
+
 export default function NoteDetail() {
     const { noteId } = useParams<{ noteId: string }>();
     const navigate = useNavigate();
@@ -231,8 +236,8 @@ export default function NoteDetail() {
                 content: data.content,
                 type: data.type,
                 tags: data.tags && data.tags.length > 0 ? data.tags : undefined,
-                // Encrypted fields with proper format
-                encryptedContent: btoa(contentToEncrypt), // Base64 encoded encrypted content
+                // Encrypted fields with proper format - Unicode-safe encoding
+                encryptedContent: encodeUnicodeBase64(contentToEncrypt),
                 deviceKeys: deviceKeys, // Array format
                 contentIV: iv // Use contentIV field name
             });

@@ -4,11 +4,13 @@ import { User, Mail, Calendar, Settings, Bell, Shield, Cpu, Download, CheckCircl
 import { userProfileService } from '../services/userProfileService';
 import { ollamaService, type OllamaStatus } from '../services/ollamaService';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotification, type NotificationPosition } from '../contexts/NotificationContext';
 import { formatAvatarSrc } from '../lib/utils';
 import EditProfileModal from '../components/EditProfileModal';
 
 export default function Profile() {
     const { theme, setTheme } = useTheme();
+    const { config, setConfig, showInfo } = useNotification();
     const queryClient = useQueryClient();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
@@ -234,6 +236,33 @@ export default function Profile() {
                                 />
                                 <span className="text-dark-800 dark:text-dark-300">Action item reminders</span>
                             </label>
+                            
+                            {/* Notification Position */}
+                            <div className="space-y-2">
+                                <label className="text-dark-800 dark:text-dark-300 text-sm font-medium">
+                                    Notification Position
+                                </label>
+                                <div className="flex items-center gap-3">
+                                    <select
+                                        value={config.position}
+                                        onChange={(e) => setConfig({ position: e.target.value as NotificationPosition })}
+                                        className="border border-dark-400 dark:border-dark-700 rounded-lg px-3 py-2 bg-white dark:bg-dark-800 text-dark-950 dark:text-white text-sm"
+                                    >
+                                        <option value="top-left">Top Left</option>
+                                        <option value="top-right">Top Right</option>
+                                        <option value="top-center">Top Center</option>
+                                        <option value="bottom-left">Bottom Left</option>
+                                        <option value="bottom-right">Bottom Right</option>
+                                        <option value="bottom-center">Bottom Center</option>
+                                    </select>
+                                    <button
+                                        onClick={() => showInfo('Test Notification', `Notifications will appear at ${config.position.replace('-', ' ')}`)}
+                                        className="px-3 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                                    >
+                                        Test
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

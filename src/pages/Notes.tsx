@@ -15,9 +15,11 @@ export default function Notes() {
     const [pageSize] = useState(20); // Fixed page size
 
     const { data: notesResponse, isLoading } = useQuery({
-        queryKey: ['notes', currentPage, pageSize],
+        queryKey: ['notes', currentPage, pageSize, searchTerm],
         queryFn: async () => {
-            const response = await notesService.getNotes(undefined, currentPage, pageSize);
+            // Use database-level search if search term is provided for better performance
+            const searchQuery = searchTerm.trim() ? searchTerm : undefined;
+            const response = await notesService.getNotes(undefined, currentPage, pageSize, searchQuery);
             if (response.success && response.data) {
                 return response.data;
             }
@@ -45,16 +47,12 @@ export default function Notes() {
         return people.find(person => person.id === personId) || null;
     };
 
-    // Filter and sort notes (client-side filtering on current page)
+    // Filter and sort notes (search is now handled at database level)
     const filteredAndSortedNotes = useMemo(() => {
         let filtered = notes.filter(note => {
-            const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                stripHtmlAndTruncate(note.content, 1000).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                note.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-
+            // Only type filtering needed here since search is handled by database
             const matchesType = selectedType === 'all' || note.type === selectedType;
-
-            return matchesSearch && matchesType;
+            return matchesType;
         });
 
         // Sort notes
@@ -72,7 +70,7 @@ export default function Notes() {
         });
 
         return filtered;
-    }, [notes, searchTerm, selectedType, sortBy]);
+    }, [notes, selectedType, sortBy]);
 
     // Reset to first page when filters change
     const handleFilterChange = (newSearchTerm: string, newType: string) => {
