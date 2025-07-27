@@ -37,16 +37,25 @@ interface NoteResponse {
 }
 
 class NotesService {
-    async getNotes(personId?: string, page = 1, limit = 20): Promise<ApiResponse<{ notes: Note[], pagination: { total: number, page: number, limit: number, totalPages: number } }>> {
+    async getNotes(personId?: string, page = 1, limit = 20, search?: string): Promise<ApiResponse<{ notes: Note[], pagination: { total: number, page: number, limit: number, totalPages: number } }>> {
         try {
             // Try to get from local database first
-            let whereClause = '';
+            let whereConditions: string[] = [];
             let queryParams: any[] = [];
             
             if (personId) {
-                whereClause = 'person_id = ?';
-                queryParams = [personId];
+                whereConditions.push('person_id = ?');
+                queryParams.push(personId);
             }
+
+            if (search && search.trim()) {
+                const searchTerm = `%${search.trim()}%`;
+                // Search in title, content, and tags (JSON field)
+                whereConditions.push('(title LIKE ? OR content LIKE ? OR tags LIKE ?)');
+                queryParams.push(searchTerm, searchTerm, searchTerm);
+            }
+
+            const whereClause = whereConditions.length > 0 ? whereConditions.join(' AND ') : '';
 
             const localNotes = await databaseService.findAll<any>('notes', whereClause, queryParams);
             
@@ -301,53 +310,44 @@ class NotesService {
         contentIV?: string;
     }): Promise<ApiResponse<Note>> {
         try {
-            const updateRequest: any = {};
+            // Update local database first
+            const localUpdateData: any = {
+                updated_at: new Date().toISOString()
+            };
+            
+            if (noteData.title !== undefined) localUpdateData.title = noteData.title;
+            if (noteData.content !== undefined) localUpdateData.content = noteData.content;
+            if (noteData.type !== undefined) localUpdateData.type = noteData.type;
+            if (noteData.tags !== undefined) localUpdateData.tags = JSON.stringify(noteData.tags);
+            if (noteData.encryptedContent) localUpdateData.encrypted_content = noteData.encryptedContent;
+            if (noteData.contentIV) localUpdateData.content_iv = noteData.contentIV;
+            if (noteData.deviceKeys) localUpdateData.device_keys = JSON.stringify(noteData.deviceKeys);
 
-            if (noteData.title) updateRequest.title = noteData.title;
-            if (noteData.encryptedContent) updateRequest.encryptedContent = noteData.encryptedContent;
-            if (noteData.deviceKeys) updateRequest.deviceKeys = noteData.deviceKeys;
-            if (noteData.contentIV) updateRequest.contentIV = noteData.contentIV;
+            await databaseService.update('notes', id, localUpdateData);
 
-            const response = await apiService.put<NoteResponse>(`/notes/${id}`, updateRequest);
+            // Trigger background sync to upload to server
+            if (syncService.isConnected() && !syncService.isSyncing()) {
+                syncService.manualSync().catch(console.error);
+            }
 
-            if (response.success && response.data?.data) {
-                const item = response.data.data;
-                
-                // Update local database with decrypted content
-                const localUpdateData: any = {};
-                
-                if (noteData.title !== undefined) localUpdateData.title = noteData.title;
-                if (noteData.content !== undefined) localUpdateData.content = noteData.content; // Store decrypted content
-                if (noteData.type !== undefined) localUpdateData.type = noteData.type;
-                if (noteData.tags !== undefined) localUpdateData.tags = JSON.stringify(noteData.tags);
-                if (item.encrypted_content) localUpdateData.encrypted_content = item.encrypted_content;
-                if (item.content_iv) localUpdateData.content_iv = item.content_iv;
-                if (item.device_keys) localUpdateData.device_keys = JSON.stringify(item.device_keys);
-                if (item.updated_at) localUpdateData.updated_at = item.updated_at;
+            // Get the updated note from local database
+            const updatedNote = await databaseService.findById<any>('notes', id);
 
-                try {
-                    await databaseService.update('notes', id, localUpdateData);
-                } catch (dbError) {
-                    console.warn('Failed to update note locally:', dbError);
-                }
-
+            if (updatedNote) {
                 const note: Note = {
-                    id: item.id,
-                    title: noteData.title || '',
-                    content: noteData.content || '',
-                    type: noteData.type || 'personal',
-                    personId: item.person_id || undefined,
-                    groupId: item.group_id || undefined,
-                    tags: noteData.tags || [],
-                    createdAt: item.created_at,
-                    updatedAt: item.updated_at,
-                    encrypted: true,
-                    encryptedContent: item.encrypted_content,
-                    contentIV: item.content_iv,
-                    deviceKeys: (item.device_keys || []).map(dk => ({
-                        deviceId: dk.device_id,
-                        encryptedKey: dk.encrypted_key
-                    }))
+                    id: updatedNote.id,
+                    title: updatedNote.title || '',
+                    content: updatedNote.content || '',
+                    type: updatedNote.type || 'personal',
+                    personId: updatedNote.person_id || undefined,
+                    groupId: updatedNote.group_id || undefined,
+                    tags: updatedNote.tags ? JSON.parse(updatedNote.tags) : [],
+                    createdAt: updatedNote.created_at,
+                    updatedAt: updatedNote.updated_at,
+                    encrypted: updatedNote.encrypted || false,
+                    encryptedContent: updatedNote.encrypted_content,
+                    contentIV: updatedNote.content_iv,
+                    deviceKeys: updatedNote.device_keys ? JSON.parse(updatedNote.device_keys) : []
                 };
 
                 return {
@@ -358,18 +358,74 @@ class NotesService {
 
             return {
                 success: false,
-                error: response.error || { message: 'Failed to update note', code: 500 }
+                error: { message: 'Failed to retrieve updated note', code: 500 }
             };
         } catch (error) {
-            return {
-                success: false,
-                error: {
-                    message: 'Failed to update note',
-                    code: 500,
-                    details: error instanceof Error ? error.message : 'Unknown error'
-                }
-            };
+            console.error('Failed to update note in local database:', error);
+            
+            // Fallback to API if local database fails
+            try {
+                return await this.updateNoteViaAPI(id, noteData);
+            } catch (apiError) {
+                return {
+                    success: false,
+                    error: {
+                        message: 'Failed to update note in both local and remote sources',
+                        code: 500,
+                        details: error instanceof Error ? error.message : 'Unknown error'
+                    }
+                };
+            }
         }
+    }
+
+    /**
+     * Fallback method to update note via API
+     */
+    private async updateNoteViaAPI(id: string, noteData: Partial<CreateNoteRequest> & {
+        title?: string;
+        encryptedContent?: string;
+        deviceKeys?: Array<{ deviceId: string; encryptedKey: string }>;
+        contentIV?: string;
+    }): Promise<ApiResponse<Note>> {
+        const updateRequest: any = {};
+
+        if (noteData.title) updateRequest.title = noteData.title;
+        if (noteData.encryptedContent) updateRequest.encryptedContent = noteData.encryptedContent;
+        if (noteData.deviceKeys) updateRequest.deviceKeys = noteData.deviceKeys;
+        if (noteData.contentIV) updateRequest.contentIV = noteData.contentIV;
+
+        const response = await apiService.put<NoteResponse>(`/notes/${id}`, updateRequest);
+
+        if (response.success && response.data?.data) {
+            const item = response.data.data;
+
+            const note: Note = {
+                id: item.id,
+                title: noteData.title || '',
+                content: noteData.content || '',
+                type: noteData.type || 'personal',
+                personId: item.person_id || undefined,
+                groupId: item.group_id || undefined,
+                tags: noteData.tags || [],
+                createdAt: item.created_at,
+                updatedAt: item.updated_at,
+                encrypted: true,
+                encryptedContent: item.encrypted_content,
+                contentIV: item.content_iv,
+                deviceKeys: (item.device_keys || []).map(dk => ({
+                    deviceId: dk.device_id,
+                    encryptedKey: dk.encrypted_key
+                }))
+            };
+
+            return { success: true, data: note };
+        }
+
+        return {
+            success: false,
+            error: response.error || { message: 'Failed to update note', code: 500 }
+        };
     }
 
     async deleteNote(id: string): Promise<ApiResponse<void>> {
