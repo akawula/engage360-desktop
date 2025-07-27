@@ -12,6 +12,7 @@ import AddActionItemModal from '../components/AddActionItemModal';
 import { useActionItems } from '../hooks/useActionItems';
 import { ollamaService } from '../services/ollamaService';
 import { userProfileService } from '../services/userProfileService';
+import { useNotification } from '../contexts/NotificationContext';
 
 // Helper functions for action item styling
 const getStatusColor = (status: string) => {
@@ -102,6 +103,7 @@ export default function NoteDetail() {
     const { noteId } = useParams<{ noteId: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const { showError, showSuccess, showWarning } = useNotification();
 
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
@@ -243,6 +245,7 @@ export default function NoteDetail() {
         },
         onSuccess: async () => {
             setHasChanges(false);
+            showSuccess('Note Saved', 'Your note has been saved successfully.');
             // Invalidate and refetch cache to ensure fresh data
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['notes'] }),
@@ -250,6 +253,10 @@ export default function NoteDetail() {
                 queryClient.refetchQueries({ queryKey: ['notes'] })
             ]);
             // Stay on the current note after saving
+        },
+        onError: (error) => {
+            console.error('Failed to save note:', error);
+            showError('Save Failed', `Failed to save note: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
         },
     });
 
@@ -321,9 +328,32 @@ export default function NoteDetail() {
         // Get the current content directly from the editor
         const currentContent = editorRef.current?.getContent() || '';
 
+        // Validate the note data before saving
+        const trimmedTitle = formData.title.trim();
+        const trimmedContent = currentContent.trim();
+
+        // Basic validation
+        if (!trimmedTitle) {
+            showWarning('Title Required', 'Please enter a title for your note.');
+            return;
+        }
+
+        if (!trimmedContent) {
+            showWarning('Content Required', 'Please enter some content for your note.');
+            return;
+        }
+
+        // Check for potentially problematic characters that might cause encoding issues
+        const problematicChars = /[\u0000-\u001F\u007F-\u009F]/g; // Control characters
+        if (problematicChars.test(trimmedTitle) || problematicChars.test(trimmedContent)) {
+            showError('Invalid Characters', 'Please remove any special control characters from your note.');
+            return;
+        }
+
         // Use the content from the editor, not from formData
         const dataWithEditorContent = {
             ...formData,
+            title: trimmedTitle,
             content: currentContent
         };
 
@@ -373,7 +403,7 @@ export default function NoteDetail() {
                         return; // Successfully used AI, exit early
                         
                     } catch (aiError) {
-                        console.warn('AI analysis failed, falling back to regex detection');
+                        console.warn('AI analysis failed, falling back to regex detection:', aiError);
                     }
                 }
             }
