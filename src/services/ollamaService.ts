@@ -209,7 +209,7 @@ class OllamaService {
     }
 
     /**
-     * Detect tasks in text using AI (supports multiple languages)
+     * Detect tasks in text using AI with streaming API (supports multiple languages)
      */
     async detectTasks(
         modelName: string, 
@@ -217,123 +217,133 @@ class OllamaService {
         onProgress?: (stage: string) => void
     ): Promise<TaskDetectionResult> {
         try {
-            const prompt = `Analyze the following text and extract all tasks, TODOs, action items, reminders, and deadlines. The text may be in any language.
-
-Please respond with ONLY a valid JSON object in this exact format:
-{
-  "detectedLanguage": "language_name",
-  "tasks": [
-    {
-      "content": "task description",
-      "type": "todo|task|action|reminder|deadline|development|follow_up|general",
-      "priority": "low|medium|high|urgent",
-      "confidence": 0.95
-    }
-  ]
-}
-
-Rules:
-1. Extract tasks from any language (English, Spanish, French, German, Chinese, Japanese, etc.)
-2. Detect various task patterns: TODOs, action items, bullet points, numbered lists, deadlines, reminders
-3. Classify task types: todo, task, action, reminder, deadline, development, follow_up, general
-4. Assign priority based on urgency indicators in the text
-5. Provide confidence score (0-1) for each task
-6. Include tasks from patterns like: "need to", "should", "must", "implement", "fix", "remember", "due", etc.
-7. Respond with ONLY the JSON object, no additional text
-
-Text to analyze:
-${text}`;
+            onProgress?.('Connecting to Ollama API...');
             
-            onProgress?.('Preparing AI analysis...');
+            // Use Ollama's HTTP API directly for better control and streaming
+            const response = await this.callOllamaAPI(modelName, text, onProgress);
             
-            // Use Promise-based approach to make invoke truly async
-            const result = await new Promise<{ success: boolean; stdout: string; stderr: string }>((resolve, reject) => {
-                // Schedule on next tick to avoid blocking
-                setTimeout(async () => {
-                    try {
-                        onProgress?.('Calling AI model...');
-                        const invokeResult = await invoke('run_command', {
-                            command: 'ollama',
-                            args: ['run', modelName, prompt]
-                        }) as { success: boolean; stdout: string; stderr: string };
-                        resolve(invokeResult);
-                    } catch (error) {
-                        reject(error);
-                    }
-                }, 0);
-            });
-
-            if (!result.success) {
-                throw new Error(result.stderr || 'Failed to detect tasks');
-            }
-
-            onProgress?.('Parsing AI response...');
+            onProgress?.('Processing AI response...');
             
-            // Parse the AI response asynchronously
-            const aiResponse = await new Promise<any>((resolve, reject) => {
-                // Use setTimeout to make JSON parsing non-blocking
-                setTimeout(() => {
-                    try {
-                        // Clean the response and try to extract JSON
-                        let jsonStr = result.stdout.trim();
-                        
-                        // Remove any markdown code blocks if present
-                        jsonStr = jsonStr.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-                        
-                        // Try to find JSON object in the response
-                        const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-                        if (jsonMatch) {
-                            jsonStr = jsonMatch[0];
-                        }
-                        
-                        const parsed = JSON.parse(jsonStr);
-                        resolve(parsed);
-                    } catch (parseError) {
-                        reject(new Error(`Failed to parse AI response: ${parseError}`));
-                    }
-                }, 0);
-            });
+            // Process the response
+            const processedResult: TaskDetectionResult = {
+                tasks: (response.tasks || []).map((task: any) => ({
+                    content: String(task.content || '').trim(),
+                    type: this.validateTaskType(task.type),
+                    priority: this.validatePriority(task.priority),
+                    language: response.detectedLanguage,
+                    confidence: Math.max(0, Math.min(1, Number(task.confidence) || 0.5))
+                })).filter((task: DetectedTask) => task.content.length > 0),
+                detectedLanguage: String(response.detectedLanguage || 'unknown'),
+                totalTasks: 0,
+                summary: { byPriority: {}, byType: {} }
+            };
 
-            onProgress?.('Processing results...');
-            
-            // Process the response asynchronously
-            const processedResult = await new Promise<TaskDetectionResult>((resolve) => {
-                setTimeout(() => {
-                    // Validate and process the response
-                    const tasks: DetectedTask[] = (aiResponse.tasks || []).map((task: any) => ({
-                        content: String(task.content || '').trim(),
-                        type: this.validateTaskType(task.type),
-                        priority: this.validatePriority(task.priority),
-                        language: aiResponse.detectedLanguage,
-                        confidence: Math.max(0, Math.min(1, Number(task.confidence) || 0.5))
-                    })).filter((task: DetectedTask) => task.content.length > 0);
-
-                    // Generate summary
-                    const byPriority: Record<string, number> = {};
-                    const byType: Record<string, number> = {};
-
-                    tasks.forEach(task => {
-                        byPriority[task.priority] = (byPriority[task.priority] || 0) + 1;
-                        byType[task.type] = (byType[task.type] || 0) + 1;
-                    });
-
-                    resolve({
-                        tasks,
-                        detectedLanguage: String(aiResponse.detectedLanguage || 'unknown'),
-                        totalTasks: tasks.length,
-                        summary: {
-                            byPriority,
-                            byType
-                        }
-                    });
-                }, 0);
+            // Update totals and summary
+            processedResult.totalTasks = processedResult.tasks.length;
+            processedResult.tasks.forEach(task => {
+                processedResult.summary.byPriority[task.priority] = (processedResult.summary.byPriority[task.priority] || 0) + 1;
+                processedResult.summary.byType[task.type] = (processedResult.summary.byType[task.type] || 0) + 1;
             });
 
             return processedResult;
 
         } catch (error) {
+            console.error('Task detection failed:', error);
             throw new Error(`Failed to detect tasks: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
+    }
+
+    /**
+     * Call Ollama API directly using HTTP
+     */
+    private async callOllamaAPI(modelName: string, text: string, onProgress?: (stage: string) => void): Promise<any> {
+        const prompt = `Extract tasks from this text. Return ONLY valid JSON:
+
+{
+  "detectedLanguage": "English",
+  "tasks": [
+    {
+      "content": "task description",
+      "type": "todo",
+      "priority": "medium", 
+      "confidence": 0.8
+    }
+  ]
+}
+
+Valid types: todo, task, action, reminder, deadline, development, follow_up, general
+Valid priorities: low, medium, high, urgent
+
+Text: ${text}`;
+
+        try {
+            onProgress?.('Sending request to Ollama...');
+
+            // Try using fetch to call Ollama API directly
+            const response = await fetch('http://localhost:11434/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: modelName,
+                    prompt: prompt,
+                    stream: false,
+                    format: 'json'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
+            }
+
+            onProgress?.('Receiving AI response...');
+            const result = await response.json();
+            
+            if (!result.response) {
+                throw new Error('No response from Ollama API');
+            }
+
+            console.log('Raw Ollama API response:', result.response);
+
+            // Parse the JSON response
+            const parsedResponse = JSON.parse(result.response);
+            return parsedResponse;
+
+        } catch (error) {
+            console.error('Ollama API call failed:', error);
+            
+            // Fallback to command line if HTTP API fails
+            onProgress?.('Falling back to command line...');
+            return await this.callOllamaCommand(modelName, prompt);
+        }
+    }
+
+    /**
+     * Fallback method using command line
+     */
+    private async callOllamaCommand(modelName: string, prompt: string): Promise<any> {
+        const result = await invoke('run_command', {
+            command: 'ollama',
+            args: ['run', modelName, '--format', 'json', prompt]
+        }) as { success: boolean; stdout: string; stderr: string };
+
+        if (!result.success) {
+            throw new Error(`Ollama command failed: ${result.stderr || 'Unknown error'}`);
+        }
+
+        console.log('Command line response:', result.stdout);
+        
+        // Try to parse the response
+        let cleanResponse = result.stdout.trim();
+        
+        // Extract JSON from response
+        const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            cleanResponse = jsonMatch[0];
+        }
+
+        return JSON.parse(cleanResponse);
     }
 
     /**
