@@ -11,6 +11,7 @@ info:
     - **Action Items**: Encrypted todo/task management with flexible associations to people, groups, or notes
     - **User Management**: Account and device management with security features
     - **Authentication**: JWT-based authentication with device registration
+    - **Offline-First Sync**: Bidirectional synchronization for offline-capable applications with conflict resolution
 
     ## Security Features
     - JWT-based authentication with refresh tokens (15min access, 30day refresh)
@@ -37,7 +38,7 @@ info:
     ## Data Architecture
     - **People**: Contact information with optional GitHub username, metadata (not encrypted)
     - **Groups**: Organization structure, metadata (not encrypted)
-    - **Notes**: End-to-end encrypted content with multi-device keys
+    - **Notes**: End-to-end encrypted content with multi-device keys. Can be standalone, associated with a person, or associated with a group
     - **Action Items**: End-to-end encrypted todo/task items with priority, status, and associations
     - **User Data**: Complete isolation between users
   version: 1.0.0
@@ -1494,7 +1495,7 @@ paths:
     get:
       summary: List encrypted notes
       description: |
-        Retrieve paginated list of user's end-to-end encrypted notes. Notes can be filtered by associated person.
+        Retrieve paginated list of user's end-to-end encrypted notes. Notes can be standalone, filtered by associated person, or filtered by associated group.
       tags:
         - People Management
       security:
@@ -1503,6 +1504,12 @@ paths:
         - name: personId
           in: query
           description: Filter notes by associated person UUID
+          schema:
+            type: string
+            format: uuid
+        - name: groupId
+          in: query
+          description: Filter notes by associated group UUID
           schema:
             type: string
             format: uuid
@@ -1538,7 +1545,7 @@ paths:
     post:
       summary: Create encrypted note
       description: |
-        Store a new end-to-end encrypted note associated with a person. Client must provide encrypted content and keys for all user devices.
+        Store a new end-to-end encrypted note. Notes can be standalone, associated with a person, or associated with a group (but not both). Client must provide encrypted content and keys for all user devices.
       tags:
         - People Management
       security:
@@ -1943,6 +1950,437 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================================================
+  # SYNC ENDPOINTS
+  # ============================================================================
+
+  /api/sync/status:
+    get:
+      summary: Get sync status
+      description: |
+        Health check for sync service and get latest update timestamps
+        for all syncable models to determine sync state.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Sync status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncStatusResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sync/people:
+    get:
+      summary: Pull people changes
+      description: |
+        Retrieve people changes since a specified timestamp for offline sync.
+        Supports pagination and incremental sync.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          description: ISO timestamp to get changes since (optional)
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: People changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Push people changes
+      description: |
+        Submit batch of people changes with conflict resolution.
+        Supports create, update, and delete operations.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSyncRequest'
+      responses:
+        '200':
+          description: Batch sync processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSyncResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sync/groups:
+    get:
+      summary: Pull groups changes
+      description: |
+        Retrieve groups changes since a specified timestamp for offline sync.
+        Supports pagination and incremental sync.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          description: ISO timestamp to get changes since (optional)
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Groups changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Push groups changes
+      description: |
+        Submit batch of groups changes with conflict resolution.
+        Supports create, update, and delete operations.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSyncRequest'
+      responses:
+        '200':
+          description: Batch sync processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSyncResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sync/notes:
+    get:
+      summary: Pull notes changes
+      description: |
+        Retrieve notes changes since a specified timestamp for offline sync.
+        Supports pagination and incremental sync.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          description: ISO timestamp to get changes since (optional)
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Notes changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Push notes changes
+      description: |
+        Submit batch of notes changes with conflict resolution.
+        Supports create, update, and delete operations.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSyncRequest'
+      responses:
+        '200':
+          description: Batch sync processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSyncResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sync/actions:
+    get:
+      summary: Pull actions changes
+      description: |
+        Retrieve actions changes since a specified timestamp for offline sync.
+        Supports pagination and incremental sync.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: since
+          in: query
+          description: ISO timestamp to get changes since (optional)
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Number of records to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Actions changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Push actions changes
+      description: |
+        Submit batch of actions changes with conflict resolution.
+        Supports create, update, and delete operations.
+      tags:
+        - Sync
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSyncRequest'
+      responses:
+        '200':
+          description: Batch sync processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSyncResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   securitySchemes:
     BearerAuth:
@@ -2810,18 +3248,50 @@ components:
         personId:
           type: string
           format: uuid
-          description: UUID of the associated person
+          description: UUID of the associated person (optional, cannot be used with groupId)
+        groupId:
+          type: string
+          format: uuid
+          description: UUID of the associated group (optional, cannot be used with personId)
+        title:
+          type: string
+          maxLength: 200
+          description: Plain text title for searching
+        type:
+          type: string
+          enum: [personal, work, meeting, other]
+          default: personal
+          description: Type/category of the note
         encryptedContent:
           type: string
           description: Base64-encoded encrypted note content
+        contentIV:
+          type: string
+          description: Base64-encoded initialization vector for content encryption (96 bits)
+        deviceKeys:
+          type: array
+          items:
+            type: object
+            required: [deviceId, encryptedKey]
+            properties:
+              deviceId:
+                type: string
+                format: uuid
+                description: Device UUID
+              encryptedKey:
+                type: string
+                description: AES key encrypted with device's public key
+          minItems: 1
+          description: Device-specific encryption keys
+        # Legacy fields for backward compatibility
         encryptedKeys:
           type: object
           additionalProperties:
             type: string
-          description: Device ID to encrypted symmetric key mapping
+          description: Device ID to encrypted symmetric key mapping (legacy)
         iv:
           type: string
-          description: Base64-encoded initialization vector (96 bits)
+          description: Base64-encoded initialization vector (legacy)
 
     UpdateNoteRequest:
       type: object
@@ -2857,14 +3327,37 @@ components:
           type: string
           format: uuid
           nullable: true
+          description: Associated person UUID (null if standalone or group-associated)
+        groupId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated group UUID (null if standalone or person-associated)
+        title:
+          type: string
+          description: Plain text title for searching
+        type:
+          type: string
+          enum: [personal, work, meeting, other]
+          description: Type/category of the note
+        encrypted:
+          type: boolean
+          description: Whether the note content is encrypted
         encryptedContent:
           type: string
+          description: Base64-encoded encrypted content
+        contentIV:
+          type: string
+          description: Base64-encoded initialization vector
+        # Legacy fields
         encryptedKeys:
           type: object
           additionalProperties:
             type: string
+          description: Device ID to encrypted key mapping (legacy)
         iv:
           type: string
+          description: Base64-encoded initialization vector (legacy)
         createdAt:
           type: string
           format: date-time
@@ -3159,6 +3652,165 @@ components:
           format: date-time
           description: When the achievement was created
 
+    # ============================================================================
+    # SYNC SCHEMAS
+    # ============================================================================
+
+    SyncStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          example: "ok"
+          description: Sync service status
+        last_updates:
+          type: object
+          properties:
+            people:
+              type: string
+              format: date-time
+              nullable: true
+              description: Timestamp of last people update
+            groups:
+              type: string
+              format: date-time
+              nullable: true
+              description: Timestamp of last groups update
+            notes:
+              type: string
+              format: date-time
+              nullable: true
+              description: Timestamp of last notes update
+            actions:
+              type: string
+              format: date-time
+              nullable: true
+              description: Timestamp of last actions update
+          description: Latest update timestamps for all syncable models
+        server_time:
+          type: string
+          format: date-time
+          description: Current server timestamp for sync coordination
+          example: "2025-07-27T18:00:00.000Z"
+
+    SyncResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+          description: Array of changed records since the specified timestamp
+        last_sync:
+          type: string
+          format: date-time
+          description: Server timestamp when this sync response was generated
+          example: "2025-07-27T18:00:00.000Z"
+        has_more:
+          type: boolean
+          description: Whether there are more records available
+          example: false
+        next_offset:
+          type: integer
+          nullable: true
+          description: Offset for the next page if has_more is true
+          example: 100
+
+    SyncRecord:
+      type: object
+      required:
+        - id
+        - operation
+        - client_updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID of the record being synced
+        operation:
+          type: string
+          enum: [create, update, delete]
+          description: Type of operation performed on this record
+        data:
+          type: object
+          additionalProperties: true
+          description: Record data (required for create/update, omitted for delete)
+        client_updated_at:
+          type: string
+          format: date-time
+          description: Client timestamp when this change was made
+          example: "2025-07-27T17:30:00.000Z"
+
+    BatchSyncRequest:
+      type: object
+      required:
+        - records
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncRecord'
+          minItems: 1
+          maxItems: 100
+          description: Array of sync records to process (max 100 per batch)
+      example:
+        records:
+          - id: "550e8400-e29b-41d4-a716-446655440000"
+            operation: "create"
+            data:
+              first_name: "John"
+              last_name: "Doe"
+              job_description: "Software Engineer"
+              email: "john@example.com"
+            client_updated_at: "2025-07-27T17:30:00.000Z"
+          - id: "550e8400-e29b-41d4-a716-446655440001"
+            operation: "update"
+            data:
+              job_description: "Senior Software Engineer"
+            client_updated_at: "2025-07-27T17:35:00.000Z"
+          - id: "550e8400-e29b-41d4-a716-446655440002"
+            operation: "delete"
+            client_updated_at: "2025-07-27T17:40:00.000Z"
+
+    SyncResult:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUID of the record that was processed
+        status:
+          type: string
+          enum: [created, updated, deleted, conflict, not_found, already_deleted]
+          description: Result status of the sync operation
+        server_data:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: Current server data (included for conflicts to resolve on client)
+
+    BatchSyncResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncResult'
+          description: Results for each record in the batch sync request
+      example:
+        results:
+          - id: "550e8400-e29b-41d4-a716-446655440000"
+            status: "created"
+          - id: "550e8400-e29b-41d4-a716-446655440001"
+            status: "updated"
+          - id: "550e8400-e29b-41d4-a716-446655440002"
+            status: "deleted"
+
 tags:
   - name: Health
     description: Health check and service status
@@ -3176,5 +3828,7 @@ tags:
     description: Group creation, management, and member organization
   - name: Actions Management
     description: Action items management and organization
+  - name: Sync
+    description: Offline-first synchronization with conflict resolution
   - name: Administration
     description: Administrative tasks and background job management
