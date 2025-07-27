@@ -20,6 +20,16 @@
     },
     {
       "identifier": "sql:default"
+    },
+    {
+      "identifier": "sql:allow-load",
+      "allow": ["sqlite:*"]
+    },
+    {
+      "identifier": "sql:allow-execute"
+    },
+    {
+      "identifier": "sql:allow-select"
     }
   ]
 }

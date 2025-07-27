@@ -1,4 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
+import { appDataDir } from '@tauri-apps/api/path';
 import { 
   Person, Group, Note, ActionItem, Device, UserProfile,
   GrowthGoal, GrowthMilestone, PersonSkill, GrowthPlan, GrowthAssessment
@@ -22,9 +23,17 @@ class DatabaseService {
     if (this.isInitialized) return;
 
     try {
+      // Get the app data directory path for reference
+      const dataDir = await appDataDir();
+      console.log('App data directory:', dataDir);
+      console.log('SQLite database will be stored at:', `${dataDir}engage360.db`);
+      
       this.db = await Database.load('sqlite:engage360.db');
+      console.log('SQLite database loaded successfully');
       await this.createTables();
+      await this.runMigrations();
       this.isInitialized = true;
+      console.log('Database initialized successfully');
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
@@ -33,6 +42,8 @@ class DatabaseService {
 
   private async createTables(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
+
+    console.log('Creating database tables...');
 
     const tables = [
       // Users table
@@ -50,14 +61,17 @@ class DatabaseService {
       // People table
       `CREATE TABLE IF NOT EXISTS people (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         job_description TEXT,
         avatar_url TEXT,
         phone TEXT,
         email TEXT,
+        github_username TEXT,
         tags TEXT, -- JSON array
         group_id TEXT,
+        deleted_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (group_id) REFERENCES groups(id)
@@ -66,12 +80,13 @@ class DatabaseService {
       // Groups table
       `CREATE TABLE IF NOT EXISTS groups (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
         tags TEXT, -- JSON array
         color TEXT,
         member_count INTEGER DEFAULT 0,
-        user_id TEXT NOT NULL,
+        deleted_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )`,
@@ -79,9 +94,10 @@ class DatabaseService {
       // Notes table
       `CREATE TABLE IF NOT EXISTS notes (
         id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         content TEXT,
-        type TEXT NOT NULL CHECK (type IN ('meeting', 'call', 'email', 'personal', 'follow_up')),
+        type TEXT CHECK (type IN ('meeting', 'call', 'email', 'personal', 'follow_up')),
         person_id TEXT,
         group_id TEXT,
         tags TEXT, -- JSON array
@@ -89,6 +105,7 @@ class DatabaseService {
         encrypted_content TEXT,
         content_iv TEXT,
         device_keys TEXT, -- JSON array
+        deleted_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (person_id) REFERENCES people(id),
@@ -98,16 +115,22 @@ class DatabaseService {
       // Action items table
       `CREATE TABLE IF NOT EXISTS action_items (
         id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        title TEXT,
         description TEXT,
         status TEXT NOT NULL CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled')),
         priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-        assignee_id TEXT NOT NULL,
-        assignee_name TEXT NOT NULL,
+        assignee_id TEXT,
+        assignee_name TEXT,
         due_date TEXT,
         person_id TEXT,
         group_id TEXT,
         note_id TEXT,
+        encrypted_content TEXT,
+        encrypted_keys TEXT, -- JSON string
+        iv TEXT,
+        completed_at TEXT,
+        deleted_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         FOREIGN KEY (person_id) REFERENCES people(id),
@@ -229,8 +252,16 @@ class DatabaseService {
       )`
     ];
 
-    for (const table of tables) {
-      await this.db.execute(table);
+    for (let i = 0; i < tables.length; i++) {
+      try {
+        console.log(`Creating table ${i + 1}/${tables.length}...`);
+        await this.db.execute(tables[i]);
+        console.log(`Table ${i + 1} created successfully`);
+      } catch (error) {
+        console.error(`Failed to create table ${i + 1}:`, error);
+        console.error('SQL:', tables[i]);
+        throw error;
+      }
     }
 
     // Create indexes for better performance
@@ -248,25 +279,258 @@ class DatabaseService {
       'CREATE INDEX IF NOT EXISTS idx_sync_status_status ON sync_status(sync_status)'
     ];
 
-    for (const index of indexes) {
-      await this.db.execute(index);
+    console.log('Creating indexes...');
+    for (let i = 0; i < indexes.length; i++) {
+      try {
+        await this.db.execute(indexes[i]);
+      } catch (error) {
+        console.error(`Failed to create index ${i + 1}:`, error);
+        // Don't throw for indexes - they're not critical
+      }
     }
+
+    console.log('All tables and indexes created successfully');
+  }
+
+  private async runMigrations(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    console.log('Running database migrations...');
+
+    try {
+      // Migration 1: Add github_username column to people table
+      await this.db.execute('ALTER TABLE people ADD COLUMN github_username TEXT');
+      console.log('Migration: Added github_username column to people table');
+    } catch (error) {
+      // Column might already exist, check the error
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: github_username column already exists');
+      } else {
+        console.log('Migration: github_username column might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 2: Add user_id column to notes table
+      await this.db.execute('ALTER TABLE notes ADD COLUMN user_id TEXT');
+      console.log('Migration: Added user_id column to notes table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: user_id column already exists in notes table');
+      } else {
+        console.log('Migration: user_id column in notes table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 3: Add user_id column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN user_id TEXT');
+      console.log('Migration: Added user_id column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: user_id column already exists in action_items table');
+      } else {
+        console.log('Migration: user_id column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 4: Add user_id column to people table
+      await this.db.execute('ALTER TABLE people ADD COLUMN user_id TEXT');
+      console.log('Migration: Added user_id column to people table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: user_id column already exists in people table');
+      } else {
+        console.log('Migration: user_id column in people table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 5: Add deleted_at column to people table
+      await this.db.execute('ALTER TABLE people ADD COLUMN deleted_at TEXT');
+      console.log('Migration: Added deleted_at column to people table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: deleted_at column already exists in people table');
+      } else {
+        console.log('Migration: deleted_at column in people table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 6: Add deleted_at column to groups table
+      await this.db.execute('ALTER TABLE groups ADD COLUMN deleted_at TEXT');
+      console.log('Migration: Added deleted_at column to groups table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: deleted_at column already exists in groups table');
+      } else {
+        console.log('Migration: deleted_at column in groups table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 7: Add deleted_at column to notes table
+      await this.db.execute('ALTER TABLE notes ADD COLUMN deleted_at TEXT');
+      console.log('Migration: Added deleted_at column to notes table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: deleted_at column already exists in notes table');
+      } else {
+        console.log('Migration: deleted_at column in notes table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 8: Add deleted_at column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN deleted_at TEXT');
+      console.log('Migration: Added deleted_at column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: deleted_at column already exists in action_items table');
+      } else {
+        console.log('Migration: deleted_at column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 9: Add encrypted_content column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN encrypted_content TEXT');
+      console.log('Migration: Added encrypted_content column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: encrypted_content column already exists in action_items table');
+      } else {
+        console.log('Migration: encrypted_content column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 10: Add encrypted_keys column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN encrypted_keys TEXT');
+      console.log('Migration: Added encrypted_keys column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: encrypted_keys column already exists in action_items table');
+      } else {
+        console.log('Migration: encrypted_keys column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 11: Add iv column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN iv TEXT');
+      console.log('Migration: Added iv column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: iv column already exists in action_items table');
+      } else {
+        console.log('Migration: iv column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 12: Add completed_at column to action_items table
+      await this.db.execute('ALTER TABLE action_items ADD COLUMN completed_at TEXT');
+      console.log('Migration: Added completed_at column to action_items table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: completed_at column already exists in action_items table');
+      } else {
+        console.log('Migration: completed_at column in action_items table might already exist or other issue:', error);
+      }
+    }
+
+    // Since SQLite doesn't support ALTER COLUMN to modify constraints,
+    // we need to handle encrypted records by providing default values
+    try {
+      // Migration 13: Update notes with missing type for encrypted records
+      await this.db.execute(`
+        UPDATE notes 
+        SET type = 'personal' 
+        WHERE type IS NULL AND encrypted = true AND encrypted_content IS NOT NULL
+      `);
+      console.log('Migration: Set default type for encrypted notes');
+    } catch (error) {
+      console.log('Migration: Could not update encrypted notes type:', error);
+    }
+
+    try {
+      // Migration 14: Update action_items with missing title for encrypted records
+      await this.db.execute(`
+        UPDATE action_items 
+        SET title = 'Encrypted Action Item', assignee_id = user_id, assignee_name = 'Unknown'
+        WHERE title IS NULL AND encrypted_content IS NOT NULL
+      `);
+      console.log('Migration: Set default title for encrypted action items');
+    } catch (error) {
+      console.log('Migration: Could not update encrypted action items title:', error);
+    }
+
+    try {
+      // Migration 15: Decrypt and populate content for existing encrypted notes
+      const encryptedNotes = await this.db.select<any[]>(`
+        SELECT id, encrypted_content 
+        FROM notes 
+        WHERE encrypted_content IS NOT NULL 
+        AND (content IS NULL OR content = '')
+      `);
+      
+      for (const note of encryptedNotes) {
+        try {
+          // Decrypt the content using the same method as sync service
+          const decodedContent = atob(note.encrypted_content);
+          const decryptedData = JSON.parse(decodedContent);
+          
+          const updateData: any = {};
+          if (decryptedData.content !== undefined) updateData.content = decryptedData.content;
+          if (decryptedData.type) updateData.type = decryptedData.type;
+          if (decryptedData.tags && Array.isArray(decryptedData.tags)) {
+            updateData.tags = JSON.stringify(decryptedData.tags);
+          }
+          
+          if (Object.keys(updateData).length > 0) {
+            const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
+            const values = Object.values(updateData);
+            await this.db.execute(
+              `UPDATE notes SET ${setClause} WHERE id = ?`,
+              [...values, note.id]
+            );
+          }
+        } catch (decryptError) {
+          console.warn(`Failed to decrypt note ${note.id}:`, decryptError);
+        }
+      }
+      console.log(`Migration: Decrypted content for ${encryptedNotes.length} existing notes`);
+    } catch (error) {
+      console.log('Migration: Could not decrypt existing notes:', error);
+    }
+
+    console.log('Database migrations completed');
   }
 
   // Generic CRUD operations
   async insert<T>(table: string, data: Partial<T>): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const keys = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = keys.map(() => '?').join(', ');
+    try {
+      const keys = Object.keys(data);
+      const values = Object.values(data);
+      const placeholders = keys.map(() => '?').join(', ');
 
-    const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-    await this.db.execute(sql, values);
+      const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+      console.log('Executing INSERT:', sql, values);
+      await this.db.execute(sql, values);
 
-    // Update sync status
-    if (data && typeof data === 'object' && 'id' in data) {
-      await this.updateSyncStatus(table, data.id as string, 'pending');
+      // Update sync status
+      if (data && typeof data === 'object' && 'id' in data) {
+        await this.updateSyncStatus(table, data.id as string, 'pending');
+      }
+    } catch (error) {
+      console.error(`Failed to insert into ${table}:`, error);
+      console.error('Data:', data);
+      throw error;
     }
   }
 
@@ -388,6 +652,11 @@ class DatabaseService {
       this.db = null;
       this.isInitialized = false;
     }
+  }
+
+  async getDatabasePath(): Promise<string> {
+    const dataDir = await appDataDir();
+    return `${dataDir}engage360.db`;
   }
 }
 
