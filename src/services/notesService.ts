@@ -1,4 +1,6 @@
 import { apiService } from './apiService';
+import { databaseService } from './databaseService';
+import { syncService } from './syncService';
 import type { ApiResponse, Note, CreateNoteRequest } from '../types';
 
 // API response types matching the updated backend spec
@@ -37,120 +39,92 @@ interface NoteResponse {
 class NotesService {
     async getNotes(personId?: string, page = 1, limit = 20): Promise<ApiResponse<{ notes: Note[], pagination: { total: number, page: number, limit: number, totalPages: number } }>> {
         try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: limit.toString(),
-                // Add cache busting parameter to force fresh data
-                _t: Date.now().toString()
-            });
-
+            // Try to get from local database first
+            let whereClause = '';
+            let queryParams: any[] = [];
+            
             if (personId) {
-                params.append('personId', personId);
+                whereClause = 'person_id = ?';
+                queryParams = [personId];
             }
 
-            const response = await apiService.get<NoteListResponse>(`/notes?${params}`);
-
-
-            if (response.success && response.data?.data) {
-
-                // Check if we have any items
-                if (!response.data.data.items || response.data.data.items.length === 0) {
-                    return {
-                        success: true,
-                        data: {
-                            notes: [],
-                            pagination: response.data.data.pagination || { total: 0, page, limit, totalPages: 0 }
+            const localNotes = await databaseService.findAll<any>('notes', whereClause, queryParams);
+            
+            if (localNotes && localNotes.length > 0) {
+                // Transform database records to frontend Note type
+                const notes: Note[] = localNotes.map(item => {
+                    // Parse tags if they're stored as JSON string
+                    let tags: string[] = [];
+                    if (item.tags) {
+                        try {
+                            tags = typeof item.tags === 'string' ? JSON.parse(item.tags) : item.tags;
+                        } catch (e) {
+                            tags = [];
                         }
-                    };
-                }
-
-                // Transform API response to frontend Note type
-                const notes: Note[] = response.data.data.items.map(item => {
-
-                    // Decode the encrypted content to extract readable data
-                    let decodedContent = '';
-                    let noteType = 'personal' as const;
-                    let noteTags: string[] = [];
-
-                    // Check if encrypted_content exists and is not undefined
-                    if (!item.encrypted_content) {
-                        decodedContent = 'Content not found';
-                        return {
-                            id: item.id,
-                            title: item.title || '',
-                            content: decodedContent,
-                            type: noteType,
-                            personId: item.person_id || undefined,
-                            tags: noteTags,
-                            createdAt: item.created_at,
-                            updatedAt: item.updated_at,
-                            encrypted: true,
-                            encryptedContent: item.encrypted_content || '',
-                            contentIV: item.content_iv || '',
-                            deviceKeys: (item.device_keys || []).map(dk => ({
-                                deviceId: dk.device_id,
-                                encryptedKey: dk.encrypted_key
-                            }))
-                        };
                     }
 
-                    try {
-                        // For now, we're using base64 encoding (not real encryption)
-                        // Use UTF-8 safe base64 decoding
-                        const decodedData = JSON.parse(decodeURIComponent(escape(atob(item.encrypted_content))));
-                        decodedContent = decodedData.content || '';
-                        noteType = decodedData.type || 'personal';
-                        noteTags = decodedData.tags || [];
-                    } catch (error) {
-                        // Try to parse as JSON directly (in case it's not base64 encoded)
+                    // Parse device keys if they exist
+                    let deviceKeys: Array<{ deviceId: string; encryptedKey: string }> = [];
+                    if (item.device_keys) {
                         try {
-                            const directData = JSON.parse(item.encrypted_content);
-                            decodedContent = directData.content || '';
-                            noteType = directData.type || 'personal';
-                            noteTags = directData.tags || [];
-                        } catch (directError) {
-                            // Fall back to treating encrypted_content as plain text
-                            decodedContent = item.encrypted_content;
+                            const parsed = typeof item.device_keys === 'string' ? JSON.parse(item.device_keys) : item.device_keys;
+                            deviceKeys = Array.isArray(parsed) ? parsed : [];
+                        } catch (e) {
+                            deviceKeys = [];
                         }
                     }
 
                     return {
                         id: item.id,
-                        title: item.title || '', // Use title from API response
-                        content: decodedContent, // Decoded readable content
-                        type: noteType,
+                        title: item.title || '',
+                        content: item.content || '', // Already decrypted and stored locally
+                        type: item.type || 'personal',
                         personId: item.person_id || undefined,
-                        tags: noteTags,
+                        groupId: item.group_id || undefined,
+                        tags: tags,
                         createdAt: item.created_at,
                         updatedAt: item.updated_at,
-                        encrypted: true,
-                        encryptedContent: item.encrypted_content,
-                        contentIV: item.content_iv,
-                        deviceKeys: (item.device_keys || []).map(dk => ({
-                            deviceId: dk.device_id,
-                            encryptedKey: dk.encrypted_key
-                        }))
+                        encrypted: item.encrypted || false,
+                        encryptedContent: item.encrypted_content || undefined,
+                        contentIV: item.content_iv || undefined,
+                        deviceKeys: deviceKeys
                     };
                 });
+
+                // Apply pagination
+                const offset = (page - 1) * limit;
+                const paginatedNotes = notes.slice(offset, offset + limit);
+                const total = notes.length;
+                const totalPages = Math.ceil(total / limit);
 
                 return {
                     success: true,
                     data: {
-                        notes: notes,
-                        pagination: response.data.data.pagination || { total: notes.length, page, limit, totalPages: Math.ceil(notes.length / limit) }
+                        notes: paginatedNotes,
+                        pagination: { total, page, limit, totalPages }
                     }
                 };
             }
 
+            // Fallback to API if no local data (trigger sync in background)
+            console.log('No local notes found, triggering sync...');
+            syncService.syncData().catch(error => {
+                console.warn('Background sync failed:', error);
+            });
+
             return {
-                success: false,
-                error: response.error || { message: 'Failed to fetch notes', code: 500 }
+                success: true,
+                data: {
+                    notes: [],
+                    pagination: { total: 0, page, limit, totalPages: 0 }
+                }
             };
         } catch (error) {
+            console.error('Error fetching notes from local database:', error);
             return {
                 success: false,
                 error: {
-                    message: 'Failed to fetch notes',
+                    message: 'Failed to fetch notes from local database',
                     code: 500,
                     details: error instanceof Error ? error.message : 'Unknown error'
                 }
@@ -160,67 +134,69 @@ class NotesService {
 
     async getNoteById(id: string): Promise<ApiResponse<Note>> {
         try {
-            const response = await apiService.get<NoteResponse>(`/notes/${id}`);
-
-            if (response.success && response.data?.data) {
-                const item = response.data.data;
-
-                // Decode the encrypted content to extract readable data
-                let decodedContent = '';
-                let noteType = 'personal' as const;
-                let noteTags: string[] = [];
-
-                try {
-                    // For now, we're using base64 encoding (not real encryption)
-                    // Use UTF-8 safe base64 decoding
-                    const decodedData = JSON.parse(decodeURIComponent(escape(atob(item.encrypted_content))));
-                    decodedContent = decodedData.content || '';
-                    noteType = decodedData.type || 'personal';
-                    noteTags = decodedData.tags || [];
-                } catch (error) {
-                    // Try to parse as JSON directly (in case it's not base64 encoded)
+            // Try to get from local database first
+            const localNote = await databaseService.findById<any>('notes', id);
+            
+            if (localNote) {
+                // Parse tags if they're stored as JSON string
+                let tags: string[] = [];
+                if (localNote.tags) {
                     try {
-                        const directData = JSON.parse(item.encrypted_content);
-                        decodedContent = directData.content || '';
-                        noteType = directData.type || 'personal';
-                        noteTags = directData.tags || [];
-                    } catch (directError) {
-                        // Fall back to treating encrypted_content as plain text
-                        decodedContent = item.encrypted_content;
+                        tags = typeof localNote.tags === 'string' ? JSON.parse(localNote.tags) : localNote.tags;
+                    } catch (e) {
+                        tags = [];
+                    }
+                }
+
+                // Parse device keys if they exist
+                let deviceKeys: Array<{ deviceId: string; encryptedKey: string }> = [];
+                if (localNote.device_keys) {
+                    try {
+                        const parsed = typeof localNote.device_keys === 'string' ? JSON.parse(localNote.device_keys) : localNote.device_keys;
+                        deviceKeys = Array.isArray(parsed) ? parsed : [];
+                    } catch (e) {
+                        deviceKeys = [];
                     }
                 }
 
                 const note: Note = {
-                    id: item.id,
-                    title: item.title || '', // Use title from API response
-                    content: decodedContent, // Decoded readable content
-                    type: noteType,
-                    personId: item.person_id || undefined,
-                    tags: noteTags,
-                    createdAt: item.created_at,
-                    updatedAt: item.updated_at,
-                    encrypted: true,
-                    encryptedContent: item.encrypted_content,
-                    contentIV: item.content_iv,
-                    deviceKeys: (item.device_keys || []).map(dk => ({
-                        deviceId: dk.device_id,
-                        encryptedKey: dk.encrypted_key
-                    }))
-                }; return {
+                    id: localNote.id,
+                    title: localNote.title || '',
+                    content: localNote.content || '', // Already decrypted and stored locally
+                    type: localNote.type || 'personal',
+                    personId: localNote.person_id || undefined,
+                    groupId: localNote.group_id || undefined,
+                    tags: tags,
+                    createdAt: localNote.created_at,
+                    updatedAt: localNote.updated_at,
+                    encrypted: localNote.encrypted || false,
+                    encryptedContent: localNote.encrypted_content || undefined,
+                    contentIV: localNote.content_iv || undefined,
+                    deviceKeys: deviceKeys
+                };
+
+                return {
                     success: true,
                     data: note
                 };
             }
 
+            // If not found locally, trigger sync and return error
+            console.log(`Note ${id} not found locally, triggering sync...`);
+            syncService.syncData().catch(error => {
+                console.warn('Background sync failed:', error);
+            });
+
             return {
                 success: false,
-                error: response.error || { message: 'Note not found', code: 404 }
+                error: { message: 'Note not found', code: 404 }
             };
         } catch (error) {
+            console.error('Error fetching note from local database:', error);
             return {
                 success: false,
                 error: {
-                    message: 'Failed to fetch note',
+                    message: 'Failed to fetch note from local database',
                     code: 500,
                     details: error instanceof Error ? error.message : 'Unknown error'
                 }
@@ -250,15 +226,40 @@ class NotesService {
 
             const response = await apiService.post<NoteResponse>('/notes', createRequest);
 
-
             if (response.success && response.data?.data) {
                 const item = response.data.data;
+                
+                // Store in local database
+                const localNoteData = {
+                    id: item.id,
+                    user_id: item.user_id,
+                    title: noteData.title,
+                    content: noteData.content, // Store decrypted content locally
+                    type: noteData.type,
+                    person_id: item.person_id || null,
+                    group_id: item.group_id || null,
+                    tags: noteData.tags ? JSON.stringify(noteData.tags) : null,
+                    encrypted: true,
+                    encrypted_content: item.encrypted_content,
+                    content_iv: item.content_iv,
+                    device_keys: JSON.stringify(item.device_keys || []),
+                    created_at: item.created_at,
+                    updated_at: item.updated_at
+                };
+
+                try {
+                    await databaseService.insert('notes', localNoteData);
+                } catch (dbError) {
+                    console.warn('Failed to store note locally:', dbError);
+                }
+
                 const note: Note = {
                     id: item.id,
                     title: noteData.title,
                     content: noteData.content,
                     type: noteData.type,
                     personId: item.person_id || undefined,
+                    groupId: item.group_id || undefined,
                     tags: noteData.tags || [],
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
@@ -311,12 +312,32 @@ class NotesService {
 
             if (response.success && response.data?.data) {
                 const item = response.data.data;
+                
+                // Update local database with decrypted content
+                const localUpdateData: any = {};
+                
+                if (noteData.title !== undefined) localUpdateData.title = noteData.title;
+                if (noteData.content !== undefined) localUpdateData.content = noteData.content; // Store decrypted content
+                if (noteData.type !== undefined) localUpdateData.type = noteData.type;
+                if (noteData.tags !== undefined) localUpdateData.tags = JSON.stringify(noteData.tags);
+                if (item.encrypted_content) localUpdateData.encrypted_content = item.encrypted_content;
+                if (item.content_iv) localUpdateData.content_iv = item.content_iv;
+                if (item.device_keys) localUpdateData.device_keys = JSON.stringify(item.device_keys);
+                if (item.updated_at) localUpdateData.updated_at = item.updated_at;
+
+                try {
+                    await databaseService.update('notes', id, localUpdateData);
+                } catch (dbError) {
+                    console.warn('Failed to update note locally:', dbError);
+                }
+
                 const note: Note = {
                     id: item.id,
                     title: noteData.title || '',
                     content: noteData.content || '',
                     type: noteData.type || 'personal',
                     personId: item.person_id || undefined,
+                    groupId: item.group_id || undefined,
                     tags: noteData.tags || [],
                     createdAt: item.created_at,
                     updatedAt: item.updated_at,
