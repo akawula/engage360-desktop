@@ -32,11 +32,11 @@ export default function Dashboard() {
         queryKey: ['notes-count'],
         queryFn: async () => {
             try {
-                const response = await notesService.getNotes(undefined, 1, 5);
-                return response.success ? response.data : { notes: [] };
+                const response = await notesService.getNotes(undefined, 1, 1);
+                return response.success ? response.data : { notes: [], pagination: { total: 0 } };
             } catch (error) {
                 console.error('Failed to fetch notes:', error);
-                return { notes: [] };
+                return { notes: [], pagination: { total: 0 } };
             }
         },
         retry: false,
@@ -46,11 +46,32 @@ export default function Dashboard() {
         queryKey: ['action-items-count'],
         queryFn: async () => {
             try {
-                const response = await actionItemsService.getActionItems();
-                return response.success ? response.data : [];
+                const allResponse = await actionItemsService.getActionItems();
+                
+                if (!allResponse.success || !allResponse.data) {
+                    return { total: 0, pending: 0, inProgress: 0, active: 0 };
+                }
+                
+                const allItems = allResponse.data;
+                
+                // Count by status
+                const pending = allItems.filter(item => item.status === 'pending').length;
+                const inProgress = allItems.filter(item => item.status === 'in_progress').length;
+                const completed = allItems.filter(item => item.status === 'completed').length;
+                const cancelled = allItems.filter(item => item.status === 'cancelled').length;
+                
+                
+                return {
+                    total: allItems.length,
+                    pending,
+                    inProgress,
+                    completed,
+                    cancelled,
+                    active: pending + inProgress
+                };
             } catch (error) {
                 console.error('Failed to fetch action items:', error);
-                return [];
+                return { total: 0, pending: 0, inProgress: 0, active: 0 };
             }
         },
         retry: false,
@@ -59,8 +80,8 @@ export default function Dashboard() {
     // Calculate stats
     const hasPeople = (peopleData?.people?.length || 0) > 0;
     const hasGroups = (groupsResponse?.success && groupsResponse?.data?.length || 0) > 0;
-    const hasNotes = (notesData?.notes?.length || 0) > 0;
-    const hasActionItems = (actionItemsData?.length || 0) > 0;
+    const hasNotes = (notesData?.pagination?.total || 0) > 0;
+    const hasActionItems = (actionItemsData?.total || 0) > 0;
     const isNewUser = !hasPeople && !hasGroups && !hasNotes && !hasActionItems;
 
 
@@ -93,11 +114,11 @@ export default function Dashboard() {
                         <div className="flex flex-wrap gap-6 text-sm">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-dark-700 dark:text-dark-300">{notesData?.notes?.length || 0} notes</span>
+                                <span className="text-dark-700 dark:text-dark-300">{notesData?.pagination?.total || 0} notes</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                <span className="text-dark-700 dark:text-dark-300">{actionItemsData?.length || 0} action items</span>
+                                <span className="text-dark-700 dark:text-dark-300">{actionItemsData?.active || 0} active tasks</span>
                             </div>
                         </div>
                     )}
@@ -156,7 +177,7 @@ export default function Dashboard() {
                             <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-dark-950 dark:text-white">Notes</h3>
                                 <p className="text-dark-600 dark:text-dark-400 text-sm">
-                                    {notesData?.notes?.length || 0} entries
+                                    {notesData?.pagination?.total || 0} entries
                                 </p>
                             </div>
                         </div>
@@ -176,7 +197,7 @@ export default function Dashboard() {
                             <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-dark-950 dark:text-white">Tasks</h3>
                                 <p className="text-dark-600 dark:text-dark-400 text-sm">
-                                    {actionItemsData?.length || 0} items
+                                    {actionItemsData?.active || 0} active
                                 </p>
                             </div>
                         </div>
