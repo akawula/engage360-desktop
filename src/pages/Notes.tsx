@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, User, Tag, Search, Filter, Grid, List, StickyNote, ArrowRight, Clock, MessageCircle, Phone, Mail, UserCheck, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, User, Tag, Search, Filter, Grid, List, StickyNote, ArrowRight, Clock, MessageCircle, Phone, Mail, UserCheck, RotateCcw, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { stripHtmlAndTruncate, formatAvatarSrc } from '../lib/utils';
 import { useState, useMemo } from 'react';
+import { useDeleteNote } from '../hooks/useNotes';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Notes() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +15,20 @@ export default function Notes() {
     const [sortBy, setSortBy] = useState<'created' | 'updated' | 'title'>('updated');
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(20); // Fixed page size
+
+    // Delete note functionality
+    const deleteNoteMutation = useDeleteNote();
+    
+    // Confirmation modal state
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        noteId: string;
+        noteTitle: string;
+    }>({
+        isOpen: false,
+        noteId: '',
+        noteTitle: ''
+    });
 
     const { data: notesResponse, isLoading } = useQuery({
         queryKey: ['notes', currentPage, pageSize, searchTerm],
@@ -77,6 +93,39 @@ export default function Notes() {
         setSearchTerm(newSearchTerm);
         setSelectedType(newType);
         setCurrentPage(1);
+    };
+
+    // Handle note deletion
+    const handleDeleteNote = (e: React.MouseEvent, noteId: string, noteTitle: string) => {
+        e.preventDefault(); // Prevent navigation
+        e.stopPropagation(); // Prevent event bubbling
+        e.nativeEvent.stopImmediatePropagation(); // More aggressive event stopping
+        
+        // Open confirmation modal
+        setConfirmModal({
+            isOpen: true,
+            noteId,
+            noteTitle
+        });
+    };
+
+    // Confirm deletion
+    const confirmDeleteNote = async () => {
+        try {
+            await deleteNoteMutation.mutateAsync(confirmModal.noteId);
+        } catch (error) {
+            console.error('Failed to delete note:', error);
+            alert('Failed to delete note: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        }
+    };
+
+    // Close confirmation modal
+    const closeConfirmModal = () => {
+        setConfirmModal({
+            isOpen: false,
+            noteId: '',
+            noteTitle: ''
+        });
     };
 
     // Pagination handlers
@@ -368,6 +417,14 @@ export default function Notes() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={(e) => handleDeleteNote(e, note.id, note.title)}
+                                                        disabled={deleteNoteMutation.isPending}
+                                                        className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-50 z-10 relative"
+                                                        title="Delete note"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
                                                     <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1" />
                                                 </div>
                                             </div>
@@ -471,7 +528,17 @@ export default function Notes() {
                                                 </div>
                                             </div>
 
-                                            <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1 flex-shrink-0" />
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => handleDeleteNote(e, note.id, note.title)}
+                                                    disabled={deleteNoteMutation.isPending}
+                                                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-50 z-10 relative"
+                                                    title="Delete note"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                                <ArrowRight className="h-4 w-4 text-dark-500 group-hover:text-primary-500 transition-all duration-200 transform group-hover:translate-x-1 flex-shrink-0" />
+                                            </div>
                                         </div>
                                     )}
                                 </Link>
@@ -585,6 +652,18 @@ export default function Notes() {
                     </div>
                 )}
             </div>
+
+            {/* Confirmation Modal */}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={closeConfirmModal}
+                onConfirm={confirmDeleteNote}
+                title="Delete Note"
+                message={`Are you sure you want to delete "${confirmModal.noteTitle}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                isDestructive={true}
+            />
         </div>
     );
 }

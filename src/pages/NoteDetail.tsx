@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose } from 'lucide-react';
+import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose, Trash2 } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -13,6 +13,8 @@ import { useActionItems } from '../hooks/useActionItems';
 import { ollamaService } from '../services/ollamaService';
 import { userProfileService } from '../services/userProfileService';
 import { useNotification } from '../contexts/NotificationContext';
+import { useDeleteNote } from '../hooks/useNotes';
+import ConfirmModal from '../components/ConfirmModal';
 
 // Helper functions for action item styling
 const getStatusColor = (status: string) => {
@@ -134,6 +136,12 @@ export default function NoteDetail() {
     // UI state for maximizing editor
     const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
     const [isActionItemsPanelOpen, setIsActionItemsPanelOpen] = useState(false);
+
+    // Delete note functionality
+    const deleteNoteMutation = useDeleteNote();
+    
+    // Confirmation modal state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const { data: note, isLoading } = useQuery({
         queryKey: ['note', noteId],
@@ -372,6 +380,23 @@ export default function NoteDetail() {
             }
         } else {
             navigate('/notes');
+        }
+    };
+
+    const handleDeleteNote = () => {
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDeleteNote = async () => {
+        if (!note) return;
+        
+        try {
+            await deleteNoteMutation.mutateAsync(note.id);
+            showSuccess('Note Deleted', 'Your note has been deleted successfully.');
+            navigate('/notes');
+        } catch (error) {
+            console.error('Failed to delete note:', error);
+            showError('Delete Failed', 'Failed to delete note. Please try again.');
         }
     };
 
@@ -615,6 +640,15 @@ export default function NoteDetail() {
                                         <span className="text-sm font-medium">Unsaved</span>
                                     </div>
                                 )}
+                                <button
+                                    onClick={handleDeleteNote}
+                                    disabled={deleteNoteMutation.isPending}
+                                    className="px-3 py-1.5 text-red-700 dark:text-red-400 border border-red-400 dark:border-red-600 bg-white dark:bg-dark-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 hover:shadow-md flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete note"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span>Delete</span>
+                                </button>
                                 <button
                                     onClick={handleCancel}
                                     className="px-3 py-1.5 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-all duration-200 hover:shadow-md flex items-center gap-1.5"
@@ -870,6 +904,18 @@ export default function NoteDetail() {
                 preselectedNoteId={note?.id}
                 preselectedPersonId={note?.personId}
                 preselectedGroupId={note?.groupId}
+            />
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={confirmDeleteNote}
+                title="Delete Note"
+                message={`Are you sure you want to delete "${note?.title}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                isDestructive={true}
             />
         </div>
     );

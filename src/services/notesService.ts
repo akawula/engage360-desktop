@@ -430,16 +430,32 @@ class NotesService {
 
     async deleteNote(id: string): Promise<ApiResponse<void>> {
         try {
-            const response = await apiService.delete(`/notes/${id}`);
+            // First delete all related action items to avoid foreign key constraint
+            const relatedActionItems = await databaseService.findAll<any>('action_items', 'note_id = ?', [id]);
+            
+            for (const actionItem of relatedActionItems) {
+                await databaseService.delete('action_items', actionItem.id);
+            }
+
+            // Now delete the note from local database
+            await databaseService.delete('notes', id);
+
+            // Trigger background sync to delete from server
+            if (syncService.isConnected() && !syncService.isSyncing()) {
+                syncService.manualSync().catch(error => {
+                    console.warn('Background sync failed after note deletion:', error);
+                });
+            }
+
             return {
-                success: response.success,
-                error: response.error
+                success: true
             };
         } catch (error) {
+            console.error('Failed to delete note from local database:', error);
             return {
                 success: false,
                 error: {
-                    message: 'Failed to delete note',
+                    message: 'Failed to delete note from local database',
                     code: 500,
                     details: error instanceof Error ? error.message : 'Unknown error'
                 }
