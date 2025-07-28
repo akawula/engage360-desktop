@@ -31,6 +31,11 @@
       "csp": "default-src 'self'; connect-src 'self' http: https: ws: wss: ipc: ipc.localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:;"
     }
   },
+  "plugins": {
+    "deep-link": {
+      "schemes": ["engage360"]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -6,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { StoreErrorHandler } from './components/StoreErrorHandler';
 import { TauriEventHandler } from './components/TauriEventHandler';
+import { deepLinkService } from './services/deepLinkService';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import People from './pages/People';
@@ -19,6 +21,7 @@ import ActionItems from './pages/ActionItems';
 import ActionItemDetail from './pages/ActionItemDetail';
 import Profile from './pages/Profile';
 import Devices from './pages/Devices';
+import GoogleAuthCallback from './pages/GoogleAuthCallback';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -44,7 +47,18 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Remove automatic data fetching - let components load data as needed
+  // Initialize deep link service
+  useEffect(() => {
+    const initDeepLinks = async () => {
+      try {
+        await deepLinkService.initialize();
+      } catch (error) {
+        console.error('Failed to initialize deep link service:', error);
+      }
+    };
+
+    initDeepLinks();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -70,6 +84,7 @@ function App() {
                       <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/devices" element={<Devices />} />
+                      <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>

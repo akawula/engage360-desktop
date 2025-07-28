@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Building2, FileText, CheckSquare, TrendingUp, Calendar, Star, Zap, Target, ArrowUpRight, Sparkles, Plus } from 'lucide-react';
+import { Users, Building2, FileText, CheckSquare, TrendingUp, Target, Plus } from 'lucide-react';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
 import { notesService } from '../services/notesService';
 import { actionItemsService } from '../services/actionItemsService';
+import GoogleCalendarAuth from '../components/GoogleCalendarAuth';
+import UpcomingEvents from '../components/UpcomingEvents';
 
 export default function Dashboard() {
     // Fetch data to determine what content to show
@@ -253,6 +255,12 @@ export default function Dashboard() {
                         </div>
                     </div>
                 )}
+
+                {/* Google Calendar Integration */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <GoogleCalendarAuth />
+                    <UpcomingEvents maxEvents={5} />
+                </div>
 
                 {/* Simplified Tips Section */}
                 {isNewUser && (
