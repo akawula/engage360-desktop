@@ -49,8 +49,11 @@ export default function AddMemberModal({ isOpen, onClose, groupId, currentMember
             return response;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['group', groupId] });
-            queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+            // Invalidate all group-related queries to update member counts
+            queryClient.invalidateQueries({ queryKey: ['groups'] }); // Groups list
+            queryClient.invalidateQueries({ queryKey: ['group', groupId] }); // Single group
+            queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] }); // Group members
+            queryClient.invalidateQueries({ queryKey: ['people'] }); // People list (to update their groups)
             setSelectedPeople([]);
             onClose();
         },

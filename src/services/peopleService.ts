@@ -102,8 +102,12 @@ export class PeopleService {
                 const limit = params?.limit || localPeople.length;
                 const paginatedPeople = localPeople.slice(offset, offset + limit);
                 
+                const transformedPeople = await Promise.all(
+                    paginatedPeople.map(person => this.transformPersonFromDB(person))
+                );
+
                 const transformedData: PeopleListResponse = {
-                    people: paginatedPeople.map(this.transformPersonFromDB),
+                    people: transformedPeople,
                     total: localPeople.length
                 };
                 
@@ -174,7 +178,7 @@ export class PeopleService {
             if (localPerson) {
                 return {
                     success: true,
-                    data: this.transformPersonFromDB(localPerson)
+                    data: await this.transformPersonFromDB(localPerson)
                 };
             }
         } catch (error) {
@@ -340,7 +344,7 @@ export class PeopleService {
         const updatedPerson = await databaseService.findById<any>('people', id);
         return {
             success: true,
-            data: this.transformPersonFromDB(updatedPerson!)
+            data: await this.transformPersonFromDB(updatedPerson!)
         };
     }
 
@@ -368,7 +372,25 @@ export class PeopleService {
         return { success: true };
     }
 
-    private transformPersonFromDB(dbPerson: any): Person {
+    private async transformPersonFromDB(dbPerson: any): Promise<Person> {
+        // Get groups for this person from junction table
+        const groups: any[] = [];
+        try {
+            const groupRelations = await databaseService.findAll<any>('people_groups', 'person_id = ?', [dbPerson.id]);
+            for (const relation of groupRelations) {
+                const group = await databaseService.findById<any>('groups', relation.group_id);
+                if (group && !group.deleted_at) {
+                    groups.push({
+                        id: group.id,
+                        name: group.name,
+                        color: group.color
+                    });
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load groups for person:', dbPerson.id, error);
+        }
+
         return {
             id: dbPerson.id,
             firstName: dbPerson.first_name,
@@ -381,7 +403,8 @@ export class PeopleService {
             position: dbPerson.job_description,
             githubUsername: dbPerson.github_username,
             tags: dbPerson.tags ? JSON.parse(dbPerson.tags) : [],
-            group: dbPerson.group,
+            groups: groups, // Use many-to-many groups
+            group: groups.length > 0 ? groups[0] : undefined, // Backwards compatibility
             counts: dbPerson.counts ? JSON.parse(dbPerson.counts) : { notes: 0, achievements: 0, actions: 0 },
             engagementScore: calculateEngagementScore(dbPerson.counts ? JSON.parse(dbPerson.counts) : { notes: 0, achievements: 0, actions: 0 }),
             createdAt: dbPerson.created_at,

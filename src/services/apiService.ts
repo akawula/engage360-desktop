@@ -214,12 +214,15 @@ class ApiService {
             if (isTauri) {
                 try {
                     // Use Tauri's HTTP client in Tauri environment
+                    console.log('🌐 Using Tauri HTTP client for:', url);
                     const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
                     response = await tauriFetch(url, {
                         ...options,
                         headers,
                     });
+                    console.log('🌐 Tauri HTTP response:', response.status, response.statusText);
                 } catch (importError) {
+                    console.warn('🌐 Tauri HTTP import failed, falling back to browser fetch:', importError);
                     // Fallback to browser fetch
                     response = await fetch(url, {
                         ...options,
@@ -227,6 +230,7 @@ class ApiService {
                     });
                 }
             } else {
+                console.log('🌐 Using browser fetch for:', url);
                 // Use browser's fetch API in web environment
                 response = await fetch(url, {
                     ...options,

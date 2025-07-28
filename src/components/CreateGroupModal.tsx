@@ -41,6 +41,8 @@ export default function CreateGroupModal({ isOpen, onClose }: CreateGroupModalPr
             name: formData.name,
             description: formData.description || undefined,
             type: formData.type,
+            tags: [], // Initialize with empty tags
+            color: undefined, // No color selector in this modal yet
         });
     };
 

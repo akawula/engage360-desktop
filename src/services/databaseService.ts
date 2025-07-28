@@ -270,6 +270,17 @@ class DatabaseService {
         FOREIGN KEY (plan_id) REFERENCES growth_plans(id)
       )`,
 
+      // People-Groups junction table for many-to-many relationship
+      `CREATE TABLE IF NOT EXISTS people_groups (
+        id TEXT PRIMARY KEY,
+        person_id TEXT NOT NULL,
+        group_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (person_id) REFERENCES people(id) ON DELETE CASCADE,
+        FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
+        UNIQUE(person_id, group_id)
+      )`,
+
       // Sync status table for tracking synchronization
       `CREATE TABLE IF NOT EXISTS sync_status (
         id TEXT PRIMARY KEY,
@@ -306,6 +317,8 @@ class DatabaseService {
       'CREATE INDEX IF NOT EXISTS idx_growth_goals_person_id ON growth_goals(person_id)',
       'CREATE INDEX IF NOT EXISTS idx_growth_milestones_goal_id ON growth_milestones(goal_id)',
       'CREATE INDEX IF NOT EXISTS idx_person_skills_person_id ON person_skills(person_id)',
+      'CREATE INDEX IF NOT EXISTS idx_people_groups_person_id ON people_groups(person_id)',
+      'CREATE INDEX IF NOT EXISTS idx_people_groups_group_id ON people_groups(group_id)',
       'CREATE INDEX IF NOT EXISTS idx_sync_status_table_record ON sync_status(table_name, record_id)',
       'CREATE INDEX IF NOT EXISTS idx_sync_status_status ON sync_status(sync_status)'
     ];
@@ -500,7 +513,19 @@ class DatabaseService {
     }
 
     try {
-      // Migration 15: Decrypt and populate content for existing encrypted notes
+      // Migration 15: Add type column to groups table
+      await this.db.execute('ALTER TABLE groups ADD COLUMN type TEXT');
+      console.log('Migration: Added type column to groups table');
+    } catch (error) {
+      if (error.toString().includes('duplicate column name')) {
+        console.log('Migration: type column already exists in groups table');
+      } else {
+        console.log('Migration: type column in groups table might already exist or other issue:', error);
+      }
+    }
+
+    try {
+      // Migration 16: Decrypt and populate content for existing encrypted notes
       const encryptedNotes = await this.db.select<any[]>(`
         SELECT id, encrypted_content 
         FROM notes 

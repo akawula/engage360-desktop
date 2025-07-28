@@ -153,12 +153,17 @@ class SyncService {
     try {
       // Pull only active data types from server (growth features disabled)
       const tables = [
-        'people', 'groups', 'notes', 'action_items', 'devices'
+        'people', 'groups', 'people_groups', 'notes', 'action_items', 'devices'
       ];
 
       for (const table of tables) {
         console.log(`📥 Pulling ${table}...`);
-        await this.pullTableData(table, lastSync, result, resolveConflicts);
+        try {
+          await this.pullTableData(table, lastSync, result, resolveConflicts);
+        } catch (error) {
+          console.error(`📥 Failed to pull ${table}:`, error);
+          result.errors.push(`Failed to pull ${table}: ${error.message}`);
+        }
       }
     } catch (error) {
       console.error('Failed to pull remote changes:', error);
@@ -504,7 +509,8 @@ class SyncService {
   private getApiEndpoint(table: string): string {
     const endpointMap: Record<string, string> = {
       'people': '/sync/people',
-      'groups': '/sync/groups', 
+      'groups': '/sync/groups',
+      'people_groups': '/sync/people-groups',
       'notes': '/sync/notes',
       'action_items': '/sync/actions',
       'devices': '/devices'
@@ -523,7 +529,7 @@ class SyncService {
 
     try {
       const tables = [
-        'people', 'groups', 'notes', 'action_items', 'devices'
+        'people', 'groups', 'people_groups', 'notes', 'action_items', 'devices'
       ];
 
       for (const table of tables) {
@@ -547,7 +553,7 @@ class SyncService {
 
     try {
       const tables = [
-        'people', 'groups', 'notes', 'action_items', 'devices'
+        'people', 'groups', 'people_groups', 'notes', 'action_items', 'devices'
       ];
 
       for (const table of tables) {

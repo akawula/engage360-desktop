@@ -22,17 +22,9 @@ export default function Dashboard() {
         retry: false,
     });
 
-    const { data: groupsData } = useQuery({
+    const { data: groupsResponse } = useQuery({
         queryKey: ['groups'],
-        queryFn: async () => {
-            try {
-                const response = await groupsService.getGroups();
-                return response.success ? { groups: response.data } : { groups: [] };
-            } catch (error) {
-                console.error('Failed to fetch groups:', error);
-                return { groups: [] };
-            }
-        },
+        queryFn: groupsService.getGroups,
         retry: false, // Don't retry failed requests immediately on dashboard
     });
 
@@ -66,7 +58,7 @@ export default function Dashboard() {
 
     // Calculate stats
     const hasPeople = (peopleData?.people?.length || 0) > 0;
-    const hasGroups = (groupsData?.groups?.length || 0) > 0;
+    const hasGroups = (groupsResponse?.success && groupsResponse?.data?.length || 0) > 0;
     const hasNotes = (notesData?.notes?.length || 0) > 0;
     const hasActionItems = (actionItemsData?.length || 0) > 0;
     const isNewUser = !hasPeople && !hasGroups && !hasNotes && !hasActionItems;
@@ -92,7 +84,7 @@ export default function Dashboard() {
                             <p className="text-dark-600 dark:text-dark-400 text-lg mt-1">
                                 {isNewUser 
                                     ? "Your relationship management platform"
-                                    : `Managing ${peopleData?.people?.length || 0} contacts across ${groupsData?.groups?.length || 0} groups`
+                                    : `Managing ${peopleData?.people?.length || 0} contacts across ${groupsResponse?.success && groupsResponse?.data?.length || 0} groups`
                                 }
                             </p>
                         </div>
@@ -144,7 +136,7 @@ export default function Dashboard() {
                             <div className="flex-1">
                                 <h3 className="text-lg font-semibold text-dark-950 dark:text-white">Groups</h3>
                                 <p className="text-dark-600 dark:text-dark-400 text-sm">
-                                    {groupsData?.groups?.length || 0} teams
+                                    {groupsResponse?.success && groupsResponse?.data?.length || 0} teams
                                 </p>
                             </div>
                         </div>

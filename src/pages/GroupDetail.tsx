@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Building2, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Building2, Plus, UserMinus } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
 import EditGroupModal from '../components/EditGroupModal';
 import AddMemberModal from '../components/AddMemberModal';
+import RemoveMemberModal from '../components/RemoveMemberModal';
 
 export default function GroupDetail() {
     const { groupId } = useParams<{ groupId: string }>();
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+    const [isRemoveMemberModalOpen, setIsRemoveMemberModalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     const { data: groupResponse, isLoading, error } = useQuery({
         queryKey: ['group', groupId],
@@ -132,13 +135,23 @@ export default function GroupDetail() {
                             <Building2 className="h-5 w-5" />
                             Members ({members.length})
                         </h2>
-                        <button
-                            onClick={() => setIsAddMemberModalOpen(true)}
-                            className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Add Member
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setIsRemoveMemberModalOpen(true)}
+                                disabled={members.length === 0}
+                                className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <UserMinus className="h-4 w-4" />
+                                Remove Member
+                            </button>
+                            <button
+                                onClick={() => setIsAddMemberModalOpen(true)}
+                                className="bg-primary-600 text-white px-3 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2 text-sm"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add Member
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -154,12 +167,14 @@ export default function GroupDetail() {
                                 const position = person.job_description || person.position || '';
 
                                 return (
-                                    <Link
+                                    <div
                                         key={member.id || person.id}
-                                        to={`/people/${person.id}`}
-                                        className="p-4 border border-dark-300 rounded-lg hover:shadow-md transition-shadow"
+                                        className="p-4 border border-dark-300 rounded-lg hover:shadow-md transition-shadow relative group"
                                     >
-                                        <div className="flex items-center gap-3">
+                                        <Link
+                                            to={`/people/${person.id}`}
+                                            className="flex items-center gap-3"
+                                        >
                                             {avatar ? (
                                                 <img
                                                     key={`${person.id}-avatar-${avatar}`}
@@ -174,14 +189,14 @@ export default function GroupDetail() {
                                                     </span>
                                                 </div>
                                             )}
-                                            <div>
+                                            <div className="flex-1">
                                                 <h3 className="font-medium text-dark-950 dark:text-white">
                                                     {firstName} {lastName}
                                                 </h3>
                                                 <p className="text-sm text-dark-600 dark:text-dark-500">{position}</p>
                                             </div>
-                                        </div>
-                                    </Link>
+                                        </Link>
+                                    </div>
                                 );
                             })}
                         </div>
@@ -207,6 +222,17 @@ export default function GroupDetail() {
                     onClose={() => setIsAddMemberModalOpen(false)}
                     groupId={group.id}
                     currentMembers={members}
+                />
+            )}
+
+            {/* Remove Member Modal */}
+            {group && (
+                <RemoveMemberModal
+                    isOpen={isRemoveMemberModalOpen}
+                    onClose={() => setIsRemoveMemberModalOpen(false)}
+                    groupId={group.id}
+                    groupName={group.name}
+                    members={members}
                 />
             )}
         </div>
