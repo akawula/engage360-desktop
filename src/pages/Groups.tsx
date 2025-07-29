@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Building2, Calendar, TestTube, RefreshCw } from 'lucide-react';
+import { Plus, Building2, Calendar } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
 import { useAuth } from '../contexts/AuthContext';
 import CreateGroupModal from '../components/CreateGroupModal';
-import { testGroupAssignments, logGroupMembershipStatus, testSyncFunctionality } from '../utils/testGroupAssignments';
 
 export default function Groups() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isTestingAssignments, setIsTestingAssignments] = useState(false);
-    const [isTestingSync, setIsTestingSync] = useState(false);
     const { handleSessionExpiration } = useAuth();
 
 
@@ -22,34 +19,6 @@ export default function Groups() {
 
     const groups = groupsResponse?.success ? groupsResponse.data || [] : [];
 
-    const handleTestAssignments = async () => {
-        setIsTestingAssignments(true);
-        try {
-            const success = await testGroupAssignments();
-            if (success) {
-                await refetch();
-            }
-        } catch (error) {
-        } finally {
-            setIsTestingAssignments(false);
-        }
-    };
-
-    const handleLogStatus = async () => {
-        await logGroupMembershipStatus();
-    };
-
-    const handleTestSync = async () => {
-        setIsTestingSync(true);
-        try {
-            const success = await testSyncFunctionality();
-            if (success) {
-            }
-        } catch (error) {
-        } finally {
-            setIsTestingSync(false);
-        }
-    };
 
     if (isLoading) {
         return (
@@ -71,38 +40,13 @@ export default function Groups() {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Groups</h1>
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleLogStatus}
-                            className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
-                        >
-                            <Building2 className="h-4 w-4" />
-                            Log Status
-                        </button>
-                        <button
-                            onClick={handleTestAssignments}
-                            disabled={isTestingAssignments}
-                            className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
-                        >
-                            <TestTube className="h-4 w-4" />
-                            {isTestingAssignments ? 'Testing...' : 'Test Assignments'}
-                        </button>
-                        <button
-                            onClick={handleTestSync}
-                            disabled={isTestingSync}
-                            className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
-                        >
-                            <RefreshCw className="h-4 w-4" />
-                            {isTestingSync ? 'Syncing...' : 'Test Sync'}
-                        </button>
-                        <button
-                            onClick={() => setIsCreateModalOpen(true)}
-                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                        >
-                            <Plus className="h-4 w-4" />
-                            New Group
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        New Group
+                    </button>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                     <p className="text-red-800 dark:text-red-200">
@@ -127,38 +71,13 @@ export default function Groups() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-dark-950 dark:text-white">Groups</h1>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleLogStatus}
-                        className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
-                    >
-                        <Building2 className="h-4 w-4" />
-                        Log Status
-                    </button>
-                    <button
-                        onClick={handleTestAssignments}
-                        disabled={isTestingAssignments}
-                        className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
-                    >
-                        <TestTube className="h-4 w-4" />
-                        {isTestingAssignments ? 'Testing...' : 'Test Assignments'}
-                    </button>
-                    <button
-                        onClick={handleTestSync}
-                        disabled={isTestingSync}
-                        className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
-                    >
-                        <RefreshCw className="h-4 w-4" />
-                        {isTestingSync ? 'Syncing...' : 'Test Sync'}
-                    </button>
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Group
-                    </button>
-                </div>
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
+                    <Plus className="h-4 w-4" />
+                    New Group
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
