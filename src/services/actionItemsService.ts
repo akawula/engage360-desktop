@@ -458,8 +458,15 @@ class ActionItemsService {    /**
         try {
             const now = new Date().toISOString();
             const id = crypto.randomUUID();
-            const userProfile = await authService.getUserProfile();
-            const userId = userProfile.success ? userProfile.data?.id : null;
+
+            // Get user ID from local storage first (for offline-first approach)
+            let userId = authService.getStoredUserId();
+
+            // If no stored user ID, try to get from API as fallback
+            if (!userId) {
+                const userProfile = await authService.getUserProfile();
+                userId = userProfile.success ? (userProfile.data?.id || null) : null;
+            }
 
             if (!userId) {
                 return {

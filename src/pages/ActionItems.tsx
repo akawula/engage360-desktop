@@ -1,11 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck, FileText } from 'lucide-react';
 import { useActionItems, useUpdateActionStatus, useDeleteActionItem } from '../hooks/useActionItems';
 import { peopleService } from '../services/peopleService';
-import AddActionItemModal from '../components/AddActionItemModal';
-import EditActionItemModal from '../components/EditActionItemModal';
 import { formatAvatarSrc } from '../lib/utils';
 import type { ActionItem } from '../types';
 
@@ -14,17 +12,14 @@ import type { ActionItem } from '../types';
 // Helper function to format dates in a human-readable way for due dates
 
 export default function ActionItems() {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<ActionItem | null>(null);
     const [itemToDelete, setItemToDelete] = useState<ActionItem | null>(null);
     const [activeTab, setActiveTab] = useState<'todo' | 'completed' | 'archived'>('todo');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPriority, setSelectedPriority] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'created' | 'updated' | 'priority' | 'dueDate'>('updated');
-    const [prefilledTitle, setPrefilledTitle] = useState<string>('');
-    const [prefilledNoteId, setPrefilledNoteId] = useState<string>('');
     const [showHighlight, setShowHighlight] = useState<boolean>(true);
     const [highlightProgress, setHighlightProgress] = useState<number>(100);
 
@@ -116,29 +111,21 @@ export default function ActionItems() {
         const noteId = searchParams.get('noteId');
 
         if (title || noteId) {
-            setPrefilledTitle(title || '');
-            setPrefilledNoteId(noteId || '');
-            setIsAddModalOpen(true);
+            // Navigate to create page with prefilled values
+            const params = new URLSearchParams();
+            if (title) params.set('title', title);
+            if (noteId) params.set('noteId', noteId);
+            navigate(`/action-items/create?${params.toString()}`);
 
-            // Clear the URL parameters after a small delay to allow modal to initialize
-            setTimeout(() => {
-                setSearchParams(prev => {
-                    const newParams = new URLSearchParams(prev);
-                    newParams.delete('title');
-                    newParams.delete('noteId');
-                    return newParams;
-                });
-            }, 100);
+            // Clear the URL parameters
+            setSearchParams(prev => {
+                const newParams = new URLSearchParams(prev);
+                newParams.delete('title');
+                newParams.delete('noteId');
+                return newParams;
+            });
         }
-    }, [searchParams, setSearchParams, highlightItemId]);
-
-    // Reset prefilled values when modal closes
-    useEffect(() => {
-        if (!isAddModalOpen) {
-            setPrefilledTitle('');
-            setPrefilledNoteId('');
-        }
-    }, [isAddModalOpen]);
+    }, [searchParams, setSearchParams, navigate, highlightItemId]);
 
     // Helper function to get person data by ID
     const getPersonById = (personId: string | undefined) => {
@@ -421,7 +408,7 @@ export default function ActionItems() {
                             <div className="h-6 w-px bg-dark-400 dark:bg-dark-700"></div>
 
                             <button
-                                onClick={() => setIsAddModalOpen(true)}
+                                onClick={() => navigate('/action-items/create')}
                                 className="group flex items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg"
                             >
                                 <Plus className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -582,10 +569,11 @@ export default function ActionItems() {
                             const isHighlighted = highlightItemId === item.id && showHighlight;
 
                             return (
-                                <div
+                                <Link
                                     key={item.id}
+                                    to={`/action-items/${item.id}/edit`}
                                     id={`action-item-${item.id}`}
-                                    className={`group bg-white dark:bg-dark-900 rounded-xl border-2 transition-all duration-1000 hover:shadow-lg ${isHighlighted
+                                    className={`group bg-white dark:bg-dark-900 rounded-xl border-2 transition-all duration-1000 hover:shadow-lg cursor-pointer block ${isHighlighted
                                         ? 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-primary-200/50 dark:shadow-primary-900/30 shadow-lg ring-2 ring-primary-200 dark:ring-primary-800 hover:shadow-primary-300/60 dark:hover:shadow-primary-900/40'
                                         : isItemOverdue
                                             ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 shadow-red-200/50 dark:shadow-red-900/30 shadow-lg ring-2 ring-red-200 dark:ring-red-800 hover:shadow-red-300/60 dark:hover:shadow-red-900/40'
@@ -720,7 +708,11 @@ export default function ActionItems() {
                                                         {/* Status action buttons */}
                                                         {item.status === 'pending' && (
                                                             <button
-                                                                onClick={() => handleStartWork(item)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleStartWork(item);
+                                                                }}
                                                                 disabled={updateActionStatus.isPending}
                                                                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors disabled:opacity-50"
                                                                 title="Start working"
@@ -730,7 +722,11 @@ export default function ActionItems() {
                                                         )}
                                                         {item.status === 'in_progress' && (
                                                             <button
-                                                                onClick={() => handleStopWork(item)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleStopWork(item);
+                                                                }}
                                                                 disabled={updateActionStatus.isPending}
                                                                 className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors disabled:opacity-50"
                                                                 title="Stop working"
@@ -740,7 +736,11 @@ export default function ActionItems() {
                                                         )}
                                                         {item.status !== 'completed' && item.status !== 'cancelled' && (
                                                             <button
-                                                                onClick={() => handleToggleStatus(item)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleToggleStatus(item);
+                                                                }}
                                                                 disabled={updateActionStatus.isPending}
                                                                 className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors disabled:opacity-50"
                                                                 title="Mark as completed"
@@ -750,7 +750,11 @@ export default function ActionItems() {
                                                         )}
                                                         {item.status === 'completed' && (
                                                             <button
-                                                                onClick={() => handleToggleStatus(item)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleToggleStatus(item);
+                                                                }}
                                                                 disabled={updateActionStatus.isPending}
                                                                 className="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-colors disabled:opacity-50"
                                                                 title="Mark as pending"
@@ -760,7 +764,11 @@ export default function ActionItems() {
                                                         )}
                                                         {item.status === 'cancelled' && (
                                                             <button
-                                                                onClick={() => handleRestoreItem(item)}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleRestoreItem(item);
+                                                                }}
                                                                 disabled={updateActionStatus.isPending}
                                                                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors disabled:opacity-50"
                                                                 title="Restore"
@@ -771,14 +779,11 @@ export default function ActionItems() {
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
-                                                            onClick={() => setEditingItem(item)}
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit2 className="h-4 w-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteItem(item)}
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                handleDeleteItem(item);
+                                                            }}
                                                             disabled={deleteActionItem.isPending}
                                                             className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
                                                             title="Delete"
@@ -880,7 +885,11 @@ export default function ActionItems() {
                                             <div className="flex items-center gap-1">
                                                 {item.status === 'pending' && (
                                                     <button
-                                                        onClick={() => handleStartWork(item)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleStartWork(item);
+                                                        }}
                                                         disabled={updateActionStatus.isPending}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors disabled:opacity-50"
                                                         title="Start working"
@@ -890,7 +899,11 @@ export default function ActionItems() {
                                                 )}
                                                 {item.status === 'in_progress' && (
                                                     <button
-                                                        onClick={() => handleStopWork(item)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleStopWork(item);
+                                                        }}
                                                         disabled={updateActionStatus.isPending}
                                                         className="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors disabled:opacity-50"
                                                         title="Stop working"
@@ -900,7 +913,11 @@ export default function ActionItems() {
                                                 )}
                                                 {item.status !== 'completed' && item.status !== 'cancelled' && (
                                                     <button
-                                                        onClick={() => handleToggleStatus(item)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleToggleStatus(item);
+                                                        }}
                                                         disabled={updateActionStatus.isPending}
                                                         className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors disabled:opacity-50"
                                                         title="Mark as completed"
@@ -910,7 +927,11 @@ export default function ActionItems() {
                                                 )}
                                                 {item.status === 'completed' && (
                                                     <button
-                                                        onClick={() => handleToggleStatus(item)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleToggleStatus(item);
+                                                        }}
                                                         disabled={updateActionStatus.isPending}
                                                         className="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-md transition-colors disabled:opacity-50"
                                                         title="Mark as pending"
@@ -920,7 +941,11 @@ export default function ActionItems() {
                                                 )}
                                                 {item.status === 'cancelled' && (
                                                     <button
-                                                        onClick={() => handleRestoreItem(item)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleRestoreItem(item);
+                                                        }}
                                                         disabled={updateActionStatus.isPending}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors disabled:opacity-50"
                                                         title="Restore"
@@ -929,14 +954,11 @@ export default function ActionItems() {
                                                     </button>
                                                 )}
                                                 <button
-                                                    onClick={() => setEditingItem(item)}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
-                                                    title="Edit"
-                                                >
-                                                    <Edit2 className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteItem(item)}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleDeleteItem(item);
+                                                    }}
                                                     disabled={deleteActionItem.isPending}
                                                     className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
                                                     title="Delete"
@@ -946,7 +968,7 @@ export default function ActionItems() {
                                             </div>
                                         </div>
                                     )}
-                                </div>
+                                </Link>
                             );
                         })}
                     </div>
@@ -985,7 +1007,7 @@ export default function ActionItems() {
                                 </button>
                             )}
                             <button
-                                onClick={() => setIsAddModalOpen(true)}
+                                onClick={() => navigate('/action-items/create')}
                                 className="flex items-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white px-6 py-2 rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg"
                             >
                                 <Plus className="h-4 w-4" />
@@ -996,21 +1018,6 @@ export default function ActionItems() {
                 )}
             </div>
 
-            {/* Modals */}
-            <AddActionItemModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                prefilledTitle={prefilledTitle}
-                preselectedNoteId={prefilledNoteId}
-            />
-
-            {editingItem && (
-                <EditActionItemModal
-                    isOpen={true}
-                    onClose={() => setEditingItem(null)}
-                    actionItem={editingItem}
-                />
-            )}
 
             {/* Custom Delete Confirmation Modal */}
             {itemToDelete && (

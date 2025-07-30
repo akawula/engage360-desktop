@@ -1,13 +1,11 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, CheckSquare, Calendar, User, Building, FileText } from 'lucide-react';
 import { actionItemsService } from '../services/actionItemsService';
-import EditActionItemModal from '../components/EditActionItemModal';
 
 export default function ActionItemDetail() {
     const { actionItemId } = useParams<{ actionItemId: string }>();
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     const { data: actionItem, isLoading } = useQuery({
         queryKey: ['actionItem', actionItemId],
@@ -73,7 +71,7 @@ export default function ActionItemDetail() {
                     Back to Action Items
                 </Link>
                 <button
-                    onClick={() => setIsEditModalOpen(true)}
+                    onClick={() => navigate(`/action-items/${actionItemId}/edit`)}
                     className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
                 >
                     <Edit className="h-4 w-4" />
@@ -173,14 +171,6 @@ export default function ActionItemDetail() {
                 </div>
             </div>
 
-            {/* Edit Action Item Modal */}
-            {actionItem && (
-                <EditActionItemModal
-                    isOpen={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    actionItem={actionItem}
-                />
-            )}
         </div>
     );
 }

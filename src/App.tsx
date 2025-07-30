@@ -18,6 +18,7 @@ import Notes from './pages/Notes';
 import CreateNote from './pages/CreateNote';
 import NoteDetail from './pages/NoteDetail';
 import ActionItems from './pages/ActionItems';
+import CreateActionItem from './pages/CreateActionItem';
 import ActionItemDetail from './pages/ActionItemDetail';
 import Profile from './pages/Profile';
 import Devices from './pages/Devices';
@@ -81,6 +82,8 @@ function App() {
                       <Route path="/notes/create" element={<CreateNote />} />
                       <Route path="/notes/:noteId" element={<NoteDetail />} />
                       <Route path="/action-items" element={<ActionItems />} />
+                      <Route path="/action-items/create" element={<CreateActionItem />} />
+                      <Route path="/action-items/:actionItemId/edit" element={<CreateActionItem />} />
                       <Route path="/action-items/:actionItemId" element={<ActionItemDetail />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/devices" element={<Devices />} />

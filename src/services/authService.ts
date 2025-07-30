@@ -232,6 +232,40 @@ class AuthService {
         return apiService.get<AuthUser>('/users/profile');
     }
 
+    /**
+     * Get stored user ID from local storage (for offline use)
+     */
+    getStoredUserId(): string | null {
+        try {
+            // First try to get from stored user profile
+            const stored = localStorage.getItem('user_id');
+            if (stored) {
+                return stored;
+            }
+
+            // Try to get from token payload if available
+            const token = this.getToken();
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const userId = payload.sub || payload.userId || payload.id || null;
+                    if (userId) {
+                        // Store it for future use
+                        localStorage.setItem('user_id', userId);
+                        return userId;
+                    }
+                } catch {
+                    // Token parsing failed, continue with fallback
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Failed to get stored user ID:', error);
+            return null;
+        }
+    }
+
     isAuthenticated(): boolean {
         return !!apiService.getToken();
     }
@@ -458,6 +492,9 @@ class AuthService {
      */
     private storeUserProfile(user: AuthUser): void {
         try {
+            // Store user ID separately for easy access
+            localStorage.setItem('user_id', user.id);
+
             localStorage.setItem('user_profile', JSON.stringify({
                 firstName: user.firstName,
                 lastName: user.lastName,
@@ -488,6 +525,7 @@ class AuthService {
     private clearStoredUserProfile(): void {
         try {
             localStorage.removeItem('user_profile');
+            localStorage.removeItem('user_id');
         } catch (error) {
             console.error('Failed to clear user profile:', error);
         }
