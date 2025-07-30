@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Calendar, User, Building, Tag, Clock, Sparkles, FileText, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, X, Building, Tag, Clock, Sparkles, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose, Trash2 } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -131,7 +131,7 @@ export default function NoteDetail() {
 
     // Action item modal state
     const [showActionItemModal, setShowActionItemModal] = useState(false);
-    const [actionItemTitle, setActionItemTitle] = useState('');
+    const [actionItemTitle] = useState('');
 
     // UI state for maximizing editor
     const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
@@ -139,7 +139,7 @@ export default function NoteDetail() {
 
     // Delete note functionality
     const deleteNoteMutation = useDeleteNote();
-    
+
     // Confirmation modal state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -187,7 +187,7 @@ export default function NoteDetail() {
     // Helper function to check if form data has actually changed from original note
     const hasActualChanges = (currentFormData: typeof formData, originalNote: typeof note) => {
         if (!originalNote) return false;
-        
+
         return (
             currentFormData.title !== originalNote.title ||
             currentFormData.content !== originalNote.content ||
@@ -389,7 +389,7 @@ export default function NoteDetail() {
 
     const confirmDeleteNote = async () => {
         if (!note) return;
-        
+
         try {
             await deleteNoteMutation.mutateAsync(note.id);
             showSuccess('Note Deleted', 'Your note has been deleted successfully.');
@@ -400,11 +400,11 @@ export default function NoteDetail() {
         }
     };
 
-    const handleCreateActionItem = (selectedText: string) => {
-        // Open the modal with the selected text
-        setActionItemTitle(selectedText);
-        setShowActionItemModal(true);
-    };
+    // const handleCreateActionItem = (selectedText: string) => {
+    //     // Open the modal with the selected text
+    //     setActionItemTitle(selectedText);
+    //     setShowActionItemModal(true);
+    // };
 
     const handleFindTasks = async (selectedText: string) => {
         try {
@@ -416,11 +416,11 @@ export default function NoteDetail() {
             if (isOllamaEnabled) {
                 // Check if Ollama is available
                 const ollamaStatus = await ollamaService.checkOllamaStatus();
-                
+
                 if (ollamaStatus.isInstalled && ollamaStatus.isRunning) {
                     try {
                         const aiResult = await ollamaService.detectTasks(modelName, selectedText);
-                        
+
                         if (aiResult.totalTasks > 0) {
                             // Display AI-detected tasks summary
                             console.log(`🔍 AI detected ${aiResult.totalTasks} tasks in ${aiResult.detectedLanguage}`);
@@ -431,7 +431,7 @@ export default function NoteDetail() {
                             console.log('No tasks found by AI analysis');
                         }
                         return; // Successfully used AI, exit early
-                        
+
                     } catch (aiError) {
                         console.warn('AI analysis failed, falling back to regex detection:', aiError);
                     }
@@ -469,7 +469,7 @@ export default function NoteDetail() {
 
         // Remove duplicates
         const uniqueTasks = [...new Set(foundTasks)];
-        
+
         if (uniqueTasks.length > 0) {
             console.log(`📋 Found ${uniqueTasks.length} potential tasks using regex detection`);
             uniqueTasks.forEach((task, index) => {
@@ -855,7 +855,7 @@ export default function NoteDetail() {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex flex-wrap gap-1 mb-2">
                                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getStatusColor(item.status)}`}>
                                             {item.status.replace('_', ' ')}

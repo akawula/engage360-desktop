@@ -87,21 +87,21 @@ export class PeopleService {
         try {
             let whereClause = '';
             let queryParams: any[] = [];
-            
+
             if (params?.search) {
                 whereClause = 'first_name LIKE ? OR last_name LIKE ? OR email LIKE ?';
                 const searchTerm = `%${params.search}%`;
                 queryParams = [searchTerm, searchTerm, searchTerm];
             }
-            
+
             const localPeople = await databaseService.findAll<any>('people', whereClause, queryParams);
-            
+
             if (localPeople.length > 0) {
                 // Apply offset and limit
                 const offset = params?.offset || 0;
                 const limit = params?.limit || localPeople.length;
                 const paginatedPeople = localPeople.slice(offset, offset + limit);
-                
+
                 const transformedPeople = await Promise.all(
                     paginatedPeople.map(person => this.transformPersonFromDB(person))
                 );
@@ -110,7 +110,7 @@ export class PeopleService {
                     people: transformedPeople,
                     total: localPeople.length
                 };
-                
+
                 return {
                     success: true,
                     data: transformedData
@@ -216,7 +216,7 @@ export class PeopleService {
     async createPerson(personData: CreatePersonRequest): Promise<ApiResponse<Person>> {
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
-        
+
         const newPerson: Person = {
             id,
             firstName: personData.firstName,
@@ -240,7 +240,7 @@ export class PeopleService {
             console.error('Failed to store person in local database:', error);
             return {
                 success: false,
-                error: { message: 'Failed to create person locally', code: 500, details: error.toString() }
+                error: { message: 'Failed to create person locally', code: 500, details: (error as Error).toString() }
             };
         }
 
@@ -265,7 +265,7 @@ export class PeopleService {
                 }
 
                 const response = await apiService.post<any>('/people', apiData);
-                
+
                 if (response.success) {
                     // Update local record with server response if needed
                     await databaseService.markSynced('people', id);
@@ -313,7 +313,7 @@ export class PeopleService {
             console.error('Failed to update person in local database:', error);
             return {
                 success: false,
-                error: { message: 'Failed to update person locally', code: 500, details: error.toString() }
+                error: { message: 'Failed to update person locally', code: 500, details: (error as Error).toString() }
             };
         }
 
@@ -331,7 +331,7 @@ export class PeopleService {
                 if (updates.avatarUrl !== undefined) apiData.avatar_url = updates.avatarUrl || null;
 
                 const response = await apiService.put<any>(`/people/${id}`, apiData);
-                
+
                 if (response.success) {
                     await databaseService.markSynced('people', id);
                 }
@@ -356,7 +356,7 @@ export class PeopleService {
             console.error('Failed to delete person from local database:', error);
             return {
                 success: false,
-                error: { message: 'Failed to delete person locally', code: 500, details: error.toString() }
+                error: { message: 'Failed to delete person locally', code: 500, details: (error as Error).toString() }
             };
         }
 

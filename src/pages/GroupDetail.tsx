@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Building2, Plus, UserMinus } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
@@ -12,7 +12,6 @@ export default function GroupDetail() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
     const [isRemoveMemberModalOpen, setIsRemoveMemberModalOpen] = useState(false);
-    const queryClient = useQueryClient();
 
     const { data: groupResponse, isLoading, error } = useQuery({
         queryKey: ['group', groupId],

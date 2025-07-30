@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Plus, CheckSquare, Clock, User, Calendar, AlertCircle, Edit2, Trash2, Check, Play, Square, Archive, Ban, RotateCcw, Search, Filter, Grid, List, Target, ArrowRight, Flame, Zap, Timer, UserCheck, FileText } from 'lucide-react';

@@ -18,7 +18,7 @@ export default function CreateNote() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [searchParams] = useSearchParams();
-    const { user, isAuthenticated, isLoading } = useAuth();
+    const { isAuthenticated, isLoading } = useAuth();
 
     // Fetch people and groups for association dropdowns
     const { data: peopleResponse } = useQuery({
@@ -71,7 +71,7 @@ export default function CreateNote() {
 
     // Action item modal state
     const [showActionItemModal, setShowActionItemModal] = useState(false);
-    const [actionItemTitle, setActionItemTitle] = useState('');
+    const [actionItemTitle] = useState('');
 
     // UI state for maximizing editor
     const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
@@ -187,7 +187,7 @@ export default function CreateNote() {
 
             return response.data;
         },
-        onSuccess: async (note) => {
+        onSuccess: async () => {
             // Invalidate and refetch notes immediately
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['notes'] }),
@@ -325,19 +325,17 @@ export default function CreateNote() {
         createMutation.mutate(noteDataWithEditorContent);
     }, [formData, editorRef, createMutation]);
 
-    const handleCreateActionItem = (selectedText: string) => {
-        // Open the modal with the selected text
-        setActionItemTitle(selectedText);
-        setShowActionItemModal(true);
-    };
+    // const handleCreateActionItem = (selectedText: string) => {
+    //     // Open the modal with the selected text
+    //     setActionItemTitle(selectedText);
+    //     setShowActionItemModal(true);
+    // };
 
     const handleFindTasks = async (selectedText: string) => {
         console.log('=== AI-POWERED TASK ANALYSIS ===');
         console.log(`Analyzing ${selectedText.length} characters of text...`);
         console.log('');
 
-        let usingAI = false;
-        let aiModel = '';
 
         try {
             // Get user's Ollama preferences
@@ -348,17 +346,15 @@ export default function CreateNote() {
             if (isOllamaEnabled) {
                 // Check if Ollama is available
                 const ollamaStatus = await ollamaService.checkOllamaStatus();
-                
+
                 if (ollamaStatus.isInstalled && ollamaStatus.isRunning) {
-                    usingAI = true;
-                    aiModel = modelName;
                     console.log(`🤖 Using AI model: ${modelName}`);
                     console.log('🌍 Multi-language task detection enabled');
                     console.log('');
 
                     try {
                         const aiResult = await ollamaService.detectTasks(modelName, selectedText);
-                        
+
                         console.log(`🔍 Detected language: ${aiResult.detectedLanguage}`);
                         console.log(`📋 Found ${aiResult.totalTasks} tasks`);
                         console.log('');
@@ -376,27 +372,27 @@ export default function CreateNote() {
                         } else {
                             // Display AI-detected tasks
                             aiResult.tasks.forEach((task, index) => {
-                                const priorityEmoji = task.priority === 'urgent' ? '🟣' : 
-                                                    task.priority === 'high' ? '🔴' : 
+                                const priorityEmoji = task.priority === 'urgent' ? '🟣' :
+                                                    task.priority === 'high' ? '🔴' :
                                                     task.priority === 'medium' ? '🟡' : '🟢';
-                                const typeEmoji = task.type === 'todo' ? '📝' : 
-                                                 task.type === 'deadline' ? '⏰' : 
-                                                 task.type === 'development' ? '💻' : 
-                                                 task.type === 'follow_up' ? '🔄' : 
-                                                 task.type === 'reminder' ? '🔔' : 
+                                const typeEmoji = task.type === 'todo' ? '📝' :
+                                                 task.type === 'deadline' ? '⏰' :
+                                                 task.type === 'development' ? '💻' :
+                                                 task.type === 'follow_up' ? '🔄' :
+                                                 task.type === 'reminder' ? '🔔' :
                                                  task.type === 'action' ? '⚡' : '✅';
-                                
+
                                 const confidenceBar = '█'.repeat(Math.round(task.confidence * 10));
                                 console.log(`${index + 1}. ${typeEmoji} ${priorityEmoji} [${task.type.toUpperCase()}] ${task.content}`);
                                 console.log(`   📊 Confidence: ${(task.confidence * 100).toFixed(0)}% ${confidenceBar}`);
                             });
-                            
+
                             console.log('');
                             console.log('📊 AI Analysis Summary:');
                             console.log('Priority Distribution:');
                             Object.entries(aiResult.summary.byPriority).forEach(([priority, count]) => {
-                                const emoji = priority === 'urgent' ? '🟣' : 
-                                            priority === 'high' ? '🔴' : 
+                                const emoji = priority === 'urgent' ? '🟣' :
+                                            priority === 'high' ? '🔴' :
                                             priority === 'medium' ? '🟡' : '🟢';
                                 console.log(`  ${emoji} ${priority.toUpperCase()}: ${count} tasks`);
                             });
@@ -410,12 +406,11 @@ export default function CreateNote() {
 
                         console.log('=== END AI TASK ANALYSIS ===');
                         return; // Successfully used AI, exit early
-                        
+
                     } catch (aiError) {
                         console.log(`⚠️ AI analysis failed: ${aiError}`);
                         console.log('📝 Falling back to regex-based detection...');
                         console.log('');
-                        usingAI = false;
                     }
                 } else {
                     console.log('⚠️ Ollama not available (not installed or not running)');
@@ -457,11 +452,11 @@ export default function CreateNote() {
                 const taskContent = match[1]?.trim();
                 if (taskContent && taskContent.length > 3) {
                     foundTasks.push(taskContent);
-                    
+
                     // Determine task type and priority
                     let taskType = 'general';
                     let priority = 'medium';
-                    
+
                     if (index === 0) taskType = 'todo';
                     else if (index === 1) taskType = 'task';
                     else if (index === 2) taskType = 'action';
@@ -492,7 +487,7 @@ export default function CreateNote() {
 
         // Remove duplicates
         const uniqueTasks = [...new Set(foundTasks)];
-        const uniqueTaskDetails = taskDetails.filter((task, index, self) => 
+        const uniqueTaskDetails = taskDetails.filter((task, index, self) =>
             index === self.findIndex(t => t.content === task.content)
         );
 
@@ -500,7 +495,7 @@ export default function CreateNote() {
         console.log(`Found ${uniqueTasks.length} potential tasks in selected text`);
         console.log('⚠️ Note: Regex detection only works with English patterns');
         console.log('');
-        
+
         if (uniqueTasks.length === 0) {
             console.log('❌ No tasks found. Try selecting text that contains:');
             console.log('  • TODO/Task items');
@@ -511,22 +506,22 @@ export default function CreateNote() {
         } else {
             uniqueTaskDetails.forEach((task, index) => {
                 const priorityEmoji = task.priority === 'high' ? '🔴' : task.priority === 'low' ? '🟢' : '🟡';
-                const typeEmoji = task.type === 'todo' ? '📝' : 
-                                 task.type === 'deadline' ? '⏰' : 
-                                 task.type === 'development' ? '💻' : 
-                                 task.type === 'follow_up' ? '🔄' : 
+                const typeEmoji = task.type === 'todo' ? '📝' :
+                                 task.type === 'deadline' ? '⏰' :
+                                 task.type === 'development' ? '💻' :
+                                 task.type === 'follow_up' ? '🔄' :
                                  task.type === 'reminder' ? '🔔' : '✅';
-                
+
                 console.log(`${index + 1}. ${typeEmoji} ${priorityEmoji} [${task.type.toUpperCase()}] ${task.content}`);
             });
-            
+
             console.log('');
             console.log('📊 Summary by Priority:');
             const priorityCount = uniqueTaskDetails.reduce((acc, task) => {
                 acc[task.priority!] = (acc[task.priority!] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>);
-            
+
             Object.entries(priorityCount).forEach(([priority, count]) => {
                 const emoji = priority === 'high' ? '🔴' : priority === 'low' ? '🟢' : '🟡';
                 console.log(`  ${emoji} ${priority.toUpperCase()}: ${count} tasks`);
@@ -538,12 +533,12 @@ export default function CreateNote() {
                 acc[task.type] = (acc[task.type] || 0) + 1;
                 return acc;
             }, {} as Record<string, number>);
-            
+
             Object.entries(typeCount).forEach(([type, count]) => {
                 console.log(`  • ${type.replace('_', ' ').toUpperCase()}: ${count} tasks`);
             });
         }
-        
+
         console.log('=== END REGEX TASK ANALYSIS ===');
     };
 

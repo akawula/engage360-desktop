@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { syncService } from '../services/syncService';
-import { WifiIcon, WifiOffIcon, RefreshCwIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
+import { WifiOffIcon, RefreshCwIcon, CheckIcon, AlertTriangleIcon } from 'lucide-react';
 
 interface SyncStatusProps {
   className?: string;
@@ -23,7 +23,7 @@ export const SyncStatus: React.FC<SyncStatusProps> = ({ className = '' }) => {
       const result = await syncService.manualSync();
       setLastSyncResult({ success: result.success, errors: result.errors });
     } catch (error) {
-      setLastSyncResult({ success: false, errors: [error.toString()] });
+      setLastSyncResult({ success: false, errors: [String(error)] });
     }
   };
 
@@ -31,15 +31,15 @@ export const SyncStatus: React.FC<SyncStatusProps> = ({ className = '' }) => {
     if (!status.isOnline) {
       return <WifiOffIcon className="h-4 w-4 text-red-500" />;
     }
-    
+
     if (status.isSync) {
       return <RefreshCwIcon className="h-4 w-4 text-blue-500 animate-spin" />;
     }
-    
+
     if (lastSyncResult?.success === false) {
       return <AlertTriangleIcon className="h-4 w-4 text-yellow-500" />;
     }
-    
+
     return <CheckIcon className="h-4 w-4 text-green-500" />;
   };
 
@@ -47,22 +47,22 @@ export const SyncStatus: React.FC<SyncStatusProps> = ({ className = '' }) => {
     if (!status.isOnline) {
       return 'Offline';
     }
-    
+
     if (status.isSync) {
       return 'Syncing...';
     }
-    
+
     if (lastSyncResult?.success === false) {
       return 'Sync error';
     }
-    
+
     if (status.lastSync) {
       const timeAgo = Math.floor((Date.now() - status.lastSync.getTime()) / 1000);
       if (timeAgo < 60) return 'Just synced';
       if (timeAgo < 3600) return `Synced ${Math.floor(timeAgo / 60)}m ago`;
       return `Synced ${Math.floor(timeAgo / 3600)}h ago`;
     }
-    
+
     return 'Ready to sync';
   };
 

@@ -12,24 +12,24 @@ export async function testGroupAssignments() {
     // 1. Get all groups and people
     const groupsResponse = await groupsService.getGroups();
     const allPeople = await databaseService.findAll<any>('people', 'deleted_at IS NULL');
-    
+
     if (!groupsResponse.success || !groupsResponse.data) {
       return false;
     }
-    
+
     const groups = groupsResponse.data;
-    
+
     if (groups.length === 0) {
       return false;
     }
-    
+
     if (allPeople.length === 0) {
       return false;
     }
-    
+
     // 2. Clear existing assignments for clean test
     await databaseService.clearTable('people_groups');
-    
+
     // Reset group member counts
     for (const group of groups) {
       await databaseService.update('groups', group.id, {
@@ -37,41 +37,41 @@ export async function testGroupAssignments() {
         updated_at: new Date().toISOString()
       });
     }
-    
+
     // 3. Test assignments
     const firstGroup = groups[0];
     const secondGroup = groups[1] || firstGroup;
-    
+
     // Assign first half of people to first group
     const halfwayPoint = Math.ceil(allPeople.length / 2);
     const firstHalf = allPeople.slice(0, halfwayPoint);
     const secondHalf = allPeople.slice(halfwayPoint);
-    
+
     const firstAssignmentResult = await groupsService.addGroupMembers(
-      firstGroup.id, 
+      firstGroup.id,
       firstHalf.map(p => p.id)
     );
-    
+
     if (!firstAssignmentResult.success) {
       return false;
     }
-    
+
     // Assign second half to second group (if different)
     if (secondGroup.id !== firstGroup.id && secondHalf.length > 0) {
       const secondAssignmentResult = await groupsService.addGroupMembers(
-        secondGroup.id, 
+        secondGroup.id,
         secondHalf.map(p => p.id)
       );
-      
+
       if (!secondAssignmentResult.success) {
         return false;
       }
     }
-    
+
     // 4. Test many-to-many by assigning one person to multiple groups
     if (groups.length > 1 && allPeople.length > 0) {
       const testPerson = allPeople[0];
-      
+
       // Add the same person to all groups
       for (const group of groups) {
         await groupsService.addGroupMember(group.id, testPerson.id);
@@ -82,19 +82,19 @@ export async function testGroupAssignments() {
     if (groups.length > 0 && allPeople.length > 0) {
       const testGroup = groups[0];
       const groupMembersResponse = await groupsService.getGroupMembers(testGroup.id);
-      
+
       if (groupMembersResponse.success && groupMembersResponse.data && groupMembersResponse.data.length > 0) {
         const memberToRemove = groupMembersResponse.data[0];
-        
+
         const removalResult = await groupsService.removeGroupMember(testGroup.id, memberToRemove.id);
         if (!removalResult.success) {
           return false;
         }
       }
     }
-    
+
     return true;
-    
+
   } catch (error) {
     return false;
   }
@@ -106,12 +106,12 @@ export async function logGroupMembershipStatus() {
     if (!groupsResponse.success || !groupsResponse.data) {
       return;
     }
-    
+
     for (const group of groupsResponse.data) {
-      const membersResponse = await groupsService.getGroupMembers(group.id);
+      await groupsService.getGroupMembers(group.id);
       // Status logged in development only
     }
-    
+
   } catch (error) {
     // Error handling
   }
@@ -120,14 +120,14 @@ export async function logGroupMembershipStatus() {
 export async function testSyncFunctionality() {
   try {
     // Check sync status
-    const pendingRecords = await databaseService.getPendingSyncRecords();
-    
+    await databaseService.getPendingSyncRecords();
+
     // Test manual sync if online
     if (syncService.isConnected()) {
       const syncResult = await syncService.manualSync();
       return syncResult.success;
     }
-    
+
     return true;
   } catch (error) {
     return false;

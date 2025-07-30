@@ -16,8 +16,8 @@ class GroupsService {
         try {
             // Try to get from local database first
             const localGroups = await databaseService.findAll<any>('groups', 'deleted_at IS NULL');
-            
-            
+
+
             if (localGroups && localGroups.length >= 0) {
                 // For each group, calculate the actual member count from the people table
                 const groups: Group[] = [];
@@ -35,7 +35,7 @@ class GroupsService {
                     // Get actual member count from junction table
                     const memberRelations = await databaseService.findAll<any>('people_groups', 'group_id = ?', [item.id]);
                     const actualMemberCount = memberRelations.length;
-                    
+
                     // Update the stored member count if it's wrong
                     if (item.member_count !== actualMemberCount) {
                         await databaseService.update('groups', item.id, {
@@ -88,7 +88,7 @@ class GroupsService {
         try {
             // Try local database first
             const localGroup = await databaseService.findById<any>('groups', id);
-            
+
             if (localGroup && !localGroup.deleted_at) {
                 // Transform database record to frontend Group type
                 let tags: string[] = [];
@@ -145,7 +145,7 @@ class GroupsService {
         try {
             const id = crypto.randomUUID();
             const now = new Date().toISOString();
-            
+
             const newGroup: Group = {
                 id,
                 name: data.name,
@@ -190,7 +190,7 @@ class GroupsService {
                     };
 
                     const response = await apiService.post<any>('/groups', apiData);
-                    
+
                     if (response.success) {
                         await databaseService.markSynced('groups', id);
                     }
@@ -217,7 +217,7 @@ class GroupsService {
 
     async updateGroup(id: string, data: UpdateGroupRequest): Promise<ApiResponse<Group>> {
         try {
-            
+
             // Get current group from local database
             const currentGroup = await databaseService.findById<any>('groups', id);
             if (!currentGroup) {
@@ -257,7 +257,7 @@ class GroupsService {
                     if (data.type !== undefined) apiData.type = data.type;
 
                     const response = await apiService.put<any>(`/groups/${id}`, apiData);
-                    
+
                     if (response.success) {
                         await databaseService.markSynced('groups', id);
                     }
@@ -288,6 +288,7 @@ class GroupsService {
                 tags: tags,
                 color: updatedGroup.color || '',
                 memberCount: updatedGroup.member_count || 0,
+                userId: updatedGroup.user_id || 'current-user',
                 createdAt: updatedGroup.created_at,
                 updatedAt: updatedGroup.updated_at,
                 members: []
@@ -311,10 +312,10 @@ class GroupsService {
 
     async getGroupMembers(groupId: string): Promise<ApiResponse<Person[]>> {
         try {
-            
+
             // Get all people who belong to this group via junction table
             const memberRelations = await databaseService.findAll<any>('people_groups', 'group_id = ?', [groupId]);
-            
+
             // Get the actual people data
             const members = [];
             for (const relation of memberRelations) {
@@ -371,7 +372,7 @@ class GroupsService {
 
     async removeGroupMembers(groupId: string, personIds: string[]): Promise<ApiResponse<void>> {
         try {
-            
+
             // Verify group exists
             const group = await databaseService.findById<any>('groups', groupId);
             if (!group) {
@@ -409,7 +410,7 @@ class GroupsService {
             // Sync with server if online
             if (syncService.isConnected()) {
                 try {
-                    const response = await apiService.delete<void>(`/groups/${groupId}/members`, { memberIds: personIds });
+                    const response = await apiService.delete<void>(`/groups/${groupId}/members`);
                     if (response.success) {
                         // Mark both group and people as synced
                         await databaseService.markSynced('groups', groupId);
@@ -436,7 +437,7 @@ class GroupsService {
 
     async addGroupMembers(groupId: string, personIds: string[]): Promise<ApiResponse<void>> {
         try {
-            
+
             // Verify group exists
             const group = await databaseService.findById<any>('groups', groupId);
             if (!group) {
@@ -528,15 +529,15 @@ class GroupsService {
     // Helper function for testing - assign some people to groups
     async assignPeopleToGroupsForTesting(): Promise<void> {
         try {
-            
+
             // Get all groups and people
             const groupsResponse = await this.getGroups();
             const allPeople = await databaseService.findAll<any>('people', 'deleted_at IS NULL');
-            
-            if (!groupsResponse.success || groupsResponse.data.length === 0) {
+
+            if (!groupsResponse.success || !groupsResponse.data || groupsResponse.data.length === 0) {
                 return;
             }
-            
+
             if (allPeople.length === 0) {
                 return;
             }

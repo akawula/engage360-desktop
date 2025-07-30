@@ -100,7 +100,7 @@ export default function AddActionItemModal({
         try {
             const response = await notesService.getNotes();
             if (response.success && response.data) {
-                setNotes(response.data);
+                setNotes(response.data.notes);
             }
         } catch (error) {
             console.error('Failed to load notes:', error);

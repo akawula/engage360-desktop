@@ -18,18 +18,6 @@ interface NoteItem {
     device_keys?: Array<{ device_id: string; encrypted_key: string }>; // Backend format (if it exists)
 }
 
-interface NoteListResponse {
-    success: boolean;
-    data: {
-        items: NoteItem[];
-        pagination: {
-            total: number;
-            page: number;
-            limit: number;
-            totalPages: number;
-        };
-    };
-}
 
 interface NoteResponse {
     success: boolean;
@@ -42,7 +30,7 @@ class NotesService {
             // Try to get from local database first
             let whereConditions: string[] = [];
             let queryParams: any[] = [];
-            
+
             if (personId) {
                 whereConditions.push('person_id = ?');
                 queryParams.push(personId);
@@ -58,7 +46,7 @@ class NotesService {
             const whereClause = whereConditions.length > 0 ? whereConditions.join(' AND ') : '';
 
             const localNotes = await databaseService.findAll<any>('notes', whereClause, queryParams);
-            
+
             if (localNotes && localNotes.length > 0) {
                 // Transform database records to frontend Note type
                 const notes: Note[] = localNotes.map(item => {
@@ -117,7 +105,7 @@ class NotesService {
 
             // Fallback to API if no local data (trigger sync in background)
             console.log('No local notes found, triggering sync...');
-            syncService.syncData().catch(error => {
+            syncService.manualSync().catch((error: any) => {
                 console.warn('Background sync failed:', error);
             });
 
@@ -145,7 +133,7 @@ class NotesService {
         try {
             // Try to get from local database first
             const localNote = await databaseService.findById<any>('notes', id);
-            
+
             if (localNote) {
                 // Parse tags if they're stored as JSON string
                 let tags: string[] = [];
@@ -192,7 +180,7 @@ class NotesService {
 
             // If not found locally, trigger sync and return error
             console.log(`Note ${id} not found locally, triggering sync...`);
-            syncService.syncData().catch(error => {
+            syncService.manualSync().catch((error: any) => {
                 console.warn('Background sync failed:', error);
             });
 
@@ -237,7 +225,7 @@ class NotesService {
 
             if (response.success && response.data?.data) {
                 const item = response.data.data;
-                
+
                 // Store in local database
                 const localNoteData = {
                     id: item.id,
@@ -314,7 +302,7 @@ class NotesService {
             const localUpdateData: any = {
                 updated_at: new Date().toISOString()
             };
-            
+
             if (noteData.title !== undefined) localUpdateData.title = noteData.title;
             if (noteData.content !== undefined) localUpdateData.content = noteData.content;
             if (noteData.type !== undefined) localUpdateData.type = noteData.type;
@@ -362,7 +350,7 @@ class NotesService {
             };
         } catch (error) {
             console.error('Failed to update note in local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.updateNoteViaAPI(id, noteData);
@@ -432,7 +420,7 @@ class NotesService {
         try {
             // First delete all related action items to avoid foreign key constraint
             const relatedActionItems = await databaseService.findAll<any>('action_items', 'note_id = ?', [id]);
-            
+
             for (const actionItem of relatedActionItems) {
                 await databaseService.delete('action_items', actionItem.id);
             }

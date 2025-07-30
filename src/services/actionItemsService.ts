@@ -215,10 +215,10 @@ class ActionItemsService {    /**
 
             // Get all items with WHERE conditions first
             let items = await databaseService.findAll<any>('action_items', whereConditions.join(' AND '), queryParams);
-            
+
             // Sort by created_at descending
             items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            
+
             // Apply pagination manually
             if (filters?.limit) {
                 const startIndex = filters.page && filters.page > 1 ? (filters.page - 1) * filters.limit : 0;
@@ -266,7 +266,7 @@ class ActionItemsService {    /**
             };
         } catch (error) {
             console.error('Failed to fetch action items from local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.getActionItemsFromAPI(filters);
@@ -402,7 +402,7 @@ class ActionItemsService {    /**
             return await this.getActionItemByIdFromAPI(id);
         } catch (error) {
             console.error('Failed to fetch action item from local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.getActionItemByIdFromAPI(id);
@@ -458,7 +458,8 @@ class ActionItemsService {    /**
         try {
             const now = new Date().toISOString();
             const id = crypto.randomUUID();
-            const userId = authService.getCurrentUserId();
+            const userProfile = await authService.getUserProfile();
+            const userId = userProfile.success ? userProfile.data?.id : null;
 
             if (!userId) {
                 return {
@@ -517,7 +518,7 @@ class ActionItemsService {    /**
             };
         } catch (error) {
             console.error('Failed to create action item in local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.createActionItemViaAPI(actionData);
@@ -647,7 +648,7 @@ class ActionItemsService {    /**
             };
         } catch (error) {
             console.error('Failed to update action item in local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.updateActionItemViaAPI(id, actionData);
@@ -775,7 +776,7 @@ class ActionItemsService {    /**
             };
         } catch (error) {
             console.error('Failed to update action status in local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.updateActionStatusViaAPI(id, status);
@@ -847,7 +848,7 @@ class ActionItemsService {    /**
             };
         } catch (error) {
             console.error('Failed to delete action item in local database:', error);
-            
+
             // Fallback to API if local database fails
             try {
                 return await this.deleteActionItemViaAPI(id);

@@ -3,15 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Building2, Calendar } from 'lucide-react';
 import { groupsService } from '../services/groupsService';
-import { useAuth } from '../contexts/AuthContext';
 import CreateGroupModal from '../components/CreateGroupModal';
 
 export default function Groups() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const { handleSessionExpiration } = useAuth();
-
-
-    const { data: groupsResponse, isLoading, error, refetch } = useQuery({
+    const { data: groupsResponse, isLoading, error } = useQuery({
         queryKey: ['groups'],
         queryFn: groupsService.getGroups,
         retry: false, // Match Dashboard retry behavior

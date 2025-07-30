@@ -1,9 +1,5 @@
 import Database from '@tauri-apps/plugin-sql';
 import { appDataDir } from '@tauri-apps/api/path';
-import { 
-  Person, Group, Note, ActionItem, Device, UserProfile,
-  GrowthGoal, GrowthMilestone, PersonSkill, GrowthPlan, GrowthAssessment
-} from '../types';
 
 export interface SyncStatus {
   id: string;
@@ -27,13 +23,13 @@ class DatabaseService {
       const dataDir = await appDataDir();
       console.log('App data directory:', dataDir);
       console.log('SQLite database will be stored at:', `${dataDir}engage360.db`);
-      
+
       this.db = await Database.load('sqlite:engage360.db');
       console.log('SQLite database loaded successfully');
-      
+
       // Configure SQLite for proper UTF-8 handling (including emojis)
       await this.configureDatabase();
-      
+
       await this.createTables();
       await this.runMigrations();
       this.isInitialized = true;
@@ -347,7 +343,7 @@ class DatabaseService {
       console.log('Migration: Added github_username column to people table');
     } catch (error) {
       // Column might already exist, check the error
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: github_username column already exists');
       } else {
         console.log('Migration: github_username column might already exist or other issue:', error);
@@ -359,7 +355,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE notes ADD COLUMN user_id TEXT');
       console.log('Migration: Added user_id column to notes table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: user_id column already exists in notes table');
       } else {
         console.log('Migration: user_id column in notes table might already exist or other issue:', error);
@@ -371,7 +367,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN user_id TEXT');
       console.log('Migration: Added user_id column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: user_id column already exists in action_items table');
       } else {
         console.log('Migration: user_id column in action_items table might already exist or other issue:', error);
@@ -383,7 +379,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE people ADD COLUMN user_id TEXT');
       console.log('Migration: Added user_id column to people table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: user_id column already exists in people table');
       } else {
         console.log('Migration: user_id column in people table might already exist or other issue:', error);
@@ -395,7 +391,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE people ADD COLUMN deleted_at TEXT');
       console.log('Migration: Added deleted_at column to people table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: deleted_at column already exists in people table');
       } else {
         console.log('Migration: deleted_at column in people table might already exist or other issue:', error);
@@ -407,7 +403,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE groups ADD COLUMN deleted_at TEXT');
       console.log('Migration: Added deleted_at column to groups table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: deleted_at column already exists in groups table');
       } else {
         console.log('Migration: deleted_at column in groups table might already exist or other issue:', error);
@@ -419,7 +415,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE notes ADD COLUMN deleted_at TEXT');
       console.log('Migration: Added deleted_at column to notes table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: deleted_at column already exists in notes table');
       } else {
         console.log('Migration: deleted_at column in notes table might already exist or other issue:', error);
@@ -431,7 +427,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN deleted_at TEXT');
       console.log('Migration: Added deleted_at column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: deleted_at column already exists in action_items table');
       } else {
         console.log('Migration: deleted_at column in action_items table might already exist or other issue:', error);
@@ -443,7 +439,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN encrypted_content TEXT');
       console.log('Migration: Added encrypted_content column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: encrypted_content column already exists in action_items table');
       } else {
         console.log('Migration: encrypted_content column in action_items table might already exist or other issue:', error);
@@ -455,7 +451,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN encrypted_keys TEXT');
       console.log('Migration: Added encrypted_keys column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: encrypted_keys column already exists in action_items table');
       } else {
         console.log('Migration: encrypted_keys column in action_items table might already exist or other issue:', error);
@@ -467,7 +463,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN iv TEXT');
       console.log('Migration: Added iv column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: iv column already exists in action_items table');
       } else {
         console.log('Migration: iv column in action_items table might already exist or other issue:', error);
@@ -479,7 +475,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE action_items ADD COLUMN completed_at TEXT');
       console.log('Migration: Added completed_at column to action_items table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: completed_at column already exists in action_items table');
       } else {
         console.log('Migration: completed_at column in action_items table might already exist or other issue:', error);
@@ -491,8 +487,8 @@ class DatabaseService {
     try {
       // Migration 13: Update notes with missing type for encrypted records
       await this.db.execute(`
-        UPDATE notes 
-        SET type = 'personal' 
+        UPDATE notes
+        SET type = 'personal'
         WHERE type IS NULL AND encrypted = true AND encrypted_content IS NOT NULL
       `);
       console.log('Migration: Set default type for encrypted notes');
@@ -503,7 +499,7 @@ class DatabaseService {
     try {
       // Migration 14: Update action_items with missing title for encrypted records
       await this.db.execute(`
-        UPDATE action_items 
+        UPDATE action_items
         SET title = 'Encrypted Action Item', assignee_id = user_id, assignee_name = 'Unknown'
         WHERE title IS NULL AND encrypted_content IS NOT NULL
       `);
@@ -517,7 +513,7 @@ class DatabaseService {
       await this.db.execute('ALTER TABLE groups ADD COLUMN type TEXT');
       console.log('Migration: Added type column to groups table');
     } catch (error) {
-      if (error.toString().includes('duplicate column name')) {
+      if ((error as Error).toString().includes('duplicate column name')) {
         console.log('Migration: type column already exists in groups table');
       } else {
         console.log('Migration: type column in groups table might already exist or other issue:', error);
@@ -527,17 +523,17 @@ class DatabaseService {
     try {
       // Migration 16: Decrypt and populate content for existing encrypted notes
       const encryptedNotes = await this.db.select<any[]>(`
-        SELECT id, encrypted_content 
-        FROM notes 
-        WHERE encrypted_content IS NOT NULL 
+        SELECT id, encrypted_content
+        FROM notes
+        WHERE encrypted_content IS NOT NULL
         AND (content IS NULL OR content = '')
       `);
-      
+
       for (const note of encryptedNotes) {
         try {
           // Decrypt the content using improved method matching sync service
           let decryptedData: any = null;
-          
+
           // First, try to parse as direct JSON (unencrypted)
           try {
             decryptedData = JSON.parse(note.encrypted_content);
@@ -546,13 +542,13 @@ class DatabaseService {
             try {
               // Clean the base64 string of any whitespace or invalid characters
               const cleanedContent = note.encrypted_content.replace(/[^A-Za-z0-9+/=]/g, '');
-              
+
               // Validate base64 format
               if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanedContent)) {
                 console.warn(`Invalid base64 format for note ${note.id}`);
                 continue;
               }
-              
+
               const decodedContent = atob(cleanedContent);
               decryptedData = JSON.parse(decodedContent);
             } catch (base64Error) {
@@ -560,16 +556,16 @@ class DatabaseService {
               continue;
             }
           }
-          
+
           if (!decryptedData) continue;
-          
+
           const updateData: any = {};
           if (decryptedData.content !== undefined) updateData.content = decryptedData.content;
           if (decryptedData.type) updateData.type = decryptedData.type;
           if (decryptedData.tags && Array.isArray(decryptedData.tags)) {
             updateData.tags = JSON.stringify(decryptedData.tags);
           }
-          
+
           if (Object.keys(updateData).length > 0) {
             const setClause = Object.keys(updateData).map(key => `${key} = ?`).join(', ');
             const values = Object.values(updateData);
@@ -665,7 +661,7 @@ class DatabaseService {
     const hash = await this.generateRecordHash(table, recordId);
 
     const sql = `
-      INSERT OR REPLACE INTO sync_status 
+      INSERT OR REPLACE INTO sync_status
       (id, table_name, record_id, local_updated, sync_status, hash, last_synced)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;

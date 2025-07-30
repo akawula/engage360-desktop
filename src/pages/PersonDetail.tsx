@@ -23,7 +23,7 @@ export default function PersonDetail() {
         queryKey: ['notes', personId],
         queryFn: async () => {
             const response = await notesService.getNotes();
-            return response.success && response.data ? response.data.filter(note => note.personId === personId) : [];
+            return response.success && response.data ? response.data.notes.filter((note: any) => note.personId === personId) : [];
         },
         enabled: !!personId,
     });

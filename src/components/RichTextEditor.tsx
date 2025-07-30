@@ -68,7 +68,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             attributes: {
                 class: 'focus:outline-none h-full',
             },
-            handleKeyDown: (view, event) => {
+            handleKeyDown: () => {
                 return false;
             },
         },
@@ -100,7 +100,7 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
 
     // Timer effect for search duration
     useEffect(() => {
-        let interval: NodeJS.Timeout;
+        let interval: number;
         if (isSearching) {
             interval = setInterval(() => {
                 setSearchDuration(prev => prev + 1);
@@ -116,10 +116,10 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
     // Handle task finding with loading state
     const handleTaskSearch = () => {
         if (!onFindTasks || isSearching) return;
-        
+
         const textToAnalyze = hasSelection ? selectedText : editor.getText();
         setIsSearching(true);
-        
+
         // Use requestAnimationFrame + setTimeout to ensure UI updates before heavy computation
         requestAnimationFrame(() => {
             setTimeout(async () => {
@@ -273,10 +273,10 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                         <ToolbarButton
                             onClick={handleTaskSearch}
                             disabled={isSearching}
-                            title={isSearching 
-                                ? `Searching... ${searchDuration}s` 
-                                : hasSelection 
-                                    ? "Find Tasks in Selection" 
+                            title={isSearching
+                                ? `Searching... ${searchDuration}s`
+                                : hasSelection
+                                    ? "Find Tasks in Selection"
                                     : "Find Tasks in Entire Note"
                             }
                         >

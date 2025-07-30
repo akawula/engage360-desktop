@@ -139,7 +139,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             const response = await notesService.getNotes();
             if (response.success && response.data) {
-                set({ notes: response.data });
+                set({ notes: response.data.notes });
             } else {
                 get().showError?.('Failed to load notes', response.error?.message || 'Please try again later.');
             }

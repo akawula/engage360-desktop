@@ -1,9 +1,5 @@
 import { databaseService, SyncStatus } from './databaseService';
 import { apiService } from './apiService';
-import { 
-  Person, Group, Note, ActionItem, Device, UserProfile,
-  GrowthGoal, GrowthMilestone, PersonSkill, GrowthPlan, GrowthAssessment
-} from '../types';
 
 export interface SyncResult {
   success: boolean;
@@ -38,7 +34,7 @@ class SyncService {
 
   async initialize(): Promise<void> {
     await databaseService.initialize();
-    
+
     if (this.isOnline) {
       this.startAutoSync();
     }
@@ -88,7 +84,7 @@ class SyncService {
 
   private async pushLocalChanges(result: SyncResult): Promise<void> {
     const pendingRecords = await databaseService.getPendingSyncRecords();
-    
+
     if (pendingRecords.length === 0) {
       console.log('📤 No local changes to push');
       return;
@@ -102,13 +98,13 @@ class SyncService {
     for (const syncRecord of pendingRecords) {
       try {
         const localData = await databaseService.findById(syncRecord.table_name, syncRecord.record_id);
-        
+
         if (!recordsByTable.has(syncRecord.table_name)) {
           recordsByTable.set(syncRecord.table_name, []);
         }
 
         const tableRecords = recordsByTable.get(syncRecord.table_name)!;
-        
+
         if (!localData) {
           // Record was deleted locally
           tableRecords.push({
@@ -119,7 +115,7 @@ class SyncService {
         } else {
           // Transform data for API format
           const transformedData = this.transformRecordForAPI(syncRecord.table_name, localData);
-          
+
           // Determine if it's create or update based on whether it exists on server
           const operation = 'create'; // Backend will handle create vs update logic
           tableRecords.push({
@@ -162,7 +158,7 @@ class SyncService {
           await this.pullTableData(table, lastSync, result, resolveConflicts);
         } catch (error) {
           console.error(`📥 Failed to pull ${table}:`, error);
-          result.errors.push(`Failed to pull ${table}: ${error.message}`);
+          result.errors.push(`Failed to pull ${table}: ${(error as Error).message}`);
         }
       }
     } catch (error) {
@@ -180,10 +176,10 @@ class SyncService {
     try {
       // Use POST method to the sync endpoint directly (not /batch-sync)
       const response = await apiService.post(endpoint, { records });
-      
-      if (response.success && response.data?.results) {
+
+      if (response.success && response.data && typeof response.data === 'object' && 'results' in response.data) {
         // Process sync results according to OpenAPI spec
-        for (const syncResult of response.data.results) {
+        for (const syncResult of (response.data as any).results) {
           if (syncResult.status === 'created' || syncResult.status === 'updated' || syncResult.status === 'deleted') {
             await databaseService.markSynced(tableName, syncResult.id);
             result.synchronized++;
@@ -205,22 +201,22 @@ class SyncService {
   }
 
   private async pullTableData(
-    table: string, 
-    lastSync: string, 
-    result: SyncResult, 
+    table: string,
+    lastSync: string,
+    result: SyncResult,
     resolveConflicts?: ConflictResolution[]
   ): Promise<void> {
     try {
       const endpoint = this.getApiEndpoint(table);
       const response = await apiService.get(`${endpoint}?since=${encodeURIComponent(lastSync)}&limit=100`);
-      
+
       if (!response.success || !response.data) {
         console.log(`📥 No data returned for ${table}`);
         return;
       }
 
       // According to OpenAPI spec, the response format is { data: [], last_sync: "", has_more: boolean }
-      const remoteRecords = response.data.data || [];
+      const remoteRecords = (response.data as any).data || [];
       console.log(`📥 Received ${remoteRecords.length} records for ${table}`);
 
       for (const remoteRecord of remoteRecords) {
@@ -234,7 +230,7 @@ class SyncService {
           }
 
           const localRecord = await databaseService.findById(table, remoteRecord.id);
-          
+
           if (!localRecord) {
             // New record from server
             const transformedRecord = this.transformRecordForDB(table, remoteRecord);
@@ -244,8 +240,8 @@ class SyncService {
             console.log(`📥 Added new ${table}: ${remoteRecord.id}`);
           } else {
             // Check for conflicts
-            const localUpdated = new Date(localRecord.updated_at || localRecord.updatedAt);
-            const remoteUpdated = new Date(remoteRecord.updated_at || remoteRecord.updatedAt);
+            const localUpdated = new Date((localRecord as any).updated_at || (localRecord as any).updatedAt);
+            const remoteUpdated = new Date((remoteRecord as any).updated_at || (remoteRecord as any).updatedAt);
 
             if (localUpdated > remoteUpdated) {
               // Local is newer, no action needed
@@ -287,24 +283,24 @@ class SyncService {
   private transformRecordForDB(table: string, record: any): any {
     // Transform API record format to database format
     const transformed = { ...record };
-    
+
     // Handle common field transformations
     if (record.first_name) transformed.first_name = record.first_name;
     if (record.last_name) transformed.last_name = record.last_name;
     if (record.created_at) transformed.created_at = record.created_at;
     if (record.updated_at) transformed.updated_at = record.updated_at;
-    
+
     // Handle arrays that need to be JSON strings
     if (record.tags && Array.isArray(record.tags)) {
       transformed.tags = JSON.stringify(record.tags);
     }
-    
+
     // Handle encrypted records - decrypt and store for faster local access
     if (table === 'notes' && record.encrypted && record.encrypted_content) {
       try {
         // Decrypt the content for local storage
         const decryptedData = this.decryptContent(record.encrypted_content);
-        
+
         if (decryptedData) {
           // Store decrypted data in the local fields for faster access
           if (decryptedData.content !== undefined) {
@@ -328,12 +324,12 @@ class SyncService {
         }
       }
     }
-    
+
     if (table === 'action_items' && record.encrypted_content) {
       try {
         // Decrypt the content for local storage
         const decryptedData = this.decryptContent(record.encrypted_content);
-        
+
         if (decryptedData) {
           // Store decrypted data in the local fields for faster access
           if (decryptedData.title) {
@@ -343,7 +339,7 @@ class SyncService {
             transformed.description = decryptedData.description;
           }
         }
-        
+
         // Ensure required fields have values
         if (!transformed.title) {
           transformed.title = 'Encrypted Action Item';
@@ -368,34 +364,34 @@ class SyncService {
         }
       }
     }
-    
+
     return transformed;
   }
 
   private decryptContent(encryptedContent: string): any {
     try {
       // Handle different possible formats of encrypted content
-      
+
       // First, try to parse as direct JSON (unencrypted)
       try {
         return JSON.parse(encryptedContent);
       } catch (jsonError) {
         // Not direct JSON, continue with base64 decoding
       }
-      
+
       // Clean the base64 string of any whitespace or invalid characters
       const cleanedContent = encryptedContent.replace(/[^A-Za-z0-9+/=]/g, '');
-      
+
       // Validate base64 format
       if (!/^[A-Za-z0-9+/]*={0,2}$/.test(cleanedContent)) {
         console.warn('Invalid base64 format in encrypted content');
         return null;
       }
-      
+
       // Try base64 decoding
       const decodedContent = atob(cleanedContent);
       return JSON.parse(decodedContent);
-      
+
     } catch (error) {
       console.error('Failed to decrypt content:', error);
       console.error('Encrypted content:', encryptedContent?.substring(0, 100) + '...');
@@ -406,7 +402,7 @@ class SyncService {
   private transformRecordForAPI(table: string, record: any): any {
     // Transform database record format to API format
     const transformed = { ...record };
-    
+
     // Handle JSON string fields that need to become arrays
     if (record.tags && typeof record.tags === 'string') {
       try {
@@ -415,7 +411,7 @@ class SyncService {
         transformed.tags = [];
       }
     }
-    
+
     // Handle database field name to API field name mappings
     if (table === 'people') {
       // Map database fields to API fields for people
@@ -428,7 +424,7 @@ class SyncService {
       if (record.created_at) transformed.createdAt = record.created_at;
       if (record.updated_at) transformed.updatedAt = record.updated_at;
     }
-    
+
     return transformed;
   }
 
@@ -482,7 +478,7 @@ class SyncService {
     try {
       // Try to determine if this is a create or update operation
       const endpoint = this.getApiEndpoint(table);
-      
+
       // First try to update
       try {
         await apiService.put(`${endpoint}/${data.id}`, data);
@@ -496,15 +492,6 @@ class SyncService {
     }
   }
 
-  private async deleteRemoteRecord(table: string, recordId: string): Promise<void> {
-    try {
-      const endpoint = this.getApiEndpoint(table);
-      await apiService.delete(`${endpoint}/${recordId}`);
-    } catch (error) {
-      console.error(`Failed to delete ${table} record:`, error);
-      // Don't throw - deletion might have already happened
-    }
-  }
 
   private getApiEndpoint(table: string): string {
     const endpointMap: Record<string, string> = {
@@ -592,10 +579,10 @@ class SyncService {
     return await this.syncWithServer();
   }
 
-  getSyncStatus(): { 
-    isOnline: boolean; 
-    isSync: boolean; 
-    lastSync: Date | null; 
+  getSyncStatus(): {
+    isOnline: boolean;
+    isSync: boolean;
+    lastSync: Date | null;
     pendingChanges: number;
   } {
     return {

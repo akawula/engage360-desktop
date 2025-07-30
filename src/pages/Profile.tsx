@@ -31,7 +31,7 @@ export default function Profile() {
 
     // Mutation for updating preferences
     const updatePreferencesMutation = useMutation({
-        mutationFn: (preferences: Partial<typeof profile.preferences>) => 
+        mutationFn: (preferences: Partial<NonNullable<typeof profile>['preferences']>) =>
             userProfileService.updateUserPreferences(preferences),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['profile'] });
@@ -61,7 +61,7 @@ export default function Profile() {
 
     const handleOllamaToggle = async (enabled: boolean) => {
         if (!profile) return;
-        
+
         await updatePreferencesMutation.mutateAsync({
             ollama: {
                 ...profile.preferences.ollama,
@@ -72,7 +72,7 @@ export default function Profile() {
 
     const handleOllamaModelChange = async (model: string) => {
         if (!profile) return;
-        
+
         await updatePreferencesMutation.mutateAsync({
             ollama: {
                 ...profile.preferences.ollama,
@@ -236,7 +236,7 @@ export default function Profile() {
                                 />
                                 <span className="text-dark-800 dark:text-dark-300">Action item reminders</span>
                             </label>
-                            
+
                             {/* Notification Position */}
                             <div className="space-y-2">
                                 <label className="text-dark-800 dark:text-dark-300 text-sm font-medium">
@@ -316,9 +316,9 @@ export default function Profile() {
                                             <h5 className="font-medium text-orange-800 dark:text-orange-200">Ollama Not Installed</h5>
                                             <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
                                                 To enable AI summaries, please install Ollama from{' '}
-                                                <a 
-                                                    href="https://ollama.com" 
-                                                    target="_blank" 
+                                                <a
+                                                    href="https://ollama.com"
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="underline hover:text-orange-800 dark:hover:text-orange-200"
                                                 >
