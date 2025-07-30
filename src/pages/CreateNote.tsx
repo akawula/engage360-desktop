@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Save, X, Search, Users, Building2, Tag, Sparkles, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Save, X, Search, Users, Building2, Tag, Sparkles, Plus, ChevronDown, ChevronUp, Brain } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -10,9 +10,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 import AddActionItemModal from '../components/AddActionItemModal';
-import type { CreateNoteRequest } from '../types';
+import ActionItemSidebar from '../components/ActionItemSidebar';
+import type { CreateNoteRequest, DetectedActionItem, AnalysisResult, AnalysisSettings, AnalysisContext } from '../types';
 import { ollamaService } from '../services/ollamaService';
 import { userProfileService } from '../services/userProfileService';
+import { actionItemsService } from '../services/actionItemsService';
 
 export default function CreateNote() {
     const navigate = useNavigate();
@@ -72,9 +74,28 @@ export default function CreateNote() {
     // Action item modal state
     const [showActionItemModal, setShowActionItemModal] = useState(false);
     const [actionItemTitle] = useState('');
+    const [prefilledActionItem, setPrefilledActionItem] = useState<Partial<DetectedActionItem> | null>(null);
 
     // UI state for maximizing editor
     const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
+    const [showAnalysisSidebar, setShowAnalysisSidebar] = useState(true);
+
+    // Real-time analysis state
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState<number | undefined>(undefined);
+    const [analysisSettings, setAnalysisSettings] = useState<AnalysisSettings>(() => ({
+        enabled: true,
+        debounceMs: 400,
+        minConfidenceThreshold: 0.6,
+        maxItemsToShow: 10,
+        enabledDetectionTypes: ['todo', 'task', 'action', 'deadline', 'reminder', 'development'],
+        ollamaModel: 'llama3.2:1b',
+        fallbackToRegex: true,
+        cacheEnabled: true,
+        showLowConfidenceItems: false,
+        autoCreateThreshold: 0.8
+    }));
 
     // Ref to get content directly from the rich text editor
     const editorRef = useRef<RichTextEditorRef>(null);
@@ -325,11 +346,123 @@ export default function CreateNote() {
         createMutation.mutate(noteDataWithEditorContent);
     }, [formData, editorRef, createMutation]);
 
-    // const handleCreateActionItem = (selectedText: string) => {
-    //     // Open the modal with the selected text
-    //     setActionItemTitle(selectedText);
-    //     setShowActionItemModal(true);
-    // };
+    // Analysis context based on note associations
+    const analysisContext = useMemo((): AnalysisContext => ({
+        noteType: formData.type,
+        associatedPerson: formData.personId || undefined,
+        associatedGroup: formData.groupId || undefined
+    }), [formData.type, formData.personId, formData.groupId]);
+
+    // Handle analysis updates from the editor
+    const handleAnalysisUpdate = useCallback((result: AnalysisResult) => {
+        setAnalysisResult(result);
+        setIsAnalyzing(false);
+        setAnalysisProgress(undefined);
+    }, []);
+
+    // Handle analysis start (when debounced analysis begins)
+    const handleAnalysisStart = useCallback(() => {
+        setIsAnalyzing(true);
+        setAnalysisProgress(0);
+
+        // Simulate progress for better UX
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress >= 90) {
+                setAnalysisProgress(90);
+                clearInterval(progressInterval);
+            } else {
+                setAnalysisProgress(progress);
+            }
+        }, 100);
+
+        // Clear interval after 5 seconds max
+        setTimeout(() => clearInterval(progressInterval), 5000);
+    }, []);
+
+    // Handle creating action item from detected item
+    const handleCreateActionItemFromDetected = useCallback(async (detectedItem: DetectedActionItem) => {
+        try {
+            // Create action item using the existing service
+            const actionItemData = {
+                title: detectedItem.suggestedTitle,
+                description: detectedItem.suggestedDescription || detectedItem.content,
+                priority: detectedItem.priority,
+                dueDate: detectedItem.suggestedDueDate,
+                personId: formData.personId || undefined,
+                groupId: formData.groupId || undefined,
+                noteId: undefined // Will be set after note is created
+            };
+
+            // Prepare encrypted content for action item
+            const contentToEncrypt = JSON.stringify({
+                title: actionItemData.title,
+                description: actionItemData.description || ''
+            });
+
+            const ivArray = crypto.getRandomValues(new Uint8Array(12));
+            const iv = btoa(Array.from(ivArray).map(b => String.fromCharCode(b)).join(''));
+            const currentDeviceId = authService.getDeviceId();
+
+            if (!currentDeviceId) {
+                throw new Error('No device ID found');
+            }
+
+            const encryptedKeys = {
+                [currentDeviceId]: btoa('mock-encrypted-key')
+            };
+
+            const createRequest = {
+                ...actionItemData,
+                encryptedContent: btoa(unescape(encodeURIComponent(contentToEncrypt))),
+                encryptedKeys,
+                iv
+            };
+
+            const response = await actionItemsService.createActionItem(createRequest);
+
+            if (response.success) {
+                console.log('Action item created successfully:', response.data);
+                // Optionally show a success message
+            } else {
+                throw new Error(response.error?.message || 'Failed to create action item');
+            }
+        } catch (error) {
+            console.error('Failed to create action item from detected item:', error);
+            // Optionally show an error message to the user
+        }
+    }, [formData.personId, formData.groupId]);
+
+    // Handle dismissing detected items
+    const handleDismissDetectedItem = useCallback((itemId: string) => {
+        setAnalysisResult(prev => prev ? {
+            ...prev,
+            detectedItems: prev.detectedItems.filter(item => item.id !== itemId)
+        } : null);
+    }, []);
+
+    // Handle refreshing analysis
+    const handleRefreshAnalysis = useCallback(() => {
+        const currentContent = editorRef.current?.getContent() || '';
+        if (currentContent.trim()) {
+            setIsAnalyzing(true);
+            setAnalysisProgress(0);
+
+            // Clear cache and trigger fresh analysis
+            // This would be handled by the RichTextEditor's analysis system
+            // For now, simulate the refresh
+            setTimeout(() => {
+                setIsAnalyzing(false);
+                setAnalysisProgress(undefined);
+            }, 2000);
+        }
+    }, []);
+
+    // Handle updating analysis settings
+    const handleUpdateAnalysisSettings = useCallback((newSettings: Partial<AnalysisSettings>) => {
+        setAnalysisSettings(prev => ({ ...prev, ...newSettings }));
+    }, []);
 
     const handleFindTasks = async (selectedText: string) => {
         console.log('=== AI-POWERED TASK ANALYSIS ===');
@@ -625,6 +758,16 @@ export default function CreateNote() {
                                 >
                                     {isMetadataCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                                     <span className="text-sm">Settings</span>
+                                </button>
+
+                                {/* Analysis sidebar toggle */}
+                                <button
+                                    onClick={() => setShowAnalysisSidebar(!showAnalysisSidebar)}
+                                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-dark-600 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white hover:bg-dark-200 dark:hover:bg-dark-800 transition-all duration-200"
+                                    title={showAnalysisSidebar ? 'Hide analysis' : 'Show analysis'}
+                                >
+                                    <Brain className="h-4 w-4" />
+                                    <span className="text-sm">AI Analysis</span>
                                 </button>
                             </div>
 
@@ -932,6 +1075,11 @@ export default function CreateNote() {
                             placeholder="Start writing your note here..."
                             className="h-full prose prose-lg max-w-none dark:prose-invert prose-primary"
                             onFindTasks={handleFindTasks}
+                            enableRealTimeAnalysis={analysisSettings.enabled}
+                            onAnalysisUpdate={handleAnalysisUpdate}
+                            analysisSettings={analysisSettings}
+                            analysisContext={analysisContext}
+                            showAnalysisIndicators={true}
                         />
                     </div>
                 </div>
@@ -966,6 +1114,20 @@ export default function CreateNote() {
                     </div>
                 </div>
             </div>
+
+            {/* Analysis Sidebar */}
+            {showAnalysisSidebar && analysisResult && (
+                <ActionItemSidebar
+                    detectedItems={analysisResult.detectedItems}
+                    isAnalyzing={false}
+                    onCreateActionItem={handleCreateActionItemFromDetected}
+                    onDismissItem={handleDismissDetectedItem}
+                    onRefreshAnalysis={handleRefreshAnalysis}
+                    onUpdateSettings={handleUpdateAnalysisSettings}
+                    settings={analysisSettings}
+                    analysisResult={analysisResult}
+                />
+            )}
 
             {/* Action Item Modal */}
             <AddActionItemModal

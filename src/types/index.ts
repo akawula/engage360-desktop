@@ -402,3 +402,16 @@ export interface ApiResponse<T> {
     error?: ApiError;
     success: boolean;
 }
+
+// Re-export real-time analysis types
+export type {
+    ActionItemType,
+    DetectedActionItem,
+    AnalysisResult,
+    AnalysisSettings,
+    AnalysisContext,
+    RealTimeAnalysisOptions,
+    RealTimeAnalysisResult,
+    AnalysisCallback,
+    PerformanceMetrics
+} from './realTimeAnalysis';

@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { forwardRef, useImperativeHandle, useEffect, useState } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useState, useMemo, useCallback } from 'react';
 import {
     Bold,
     Italic,
@@ -15,8 +15,16 @@ import {
     Heading2,
     Heading3,
     Search,
-    Loader
+    Loader,
+    Brain,
+    Zap
 } from 'lucide-react';
+import { realTimeAnalysisService } from '../services/realTimeAnalysisService';
+import type {
+    AnalysisResult,
+    AnalysisContext,
+    AnalysisSettings
+} from '../types/realTimeAnalysis';
 
 export interface RichTextEditorRef {
     getContent: () => string;
@@ -29,13 +37,37 @@ interface RichTextEditorProps {
     placeholder?: string;
     className?: string;
     onFindTasks?: (selectedText: string) => void;
+    // Real-time analysis props
+    enableRealTimeAnalysis?: boolean;
+    onAnalysisUpdate?: (result: AnalysisResult) => void;
+    onAnalysisStart?: () => void;
+    analysisSettings?: AnalysisSettings;
+    analysisContext?: AnalysisContext;
+    showAnalysisIndicators?: boolean;
 }
 
-const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ content, onChange, placeholder = "Start writing...", className = "", onFindTasks }, ref) => {
+const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({
+    content,
+    onChange,
+    placeholder = "Start writing...",
+    className = "",
+    onFindTasks,
+    enableRealTimeAnalysis = false,
+    onAnalysisUpdate,
+    onAnalysisStart,
+    analysisSettings,
+    analysisContext,
+    showAnalysisIndicators = false
+}, ref) => {
     const [hasSelection, setHasSelection] = useState(false);
     const [selectedText, setSelectedText] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchDuration, setSearchDuration] = useState(0);
+
+    // Real-time analysis state
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [lastAnalyzedText, setLastAnalyzedText] = useState('');
 
     const editor = useEditor({
         extensions: [
@@ -56,7 +88,15 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
         content,
         onUpdate: ({ editor }) => {
             const html = editor.getHTML();
+            const text = editor.getText();
+
             onChange(html);
+
+            // Trigger real-time analysis if enabled
+            if (enableRealTimeAnalysis && text !== lastAnalyzedText) {
+                setLastAnalyzedText(text);
+                handleRealTimeAnalysis(text);
+            }
         },
         onSelectionUpdate: ({ editor }) => {
             const { from, to } = editor.state.selection;
@@ -97,6 +137,52 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
             return selectedText.trim();
         }
     }));
+
+    // Real-time analysis handler
+    const handleRealTimeAnalysis = useCallback((text: string) => {
+        if (!enableRealTimeAnalysis || !text.trim() || text.length < 10) {
+            return;
+        }
+
+        setIsAnalyzing(true);
+        onAnalysisStart?.(); // Notify parent that analysis is starting
+
+        realTimeAnalysisService.debouncedAnalysis(
+            text,
+            analysisContext,
+            {
+                debounceMs: analysisSettings?.debounceMs || 400,
+                minConfidenceThreshold: analysisSettings?.minConfidenceThreshold || 0.5,
+                maxItems: analysisSettings?.maxItemsToShow || 10,
+                enableCaching: analysisSettings?.cacheEnabled !== false,
+                ollamaModel: analysisSettings?.ollamaModel || 'llama3.2:1b'
+            }
+        );
+    }, [enableRealTimeAnalysis, analysisContext, analysisSettings, onAnalysisStart]);
+
+    // Set up real-time analysis callback
+    useEffect(() => {
+        if (!enableRealTimeAnalysis) return;
+
+        const handleAnalysisResult = (result: AnalysisResult) => {
+            setAnalysisResult(result);
+            setIsAnalyzing(false);
+            onAnalysisUpdate?.(result);
+        };
+
+        realTimeAnalysisService.startRealTimeAnalysis(handleAnalysisResult);
+
+        return () => {
+            realTimeAnalysisService.stopRealTimeAnalysis(handleAnalysisResult);
+        };
+    }, [enableRealTimeAnalysis, onAnalysisUpdate]);
+
+    // Update analysis settings when they change
+    useEffect(() => {
+        if (analysisSettings) {
+            realTimeAnalysisService.updateSettings(analysisSettings);
+        }
+    }, [analysisSettings]);
 
     // Timer effect for search duration
     useEffect(() => {
@@ -267,30 +353,33 @@ const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(({ con
                     </ToolbarButton>
                 </div>
 
-                {/* Task Finding - Native toolbar button */}
-                {onFindTasks && (
-                    <div className="flex items-center gap-1 pl-2 border-l border-dark-400 dark:border-dark-700">
-                        <ToolbarButton
-                            onClick={handleTaskSearch}
-                            disabled={isSearching}
-                            title={isSearching
-                                ? `Searching... ${searchDuration}s`
-                                : hasSelection
-                                    ? "Find Tasks in Selection"
-                                    : "Find Tasks in Entire Note"
-                            }
-                        >
-                            {isSearching ? (
-                                <Loader className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Search className="w-4 h-4" />
-                            )}
-                        </ToolbarButton>
-                        {isSearching && (
-                            <span className="text-xs text-dark-600 dark:text-dark-400 ml-1 tabular-nums">
-                                {searchDuration}s
-                            </span>
-                        )}
+
+                {/* Real-time Analysis Indicator */}
+                {enableRealTimeAnalysis && (
+                    <div className="flex items-center gap-2 pl-2 border-l border-dark-400 dark:border-dark-700">
+                        {isAnalyzing ? (
+                            <div className="flex items-center gap-1">
+                                <Loader className="w-4 h-4 animate-spin text-primary-500" />
+                                <span className="text-xs text-dark-600 dark:text-dark-400">Analyzing...</span>
+                            </div>
+                        ) : analysisResult ? (
+                            <div className="flex items-center gap-1">
+                                <Brain className="w-4 h-4 text-primary-500" />
+                                <span className="text-xs text-dark-600 dark:text-dark-400">
+                                    {analysisResult.detectedItems.length} items
+                                </span>
+                                {analysisResult.detectedItems.some(item => item.confidence >= 0.8) && (
+                                    <div title="High confidence items detected">
+                                        <Zap className="w-3 h-3 text-yellow-500" />
+                                    </div>
+                                )}
+                            </div>
+                        ) : enableRealTimeAnalysis ? (
+                            <div className="flex items-center gap-1">
+                                <Brain className="w-4 h-4 text-dark-400" />
+                                <span className="text-xs text-dark-500">Ready</span>
+                            </div>
+                        ) : null}
                     </div>
                 )}
             </div>

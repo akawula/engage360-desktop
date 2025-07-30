@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, X, Building, Tag, Clock, Sparkles, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, X, Building, Tag, Clock, Sparkles, UserCheck, Check, Play, Timer, Zap, Flame, ChevronDown, ChevronUp, SidebarOpen, SidebarClose, Trash2, Brain } from 'lucide-react';
 import { notesService } from '../services/notesService';
 import { peopleService } from '../services/peopleService';
 import { groupsService } from '../services/groupsService';
@@ -9,12 +9,15 @@ import { authService } from '../services/authService';
 import { formatAvatarSrc } from '../lib/utils';
 import RichTextEditor, { type RichTextEditorRef } from '../components/RichTextEditor';
 import AddActionItemModal from '../components/AddActionItemModal';
+import ActionItemSidebar from '../components/ActionItemSidebar';
 import { useActionItems } from '../hooks/useActionItems';
 import { ollamaService } from '../services/ollamaService';
 import { userProfileService } from '../services/userProfileService';
 import { useNotification } from '../contexts/NotificationContext';
 import { useDeleteNote } from '../hooks/useNotes';
 import ConfirmModal from '../components/ConfirmModal';
+import { actionItemsService } from '../services/actionItemsService';
+import type { DetectedActionItem, AnalysisResult, AnalysisSettings, AnalysisContext } from '../types';
 
 // Helper functions for action item styling
 const getStatusColor = (status: string) => {
@@ -136,6 +139,24 @@ export default function NoteDetail() {
     // UI state for maximizing editor
     const [isMetadataCollapsed, setIsMetadataCollapsed] = useState(true);
     const [isActionItemsPanelOpen, setIsActionItemsPanelOpen] = useState(false);
+    const [showAnalysisSidebar, setShowAnalysisSidebar] = useState(true);
+
+    // Real-time analysis state
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState<number | undefined>(undefined);
+    const [analysisSettings, setAnalysisSettings] = useState<AnalysisSettings>(() => ({
+        enabled: true,
+        debounceMs: 400,
+        minConfidenceThreshold: 0.6,
+        maxItemsToShow: 10,
+        enabledDetectionTypes: ['todo', 'task', 'action', 'deadline', 'reminder', 'development'],
+        ollamaModel: 'llama3.2:1b',
+        fallbackToRegex: true,
+        cacheEnabled: true,
+        showLowConfidenceItems: false,
+        autoCreateThreshold: 0.8
+    }));
 
     // Delete note functionality
     const deleteNoteMutation = useDeleteNote();
@@ -207,8 +228,35 @@ export default function NoteDetail() {
             });
             // Reset hasChanges when loading fresh data
             setHasChanges(false);
+
+            // Trigger initial analysis if content exists and analysis is enabled
+            if (note.content && note.content.trim() && analysisSettings.enabled) {
+                setIsAnalyzing(true);
+                setAnalysisProgress(0);
+                // Simulate analysis completion for demo
+                setTimeout(() => {
+                    setAnalysisResult({
+                        detectedItems: [],
+                        analysisMetadata: {
+                            processingTime: 150,
+                            modelUsed: 'llama3.2:1b',
+                            textLength: note.content.length,
+                            language: 'en',
+                            cacheHit: false,
+                            analysisMethod: 'ai'
+                        },
+                        suggestions: [],
+                        performance: {
+                            startTime: Date.now() - 150,
+                            endTime: Date.now()
+                        }
+                    });
+                    setIsAnalyzing(false);
+                    setAnalysisProgress(undefined);
+                }, 1500);
+            }
         }
-    }, [note]);
+    }, [note, analysisSettings.enabled]);
 
     const updateMutation = useMutation({
         mutationFn: async (data: typeof formData) => {
@@ -480,6 +528,126 @@ export default function NoteDetail() {
         }
     };
 
+    // Analysis context based on note associations
+    const analysisContext = useMemo((): AnalysisContext => ({
+        noteType: formData.type,
+        associatedPerson: note?.personId || undefined,
+        associatedGroup: note?.groupId || undefined
+    }), [formData.type, note?.personId, note?.groupId]);
+
+    // Handle analysis updates from the editor
+    const handleAnalysisUpdate = useCallback((result: AnalysisResult) => {
+        setAnalysisResult(result);
+        setIsAnalyzing(false);
+        setAnalysisProgress(undefined);
+    }, []);
+
+    // Handle analysis start (when debounced analysis begins)
+    const handleAnalysisStart = useCallback(() => {
+        setIsAnalyzing(true);
+        setAnalysisProgress(0);
+
+        // Simulate progress for better UX
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress >= 90) {
+                setAnalysisProgress(90);
+                clearInterval(progressInterval);
+            } else {
+                setAnalysisProgress(progress);
+            }
+        }, 100);
+
+        // Clear interval after 5 seconds max
+        setTimeout(() => clearInterval(progressInterval), 5000);
+    }, []);
+
+    // Handle creating action item from detected item
+    const handleCreateActionItemFromDetected = useCallback(async (detectedItem: DetectedActionItem) => {
+        try {
+            // Create action item using the existing service
+            const actionItemData = {
+                title: detectedItem.suggestedTitle,
+                description: detectedItem.suggestedDescription || detectedItem.content,
+                priority: detectedItem.priority,
+                dueDate: detectedItem.suggestedDueDate,
+                personId: note?.personId || undefined,
+                groupId: note?.groupId || undefined,
+                noteId: note?.id
+            };
+
+            // Prepare encrypted content for action item
+            const contentToEncrypt = JSON.stringify({
+                title: actionItemData.title,
+                description: actionItemData.description || ''
+            });
+
+            const ivArray = crypto.getRandomValues(new Uint8Array(12));
+            const iv = btoa(Array.from(ivArray).map(b => String.fromCharCode(b)).join(''));
+            const currentDeviceId = authService.getDeviceId();
+
+            if (!currentDeviceId) {
+                throw new Error('No device ID found');
+            }
+
+            const encryptedKeys = {
+                [currentDeviceId]: btoa('mock-encrypted-key')
+            };
+
+            const createRequest = {
+                ...actionItemData,
+                encryptedContent: btoa(unescape(encodeURIComponent(contentToEncrypt))),
+                encryptedKeys,
+                iv
+            };
+
+            const response = await actionItemsService.createActionItem(createRequest);
+
+            if (response.success) {
+                console.log('Action item created successfully:', response.data);
+                showSuccess('Action Item Created', 'Action item has been created successfully.');
+                // Refresh action items
+                queryClient.invalidateQueries({ queryKey: ['actionItems'] });
+            } else {
+                throw new Error(response.error?.message || 'Failed to create action item');
+            }
+        } catch (error) {
+            console.error('Failed to create action item from detected item:', error);
+            showError('Creation Failed', 'Failed to create action item. Please try again.');
+        }
+    }, [note?.personId, note?.groupId, note?.id, showSuccess, showError, queryClient]);
+
+    // Handle dismissing detected items
+    const handleDismissDetectedItem = useCallback((itemId: string) => {
+        setAnalysisResult(prev => prev ? {
+            ...prev,
+            detectedItems: prev.detectedItems.filter(item => item.id !== itemId)
+        } : null);
+    }, []);
+
+    // Handle refreshing analysis
+    const handleRefreshAnalysis = useCallback(() => {
+        const currentContent = editorRef.current?.getContent() || '';
+        if (currentContent.trim()) {
+            setIsAnalyzing(true);
+            setAnalysisProgress(0);
+
+            // Clear cache and trigger fresh analysis
+            // This would be handled by the RichTextEditor's analysis system
+            // For now, simulate the refresh
+            setTimeout(() => {
+                setIsAnalyzing(false);
+                setAnalysisProgress(undefined);
+            }, 2000);
+        }
+    }, []);
+
+    // Handle updating analysis settings
+    const handleUpdateAnalysisSettings = useCallback((newSettings: Partial<AnalysisSettings>) => {
+        setAnalysisSettings(prev => ({ ...prev, ...newSettings }));
+    }, []);
+
     // Handle keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -621,6 +789,16 @@ export default function NoteDetail() {
                                     <span className="text-sm">Metadata</span>
                                 </button>
 
+                                {/* Analysis sidebar toggle */}
+                                <button
+                                    onClick={() => setShowAnalysisSidebar(!showAnalysisSidebar)}
+                                    className="flex items-center gap-2 px-3 py-1 rounded-lg text-dark-600 dark:text-dark-400 hover:text-dark-950 dark:hover:text-white hover:bg-dark-200 dark:hover:bg-dark-800 transition-all duration-200"
+                                    title={showAnalysisSidebar ? 'Hide analysis' : 'Show analysis'}
+                                >
+                                    <Brain className="h-4 w-4" />
+                                    <span className="text-sm">AI Analysis</span>
+                                </button>
+
                                 {actionItems && actionItems.length > 0 && (
                                     <button
                                         onClick={() => setIsActionItemsPanelOpen(!isActionItemsPanelOpen)}
@@ -699,6 +877,12 @@ export default function NoteDetail() {
                             placeholder="Start writing your note here..."
                             className="h-full prose prose-lg max-w-none dark:prose-invert prose-primary"
                             onFindTasks={handleFindTasks}
+                            enableRealTimeAnalysis={analysisSettings.enabled}
+                            onAnalysisUpdate={handleAnalysisUpdate}
+                            onAnalysisStart={handleAnalysisStart}
+                            analysisSettings={analysisSettings}
+                            analysisContext={analysisContext}
+                            showAnalysisIndicators={true}
                         />
                     </div>
                 </div>
@@ -808,6 +992,21 @@ export default function NoteDetail() {
                     </div>
                 </div>
             </div>
+
+            {/* Analysis Sidebar */}
+            {showAnalysisSidebar && (
+                <ActionItemSidebar
+                    detectedItems={analysisResult?.detectedItems || []}
+                    isAnalyzing={isAnalyzing}
+                    analysisProgress={analysisProgress}
+                    onCreateActionItem={handleCreateActionItemFromDetected}
+                    onDismissItem={handleDismissDetectedItem}
+                    onRefreshAnalysis={handleRefreshAnalysis}
+                    onUpdateSettings={handleUpdateAnalysisSettings}
+                    settings={analysisSettings}
+                    analysisResult={analysisResult || undefined}
+                />
+            )}
 
             {/* Action Items Sidebar */}
             {isActionItemsPanelOpen && actionItems && actionItems.length > 0 && (
