@@ -49,20 +49,20 @@ export default function Dashboard() {
         queryFn: async () => {
             try {
                 const allResponse = await actionItemsService.getActionItems();
-                
+
                 if (!allResponse.success || !allResponse.data) {
                     return { total: 0, pending: 0, inProgress: 0, active: 0 };
                 }
-                
+
                 const allItems = allResponse.data;
-                
+
                 // Count by status
                 const pending = allItems.filter(item => item.status === 'pending').length;
                 const inProgress = allItems.filter(item => item.status === 'in_progress').length;
                 const completed = allItems.filter(item => item.status === 'completed').length;
                 const cancelled = allItems.filter(item => item.status === 'cancelled').length;
-                
-                
+
+
                 return {
                     total: allItems.length,
                     pending,
@@ -105,7 +105,7 @@ export default function Dashboard() {
                                 {isNewUser ? "Welcome to Engage360" : "Dashboard"}
                             </h1>
                             <p className="text-dark-600 dark:text-dark-400 text-lg mt-1">
-                                {isNewUser 
+                                {isNewUser
                                     ? "Your relationship management platform"
                                     : `Managing ${peopleData?.people?.length || 0} contacts across ${groupsResponse?.success && groupsResponse?.data?.length || 0} groups`
                                 }
@@ -126,8 +126,8 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* Simplified Quick Actions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Responsive Quick Actions Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <Link
                         to="/people"
                         className="group bg-white dark:bg-dark-800 rounded-xl border border-dark-200 dark:border-dark-700 p-6 hover:shadow-md hover:border-dark-300 dark:hover:border-dark-600 transition-all duration-200"
@@ -257,7 +257,7 @@ export default function Dashboard() {
                 )}
 
                 {/* Google Calendar Integration */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <GoogleCalendarAuth />
                     <UpcomingEvents maxEvents={5} />
                 </div>

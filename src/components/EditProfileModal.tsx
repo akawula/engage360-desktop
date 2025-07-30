@@ -75,7 +75,7 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             First Name *
@@ -86,7 +86,7 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
                             value={formData.firstName}
                             onChange={handleChange}
                             required
-                            className="w-full border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 touch-manipulation"
                         />
                     </div>
                     <div>
@@ -99,7 +99,7 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
                             value={formData.lastName}
                             onChange={handleChange}
                             required
-                            className="w-full border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 touch-manipulation"
                         />
                     </div>
                 </div>
@@ -114,7 +114,7 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 touch-manipulation"
                     />
                 </div>
 
@@ -127,18 +127,18 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
                     placeholder="Enter image URL"
                 />
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col xs:flex-row gap-3 pt-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 border border-dark-400 dark:border-dark-700 text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={mutation.isPending}
-                        className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
                         {mutation.isPending ? 'Saving...' : 'Save Changes'}
                     </button>

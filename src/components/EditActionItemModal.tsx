@@ -77,7 +77,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         value={formData.title}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation"
                     />
                 </div>
 
@@ -91,11 +91,11 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         value={formData.description}
                         onChange={handleChange}
                         rows={3}
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[88px] xs:min-h-[80px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation"
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="status" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             Status
@@ -105,7 +105,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                             name="status"
                             value={formData.status}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation"
                         >
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
@@ -123,7 +123,7 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                             name="priority"
                             value={formData.priority}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation"
                         >
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
@@ -143,22 +143,22 @@ export default function EditActionItemModal({ isOpen, onClose, actionItem }: Edi
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 text-dark-950 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent touch-manipulation"
                     />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col xs:flex-row gap-3 pt-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 px-4 py-2 text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] text-dark-800 dark:text-dark-400 border border-dark-400 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-lg hover:bg-dark-100 dark:hover:bg-dark-700 transition-colors touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={updateActionItem.isPending || updateActionStatus.isPending}
-                        className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 touch-manipulation"
                     >
                         {(updateActionItem.isPending || updateActionStatus.isPending) ? 'Saving...' : 'Save Changes'}
                     </button>

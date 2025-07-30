@@ -135,7 +135,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Add New Person">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="firstName" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                             First Name *
@@ -147,7 +147,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                             value={formData.firstName}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                         />
                     </div>
                     <div>
@@ -161,7 +161,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                             value={formData.lastName}
                             onChange={handleChange}
                             required
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                         />
                     </div>
                 </div>
@@ -177,7 +177,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -191,7 +191,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -206,7 +206,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         value={formData.githubUsername}
                         onChange={handleChange}
                         placeholder="e.g., octocat"
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -220,7 +220,7 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         name="position"
                         value={formData.position}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -269,22 +269,22 @@ export default function AddPersonModal({ isOpen, onClose }: AddPersonModalProps)
                         onKeyPress={handleTagKeyPress}
                         onBlur={handleTagBlur}
                         placeholder="Type and press Enter or comma to add tags"
-                        className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                     />
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex flex-col xs:flex-row justify-end space-y-3 xs:space-y-0 xs:space-x-3 pt-4">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-900 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors"
+                        className="w-full xs:w-auto px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-900 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-800 transition-colors touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full xs:w-auto px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Person'}
                     </button>

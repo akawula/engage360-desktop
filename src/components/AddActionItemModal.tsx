@@ -203,8 +203,14 @@ export default function AddActionItemModal({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleCancel} title="Create Action Item">
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <Modal
+            isOpen={isOpen}
+            onClose={handleCancel}
+            title="Create Action Item"
+            size="md"
+            fullScreenOnMobile={true}
+        >
+            <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-6">
                 {/* Title */}
                 <div>
                     <label htmlFor="title" className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
@@ -218,7 +224,7 @@ export default function AddActionItemModal({
                         onChange={handleChange}
                         required
                         placeholder="Enter action item title"
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -234,7 +240,7 @@ export default function AddActionItemModal({
                         onChange={handleChange}
                         rows={3}
                         placeholder="Enter action item description"
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[88px] xs:min-h-[80px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white touch-manipulation resize-none"
                     />
                 </div>
 
@@ -248,7 +254,7 @@ export default function AddActionItemModal({
                         name="priority"
                         value={formData.priority}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white touch-manipulation"
                     >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -269,7 +275,7 @@ export default function AddActionItemModal({
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white touch-manipulation"
                     />
                 </div>
 
@@ -284,7 +290,7 @@ export default function AddActionItemModal({
                         name="personId"
                         value={formData.personId}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white touch-manipulation"
                     >
                         <option value="">None</option>
                         {people?.people?.map((person: Person) => (
@@ -307,7 +313,7 @@ export default function AddActionItemModal({
                         value={formData.groupId}
                         onChange={handleChange}
                         disabled={loadingGroups}
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50 touch-manipulation"
                     >
                         <option value="">None</option>
                         {groups.map((group) => (
@@ -330,7 +336,7 @@ export default function AddActionItemModal({
                         value={formData.noteId}
                         onChange={handleChange}
                         disabled={loadingNotes}
-                        className="w-full px-3 py-2 border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50"
+                        className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-800 dark:border-dark-700 dark:text-white disabled:opacity-50 touch-manipulation"
                     >
                         <option value="">None</option>
                         {notes.map((note) => (
@@ -342,18 +348,18 @@ export default function AddActionItemModal({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col xs:flex-row gap-3 pt-4">
                     <button
                         type="button"
                         onClick={handleCancel}
-                        className="flex-1 px-4 py-2 text-dark-800 bg-dark-300 rounded-md hover:bg-dark-400 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-dark-700 dark:text-dark-400 dark:hover:bg-dark-600"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] text-dark-800 bg-dark-300 rounded-md hover:bg-dark-400 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-dark-700 dark:text-dark-400 dark:hover:bg-dark-600 touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     >
                         {isSubmitting ? 'Creating...' : 'Create Action Item'}
                     </button>

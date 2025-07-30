@@ -147,7 +147,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             onChange={handleChange}
                             required
                             placeholder="e.g., Master React Advanced Patterns"
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                         />
                     </div>
 
@@ -161,11 +161,11 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             onChange={handleChange}
                             rows={3}
                             placeholder="Describe what you want to achieve and why it's important..."
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[88px] xs:min-h-[80px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-dark-800 dark:text-dark-400 mb-1">
                                 Category *
@@ -175,7 +175,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 value={formData.category}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                                className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                             >
                                 <option value="technical">Technical</option>
                                 <option value="leadership">Leadership</option>
@@ -195,7 +195,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 value={formData.priority}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                                className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                             >
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -214,7 +214,7 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                             name="targetDate"
                             value={formData.targetDate}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                         />
                     </div>
                 </div>
@@ -226,13 +226,13 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                     </label>
 
                     {/* Add skill input */}
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex flex-col xs:flex-row gap-2 mb-3">
                         <input
                             type="text"
                             value={newSkill}
                             onChange={(e) => setNewSkill(e.target.value)}
                             placeholder="Add a skill..."
-                            className="flex-1 px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                            className="flex-1 px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                             onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -243,9 +243,10 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                         <button
                             type="button"
                             onClick={addSkill}
-                            className="px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                            className="w-full xs:w-auto px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors touch-manipulation"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-4 h-4 xs:mr-0 mr-2" />
+                            <span className="xs:hidden">Add Skill</span>
                         </button>
                     </div>
 
@@ -285,29 +286,29 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                                 value={newMilestone.title}
                                 onChange={(e) => setNewMilestone(prev => ({ ...prev, title: e.target.value }))}
                                 placeholder="Milestone title..."
-                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                                className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                             <textarea
                                 value={newMilestone.description}
                                 onChange={(e) => setNewMilestone(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="Description (optional)..."
                                 rows={2}
-                                className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                                className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[66px] xs:min-h-[60px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                             />
                             <div className="space-y-2">
                                 <input
                                     type="date"
                                     value={newMilestone.targetDate}
                                     onChange={(e) => setNewMilestone(prev => ({ ...prev, targetDate: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white"
+                                    className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] border border-dark-400 dark:border-dark-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-dark-800 text-dark-950 dark:text-white touch-manipulation"
                                 />
                                 <button
                                     type="button"
                                     onClick={addMilestone}
                                     disabled={!newMilestone.title.trim()}
-                                    className="w-full px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full px-3 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                                 >
                                     Add Milestone
                                 </button>
@@ -353,18 +354,18 @@ export default function CreateGrowthGoalModal({ isOpen, onClose, personId }: Cre
                 </div>
 
                 {/* Submit Buttons */}
-                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-dark-300 dark:border-dark-800">
+                <div className="flex flex-col xs:flex-row items-center justify-end space-y-3 xs:space-y-0 xs:space-x-3 pt-6 border-t border-dark-300 dark:border-dark-800">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-800 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+                        className="w-full xs:w-auto px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] font-medium text-dark-800 dark:text-dark-400 bg-white dark:bg-dark-800 border border-dark-400 dark:border-dark-700 rounded-md hover:bg-dark-100 dark:hover:bg-dark-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={createGoalMutation.isPending}
-                        className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full xs:w-auto px-4 py-3 xs:py-2 text-base xs:text-sm min-h-[44px] xs:min-h-[40px] font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation"
                     >
                         {createGoalMutation.isPending ? 'Creating...' : 'Create Goal'}
                     </button>
