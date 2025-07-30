@@ -140,19 +140,9 @@ pub fn run() {
                             if let Some(window) = app.get_webview_window("main") {
                                 if window.is_visible().unwrap_or(false) {
                                     let _ = window.hide();
-                                    // Hide dock icon when hiding to tray
-                                    #[cfg(target_os = "macos")]
-                                    {
-                                        let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-                                    }
                                 } else {
                                     let _ = window.show();
                                     let _ = window.set_focus();
-                                    // Show dock icon when showing window
-                                    #[cfg(target_os = "macos")]
-                                    {
-                                        let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
-                                    }
                                 }
                             }
                         }
@@ -165,21 +155,11 @@ pub fn run() {
                             if let Some(window) = app.get_webview_window("main") {
                                 let _ = window.show();
                                 let _ = window.set_focus();
-                                // Show dock icon when showing window
-                                #[cfg(target_os = "macos")]
-                                {
-                                    let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
-                                }
                             }
                         }
                         "hide" => {
                             if let Some(window) = app.get_webview_window("main") {
                                 let _ = window.hide();
-                                // Hide dock icon when hiding to tray
-                                #[cfg(target_os = "macos")]
-                                {
-                                    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-                                }
                             }
                         }
                         "quit" => {
@@ -190,10 +170,10 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // Start with Regular activation policy so dock icon is visible on launch
+            // Set activation policy for macOS to hide dock icon
             #[cfg(target_os = "macos")]
             {
-                app.set_activation_policy(tauri::ActivationPolicy::Regular);
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             }
 
             // Start background task
@@ -225,9 +205,7 @@ pub fn run() {
                     // You can also update the tray icon or tooltip based on task status
                     // Example: Change tray icon color or show notifications
                 }
-            });
-
-            // Handle window close event to hide instead of quit
+            });            // Handle window close event to hide instead of quit
             if let Some(window) = app.get_webview_window("main") {
                 let app_handle = app.handle().clone();
                 window.on_window_event(move |event| {
@@ -235,11 +213,6 @@ pub fn run() {
                         api.prevent_close();
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.hide();
-                            // Hide dock icon when closing window (minimize to tray)
-                            #[cfg(target_os = "macos")]
-                            {
-                                let _ = app_handle.set_activation_policy(tauri::ActivationPolicy::Accessory);
-                            }
                         }
                     }
                 });
